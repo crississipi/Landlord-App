@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-customViolet: #574964;
+  --font-poppins: "Poppins", "serif";
+}
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+      display: none;
+  }
+ /* Hide scrollbar for IE, Edge and Firefox */
+  .no__scrollbar {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+  }
+  
+  .font-outline-1 {
+    -webkit-text-stroke: 0.5px white;
+  }
+}
+
+@layer components {
+  /*HEADING STYLES*/
+  .h1__style {
+    @apply text-xl font-light md:text-2xl;
+  }
+  .h2__style {
+    @apply font-medium text-lg tracking-wide md:text-xl;
+  }
+
+  /*ELEMENT POSITIONING*/
+  .flex__center__all {
+    @apply flex items-center justify-center;
+  }
+  .flex__center__y {
+    @apply flex items-center;
+  }
+  .flex__center__x {
+    @apply flex justify-center;
+  }
+  .column__align {
+    @apply h-auto w-full flex flex-col;
+  }
+
+  /*TEXT*/
+  .text__overflow {
+    @apply overflow-ellipsis text-nowrap overflow-hidden;
+  }
+  .input__text {
+    @apply outline-none text-customViolet placeholder:text-customViolet/70;
+  }
+  .main__input {
+    @apply rounded-sm bg-zinc-100 py-3 px-3 tracking-wide
+  }
+  .strong {
+    @apply font-semibold pr-2
+  }
+
+  /*SIZING*/
+  .max__size {
+    @apply h-full w-full;
+  }
+
+  /*BUTTON STYLES*/
+  .primary__btn__holder {
+    @apply h-auto w-full grid grid-cols-12 gap-3;
+  }
+  .primary__btn {
+    @apply outline-none py-3 rounded-sm bg-customViolet text-slate-50 text-sm gap-3 tracking-wide md:py-4 md:text-base;
+  }
+  .click__action {
+    @apply ease-in-out duration-150;
+  }
+  .hover__action {
+    @apply hover:ring-2 hover:ring-customViolet/20;
+  }
+  .focus__action {
+    @apply focus:ring-2 focus:ring-customViolet/50 focus:scale-105;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Poppins", "serif";
+}
+
+* {
+  outline: none !important;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
