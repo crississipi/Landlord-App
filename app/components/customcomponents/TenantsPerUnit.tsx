@@ -14,7 +14,6 @@ const TenantsPerUnit: React.FC<TenantPerUnit> = ({ setPage, unit, name, profile,
         <Tenant setPage={setPage} profile={profile[0]} name={name[0]}/>
         <Tenant setPage={setPage} profile={profile[1]} name={name[1]}/>
         <Tenant setPage={setPage} profile={profile[2]} name={name[2]}/>
-        <Tenant setPage={setPage} profile={profile[3]} name={name[3]}/>
       </div>
     </div>
   )

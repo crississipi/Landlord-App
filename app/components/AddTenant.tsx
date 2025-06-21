@@ -49,7 +49,7 @@ const AddTenant = ({ setPage }:ChangePageProps ) => {
               <button className='main__input flex__center__y pr-3 w-full group justify-between' onClick={toggleSex}>{currSex} <AiOutlineDown className='click__action text-base rounded-xs group-focus:text-emerald-700 group-focus:scale-110'/></button>
               { sex && (
               <div className='column__align rounded-sm items-center gap-0.5 text-sm font-light tracking-wide absolute top-12 bg-zinc-100 overflow-hidden ring-2 ring-white'>
-                  { sexSelect.map((s) => (<button className='w-full py-0.5 outline-none focus:bg-customViolet/70 focus:text-white' onClick={() => changeSex(s)}>{s}</button>))}
+                  { sexSelect.map((s, i) => (<button key={i} className='w-full py-0.5 outline-none focus:bg-customViolet/70 focus:text-white' onClick={() => changeSex(s)}>{s}</button>))}
               </div>
               )}
           </div>

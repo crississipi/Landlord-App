@@ -44,16 +44,6 @@ const Maintenance: React.FC<MaintenanceProps> = ({ setPage, setImage }) => {
           setPage={setPage}
           setImage={setImage}
         />
-        <MaintenanceCard 
-          urgent={false} 
-          unit="301" 
-          dateSent="Mar 14" 
-          tenant='Desmond, Bane'
-          info="Lorem ipsum dolor sit amet consectetur adipiscing elit, sed do eiusmod tempor incididunt ui labore et dolore magna."
-          button={false}
-          setPage={setPage}
-          setImage={setImage}
-        />
       </div>
     </div>
   )

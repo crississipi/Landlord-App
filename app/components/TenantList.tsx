@@ -8,8 +8,8 @@ const TenantList = ({ setPage }:ChangePageProps) => {
         <TenantsPerUnit 
             setPage={setPage} 
             unit={101} 
-            profile={["/sample_profiles/janwek.png", "/sample_profiles/Johnny-Sins.jpg", "/sample_profiles/kevheart.jpg", "/sample_profiles/john_cena.jpg" ]} 
-            name={["John Wick", "Johnny Johnny Yes Papa", "Kevin Heart", "John Cena"]}
+            profile={["/sample_profiles/janwek.png", "/sample_profiles/kevheart.jpg", "/sample_profiles/john_cena.jpg" ]} 
+            name={["John Wick", "Kevin Heart", "John Cena"]}
             location='Pasay'
         />
         <TenantsPerUnit 
@@ -22,15 +22,15 @@ const TenantList = ({ setPage }:ChangePageProps) => {
         <TenantsPerUnit 
             setPage={setPage} 
             unit={204} 
-            profile={["/sample_profiles/kevheart.jpg", "/sample_profiles/Johnny-Sins.jpg", "/sample_profiles/janwek.png", "/sample_profiles/john_cena.jpg"]} 
-            name={["Kevin Heart", "Johnny Johnny Yes Papa", "John Wick", "John Cena"]}
+            profile={["/sample_profiles/kevheart.jpg", "/sample_profiles/janwek.png", "/sample_profiles/john_cena.jpg"]} 
+            name={["Kevin Heart", "John Wick", "John Cena"]}
             location='Cavite'
         />
         <TenantsPerUnit 
             setPage={setPage} 
             unit={301} 
-            profile={["/sample_profiles/janwek.png", "/sample_profiles/Johnny-Sins.jpg", "/sample_profiles/kevheart.jpg", "/sample_profiles/john_cena.jpg" ]} 
-            name={["John Wick", "Johnny Johnny Yes Papa", "Kevin Heart", "John Cena"]}
+            profile={["/sample_profiles/janwek.png", "/sample_profiles/kevheart.jpg", "/sample_profiles/john_cena.jpg" ]} 
+            name={["John Wick", "Kevin Heart", "John Cena"]}
             location='Paranaque'
         />
         <TenantsPerUnit 
@@ -43,8 +43,8 @@ const TenantList = ({ setPage }:ChangePageProps) => {
         <TenantsPerUnit 
             setPage={setPage} 
             unit={303} 
-            profile={["/sample_profiles/kevheart.jpg", "/sample_profiles/Johnny-Sins.jpg", "/sample_profiles/janwek.png", "/sample_profiles/john_cena.jpg"]} 
-            name={["Kevin Heart", "Johnny Johnny Yes Papa", "John Wick", "John Cena"]}
+            profile={["/sample_profiles/kevheart.jpg", "/sample_profiles/janwek.png", "/sample_profiles/john_cena.jpg"]} 
+            name={["Kevin Heart", "John Wick", "John Cena"]}
             location='Cavite'
         />
     </div>

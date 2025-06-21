@@ -14,8 +14,13 @@ const SettlePayment = ({ billType }: SettlePaymentProps) => {
   const [tenant, setTenant] = useState(tenantlist[0]);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const dropdown = (mode: boolean) => {
-    mode ? setShow(!show) : setShow2(!show2);
+    if (mode) {
+      setShow(!show)
+    } else {
+      setShow2(!show2)
+    }
   }
+  
   const choose = (u:string, mode:boolean) => {
     if(mode) {
         setUnit(u);

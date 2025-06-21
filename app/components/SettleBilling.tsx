@@ -10,7 +10,7 @@ interface UnitProps {
 
 type SettleBillingProps = SetSetttleProps & UnitProps;
 
-const SettleBilling: React.FC<SettleBillingProps> = ({ setSettleBilling, setUnit, unit }) => {
+const SettleBilling: React.FC<SettleBillingProps> = ({ setSettleBilling, unit }) => {
   const today = new Date();
   const [bill, setBill] = useState([0, 0]);
   const [rate, setRate] = useState([0, 0]);

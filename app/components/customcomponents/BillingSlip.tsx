@@ -2,7 +2,7 @@ import { BillingSlipProps } from '@/types'
 import React, { useState } from 'react'
 import ReceiptSlip from './ReceiptSlip';
 
-const BillingSlip = ({unit, datePaid, electric, water, rent, amount, paidElectric, paidRent, paidWater}:BillingSlipProps) => {
+const BillingSlip = ({unit, datePaid, electric, water, rent, paidElectric, paidRent, paidWater}:BillingSlipProps) => {
   const total = electric + water + rent;
   const totalBal = paidElectric + paidWater + paidRent;
   const balance = total - totalBal;

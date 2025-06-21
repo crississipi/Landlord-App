@@ -5,7 +5,6 @@ import ChangePass from "./ChangePass";
 import MainPage from "./MainPage";
 import SideNav from "./SideNav";
 import DashboardPage from "./DashboardPage";
-import BulletinPage from "./BulletinPage";
 import MaintenancePage from "./MaintenancePage";
 import TenantListPage from "./TenantListPage";
 import AddTenant from "./AddTenant";
@@ -29,7 +28,6 @@ export {
     MainPage, 
     SideNav, 
     DashboardPage,
-    BulletinPage,
     MaintenancePage,
     TenantListPage,
     AddTenant,

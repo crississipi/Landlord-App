@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { TbCurrencyPeso } from 'react-icons/tb';
 
 const ReceiptSlip = ({ utility, forTotal, amount, paid }: ReceiptSlipProps) => {
-  const [balance, setBalance] = useState(amount - paid);
+  const balance = amount - paid;
   const spanStyle = `col-span-3 text-right text-emerald-700/80 ${forTotal && 'font-medium flex__center__y justify-end'}`;
   return (
     <div className='col-span-full grid grid-cols-12 text-customViolet/80'>

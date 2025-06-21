@@ -7,7 +7,7 @@ const CustomInput = ({ placeholder, inputType, marginBottom }: CustomInputProps)
     <div className={`flex__center__y h-14 w-full gap-3 px-3 bg-zinc-100 rounded-md ${ marginBottom && 'mb-5' }`}>
       {
         inputType === "text" ? (
-          <div className='flex__center__all h-9 min-w-9 max-w-9  rounded-full border-[3px] border-emerald-700 text-emerald-700 overflow-hidden'>
+          <div className='flex__center__all h-9 min-w-9 max-w-9 rounded-full border-[3px] border-emerald-700 text-emerald-700 overflow-hidden'>
             <RiUserFill className='h-10 w-10 mt-2'/>
           </div>
         ): (

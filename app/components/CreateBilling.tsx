@@ -37,14 +37,6 @@ const CreateBilling: React.FC<CreateBillingProps> = ({ setPage, setSettleBilling
                 prev={3345.92} 
                 curr={0}
             />
-            <UnitBilling 
-                setSettleBilling={setSettleBilling}
-                setUnit={setUnit}
-                setPage={setPage} 
-                unit={301} 
-                prev={5122.44} 
-                curr={0}
-            />
         </div>
     </div>
   )

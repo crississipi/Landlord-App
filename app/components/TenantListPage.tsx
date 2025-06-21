@@ -1,6 +1,6 @@
 import React from 'react'
 import { AiOutlinePlus } from 'react-icons/ai'
-import { TenantsPerUnit, TitleButton } from './customcomponents'
+import { TitleButton } from './customcomponents'
 import { ChangePageProps } from '@/types'
 import TenantList from './TenantList'
 

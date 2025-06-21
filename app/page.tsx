@@ -1,6 +1,6 @@
 "use client";
 import { JSX, useEffect, useRef, useState } from "react";
-import { ChatInfo, Header, SettleBilling, ShowImage, SideNav } from "./components";
+import { ChatInfo, Header, SettleBilling, ShowImage, SideNav, Login } from "./components";
 import dynamic from 'next/dynamic'
 import { LoadingPage, LoadingScreen } from "./components/customcomponents";
 
@@ -12,9 +12,6 @@ const Dashboard = dynamic(() => import('./components/DashboardPage'),
 
 const Messages = dynamic(() => import('./components/MessagesPage'), 
 { loading: () => <LoadingScreen page={2} />, });
-
-const Bulletin = dynamic(() => import('./components/BulletinPage'), 
-{ loading: () => <LoadingScreen page={3} />, });
 
 const Maintenance = dynamic(() => import('./components/MaintenancePage'), 
 { loading: () => <LoadingScreen page={4} />, });
@@ -44,7 +41,6 @@ const Billing = dynamic(() => import('./components/BillingPage'),
 { loading: () => <LoadingScreen page={12} />, });
 
 export default function Home() {
-  const [login, setLogin] = useState(false);
   const [page, setPage] = useState(0);
   const [image, setImage] = useState(false);
   const [nav, setNav] = useState("-right-[9999px]");
@@ -84,7 +80,6 @@ export default function Home() {
     0: <Mainpage setPage={setPage} setImage={setImage} setSettleBilling={setSettleBilling} setUnit={setUnit} />,
     1: <Dashboard setPage={setPage} />,
     2: <Messages setPage={setPage} />,
-    3: <Bulletin setPage={setPage} />,
     4: <Maintenance setPage={setPage} setImage={setImage} />,
     5: <Tenants setPage={setPage} />,
     6: <Settings setPage={setPage} />,
@@ -94,13 +89,14 @@ export default function Home() {
     11: <AllMedia setPage={setPage} setImage={setImage} />,
     12: <Docu setPage={setPage} setImage={setImage} />,
     13: <Billing setPage={setPage} setSettleBilling={setSettleBilling} setUnit={setUnit} />,
+    99: <Login />
   };
   return (
     <>
       {contentLoading ? 
         ( <LoadingPage /> ) : 
         ( <main className="h-full w-full flex flex-col items-center relative bg-customViolet">
-            <Header login={login} setNav={setNav} setPage={setPage}/>
+            <Header login={false} setNav={setNav} setPage={setPage}/>
             <div className="h-full w-full flex flex-col relative overflow-x-hidden">
               {pages[page] || null}
 

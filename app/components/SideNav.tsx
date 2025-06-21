@@ -4,7 +4,7 @@ import NotificationSlip from './customcomponents/NotificationSlip'
 
 
 
-const SideNav = ({ setNav, nav, setPage, comRef }: SideNavProps ) => {
+const SideNav = ({ nav, comRef }: SideNavProps ) => {
 
   return (
     <div ref={comRef} className={`h-full w-4/5 ${nav} flex flex-col fixed z-50 bg-zinc-100 ease-in-out duration-700 md:w-3/5`}>

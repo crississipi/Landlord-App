@@ -60,7 +60,7 @@ const Documentation: React.FC<DocuProps> = ({ setPage, setImage }) => {
         </div>
         {selectedImg.map((url, i) => (
           <ImageButton 
-            k={i} 
+            key={i} 
             setImage={setImage} 
             removable={true} 
             imageURL={url}

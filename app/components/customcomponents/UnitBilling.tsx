@@ -1,6 +1,6 @@
 import { BillingProps, ChangePageProps, SetSetttleProps } from '@/types'
 import React from 'react'
-import { TbCalculator, TbCheck, TbCurrencyPeso } from 'react-icons/tb'
+import { TbCalculator } from 'react-icons/tb'
 
 type UnitBillingProps = BillingProps & ChangePageProps & SetSetttleProps;
 const UnitBilling:React.FC<UnitBillingProps> = ({setSettleBilling, setUnit, unit, prev, curr}) => {

@@ -4,7 +4,7 @@ import { MessageBubble } from './customcomponents'
 import { ChangePageProps, ChatInfoProps } from '@/types'
 
 type ChatProps = ChatInfoProps & ChangePageProps;
-const Message: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo }) => {
+const Message: React.FC<ChatProps> = ({ setPage, setChatInfo }) => {
   const showChatInfo = () => {
     setChatInfo("right-0");
   }

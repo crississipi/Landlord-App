@@ -3,7 +3,6 @@ import { TbCurrencyPeso } from 'react-icons/tb'
 
 import Maintenance from './Maintenance'
 import CreateBilling from './CreateBilling'
-import TenantList from './TenantList'
 import { CustomNavBtn, Heading, TenantsPerUnit } from './customcomponents'
 
 import { ChangePageProps, ImageProps, SetSetttleProps } from '@/types'
@@ -25,7 +24,7 @@ const MainPage: React.FC<Mainpage> = ({ setPage, setImage, setSettleBilling, set
       <div className='h-1/6 w-full bg-customViolet sticky top-0 z-10 grid grid-cols-2 px-5 items-start text-white'>
         <span className='col-span-full text-left text-sm font-light mb-auto'>{today.toDateString()}</span>
         <div className='col-span-full w-full flex flex-col my-2'>
-          <h2 className='col-span-full text-base font-medium text-center'>This Month's Revenue</h2>
+          <h2 className='col-span-full text-base font-medium text-center'>This Month&apos;s Revenue</h2>
           <h3 className='col-span-full font-semibold text-3xl flex items-center justify-center'><TbCurrencyPeso className='text-2xl stroke-2'/>16,500.00</h3>
         </div>
         <div className='col-span-1 w-full flex flex-col items-center justify-center'>
@@ -39,7 +38,7 @@ const MainPage: React.FC<Mainpage> = ({ setPage, setImage, setSettleBilling, set
 
       </div>
       <div className={`h-[93vh] border border-black w-full flex flex-col gap-3 rounded-t-2xl bg-white z-30 overflow-x-hidden sticky top-full p-2`}>
-        <div className='min-h-16 w-full bg-zinc-100 grid grid-cols-6 items-center rounded-lg'>
+        <div className='min-h-16 w-full bg-zinc-100 grid grid-cols-5 items-center rounded-lg'>
           <CustomNavBtn 
             btnName='Dashboard' 
             mainPage={true} 
@@ -54,11 +53,6 @@ const MainPage: React.FC<Mainpage> = ({ setPage, setImage, setSettleBilling, set
             btnName='Maintenance Requests' 
             mainPage={true} 
             onClick={() => newPage(4)}
-          />
-          <CustomNavBtn 
-            btnName='Bulletin' 
-            mainPage={true} 
-            onClick={() => newPage(3)}
           />
           <CustomNavBtn 
             btnName='Tenant List' 
@@ -89,8 +83,8 @@ const MainPage: React.FC<Mainpage> = ({ setPage, setImage, setSettleBilling, set
               <TenantsPerUnit 
                 setPage={setPage} 
                 unit={101} 
-                profile={["/sample_profiles/janwek.png", "/sample_profiles/Johnny-Sins.jpg", "/sample_profiles/kevheart.jpg", "/sample_profiles/john_cena.jpg" ]} 
-                name={["John Wick", "Johnny Johnny Yes Papa", "Kevin Heart", "John Cena"]}
+                profile={["/sample_profiles/janwek.png", "/sample_profiles/kevheart.jpg", "/sample_profiles/john_cena.jpg" ]} 
+                name={["John Wick", "Kevin Heart", "John Cena"]}
                 location='Pasay'
               />
             </div>

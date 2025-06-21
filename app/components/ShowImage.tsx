@@ -1,6 +1,6 @@
-import { ChangePageProps, ImageProps } from '@/types';
-import React, { useEffect, useState } from 'react'
-import { AiOutlineClose, AiOutlineLeft, AiOutlinePicture } from 'react-icons/ai'
+import { ImageProps } from '@/types';
+import React from 'react'
+import { AiOutlineClose, AiOutlinePicture } from 'react-icons/ai'
 import { showImage } from '@/utils/showImage';
 
 const ShowImage = ({ setImage }: ImageProps) => {

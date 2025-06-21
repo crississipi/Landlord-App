@@ -1,15 +1,10 @@
 "use client";
 
 import React, { useState } from 'react'
-import {  AiOutlineSearch } from 'react-icons/ai'
-import { AccountSlip, ChatHead, MessageFinger, TitleButton } from './customcomponents'
+import { ChatHead, MessageFinger, TitleButton } from './customcomponents'
 import { ChangePageProps } from '@/types';
 
 const MessagesPage = ({ setPage }: ChangePageProps) => {
-  const [showSearch, setShowSearch] = useState(false);
-  const toggleSearch = () => {
-    setShowSearch(!showSearch);
-  }
 
   return (
     <div className='max__size flex flex-col text-customViolet gap-5 px-5 py-3 bg-white rounded-t-2xl'>

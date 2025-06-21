@@ -11,7 +11,7 @@ const Login = () => {
         <button className='click__action h-auto w-full text-lg text-right outline-none text-customViolet no-underline hover:underline focus:underline mt-2 mb-14'>
             forgot password?
         </button>
-        <button className='px-14 primary__btn click__action hover__action focus__action'>LOGIN</button>
+        <button className='px-14 primary__btn click__action hover__action focus__action bg-white text-customViolet text-lg font-medium'>LOGIN</button>
       </div>
     </div>
   )
