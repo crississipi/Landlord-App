@@ -4,7 +4,7 @@ import { RiBellFill, RiMessage2Fill } from 'react-icons/ri'
 import { ChangePageProps, HeaderProps } from '@/types'
 
 type HeadProps = HeaderProps & ChangePageProps;
-const Header: React.FC<HeadProps> = ({ login, setNav, setPage }) => {
+const Header: React.FC<HeadProps> = ({ setNav, setPage }) => {
   const showNav = () => {
     setNav("right-0");
   }

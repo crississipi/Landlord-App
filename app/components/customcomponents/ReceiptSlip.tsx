@@ -1,5 +1,5 @@
 import { ReceiptSlipProps } from '@/types'
-import React, { useState } from 'react'
+import React from 'react'
 import { TbCurrencyPeso } from 'react-icons/tb';
 
 const ReceiptSlip = ({ utility, forTotal, amount, paid }: ReceiptSlipProps) => {
