@@ -23,7 +23,7 @@ const UnitBilling:React.FC<UnitBillingProps> = ({setSettleBilling, setUnit, unit
         {!(curr.toLocaleString() != '0') && '---'}
       </span>
       <div className='col-span-2 flex__center__all'>
-        <button className='click__action flex__center__all outline-none text-2xl py-0.5 outline-none rounded-sm focus:text-emerald-700'>
+        <button className='click__action flex__center__all text-2xl py-0.5 outline-none rounded-sm focus:text-emerald-700'>
           <TbCalculator onClick={settleBilling}/>
         </button>
       </div>

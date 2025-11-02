@@ -9,6 +9,8 @@ export interface CustomInputProps {
     placeholder: string;
     inputType: string;
     marginBottom: boolean;
+    hookValue: string;
+    hookVariable: (hookValue: string) => void;
 }
 
 export interface CustomPriceProps {
@@ -53,8 +55,9 @@ export interface ChatHeadProps {
     name: string;
 }
 
+// ✅ KEEP ONLY THIS ONE ChangePageProps declaration
 export interface ChangePageProps {
-    setPage: (page: number) => void;
+    setPage: (page: number, chatUserId?: number) => void;
 }
 
 export interface MessageBubbleProps {
@@ -69,13 +72,14 @@ export interface CustomNavBtnProps {
 
 export interface SideNavProps {
   setNav: (nav: string) => void;
-  setPage: (page: number) => void;
+  setPage: (page: number, chatUserId?: number) => void; // ✅ Update this too
   nav: string;
   comRef: RefObject<HTMLDivElement | null>;
 }
 
 export interface TitleButtonProps {
     title: string;
+    setPage: (page: number, chatUserId?: number) => void; // ✅ Update this too
 }
 
 export interface DashboardProps {
@@ -115,7 +119,7 @@ export interface DashboardCardProps {
     rate: boolean;
 }
 
-export interface ChartProps {
+export interface ChartLandlordProps {
     type: string;
 }
 
@@ -192,4 +196,75 @@ export interface ReceiptSlipProps {
 
 export interface SettlePaymentProps { 
     billType: boolean;
+}
+
+export interface BillingSlipProps {
+    billName: string;
+    billAmount: number;
+}
+
+export interface NotifSlipProps{
+    icon:string;
+    message:string; 
+    time:string;
+}
+
+export interface ChartProps {
+    name: string;
+    value: number;
+    electric?: number;
+    water?: number;
+}
+
+// ❌ REMOVE THIS DUPLICATE - it conflicts with the one above
+// export interface SetPageProps {
+//     setPage: (page: number) => void;
+// }   
+
+export interface MessageType {
+  messageID: number;
+  senderID: number;
+  receiverID: number;
+  message: string;
+  dateSent: string;
+  read: boolean;
+  sender: {
+    userID: number;
+    firstName: string;
+    lastName: string;
+  };
+}
+
+export interface Conversation {
+  partner: {
+    userID: number;
+    name: string;
+    isOnline: boolean;
+  };
+  lastMessage: string;
+  timestamp: string;
+  unreadCount: number;
+  lastMessageSender: string;
+}
+
+export interface ChatHeadProps {
+  name: string;
+  userId?: number;
+  isOnline?: boolean;
+}
+
+export interface MessageFingerProps {
+  name: string;
+  lastMessage: string;
+  lastMessageSender: string;
+  timestamp: string;
+  unreadCount: number;
+  userId?: number;
+  isOnline?: boolean;
+}
+
+export interface MessageBubbleProps {
+  sender: boolean;
+  message: string;
+  timestamp: string;
 }

@@ -19,6 +19,10 @@ import Documentation from "./Documentation";
 import SettleBilling from "./SettleBilling";
 import TenantList from "./TenantList";
 import BillingPage from "./BillingPage";
+import ViewAllUnits from "./ViewAllUnits";
+import ManageProperty from "./ManageProperty";
+import EditProperty from "./EditProperty";
+import ImageSlider from "./ImageSlider";
 
 export { 
     Header, 
@@ -42,4 +46,8 @@ export {
     SettleBilling,
     TenantList,
     BillingPage,
+    ViewAllUnits,
+    ManageProperty,
+    EditProperty,
+    ImageSlider
 }

@@ -1,49 +1,26 @@
 import React from 'react'
-import MaintenanceCard from './customcomponents/MaintenanceCard'
-import { ChangePageProps, ImageProps } from '@/types'
+import { MdOutlineCalendarMonth, MdOutlineEditCalendar } from 'react-icons/md';
 
-type MaintenanceProps = ChangePageProps & ImageProps;
-
-const Maintenance: React.FC<MaintenanceProps> = ({ setPage, setImage }) => {
+const Maintenance = () => {
   return (
-    <div className='column__align overflow-hidden text-customViolet'>
-      <div className='max__size flex flex-col'>
-        <div className='w-full grid grid-cols-12 border-b border-zinc-200 text-sm font-medium pb-2 mb-2'>
-          <span className='col-span-2 pl-3'>Unit</span>
-          <span className='col-span-6'>Concern</span>
-          <span className='col-span-2'>Date</span>
-          <span className='col-span-2 pr-3'>Urgency</span>
-        </div>
-        <MaintenanceCard 
-          urgent={true} 
-          unit="101" 
-          dateSent="Mar 10" 
-          tenant="Dela Cruz, Juan"
-          info="Lorem ipsum dolor sit amet consectetur adipiscing elit, sed do eiusmod tempor incididunt ui labore et dolore magna."
-          button={false}
-          setPage={setPage}
-          setImage={setImage}
-        />
-        <MaintenanceCard 
-          urgent={true} 
-          unit="202" 
-          dateSent="Mar 13" 
-          tenant='Martin, John'
-          info="Lorem ipsum dolor sit amet consectetur adipiscing elit, sed do eiusmod tempor incididunt ui labore et dolore magna."
-          button={false}
-          setPage={setPage}
-          setImage={setImage}
-        />
-        <MaintenanceCard 
-          urgent={false} 
-          unit="201" 
-          dateSent="Mar 16" 
-          tenant='Demarcus, Cousins'
-          info="Lorem ipsum dolor sit amet consectetur adipiscing elit, sed do eiusmod tempor incididunt ui labore et dolore magna."
-          button={false}
-          setPage={setPage}
-          setImage={setImage}
-        />
+    <div className='column__align overflow-hidden text-customViolet mt-3'>
+      <p className='w-full pl-5'><strong>3</strong> pending maintenance issues.</p>
+      <p className='w-full pl-5'><strong>2</strong> scheduled maintenance today.</p>
+      <div className='max__size flex gap-2 mt-5'>
+        <button 
+          type="button"
+          className='flex-grow rounded-md text-nowrap bg-customViolet text-white text-sm flex items-center justify-between p-3 pl-4 gap-3 hover:scale-101 focus:scale-101 click__action'
+        >
+          Set a Schedule
+          <MdOutlineEditCalendar className='text-2xl'/>
+        </button>
+        <button 
+          type="button"
+          className='flex-grow rounded-md text-nowrap bg-customViolet text-white text-sm flex items-center justify-between p-3 pl-4 gap-3'  
+        >
+          Show Appointments
+          <MdOutlineCalendarMonth className='text-2xl'/>
+        </button>
       </div>
     </div>
   )

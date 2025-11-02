@@ -10,7 +10,6 @@ import MessageFinger from "./MessageFinger";
 import AccountSlip from "./AccountSlip";
 import MessageBubble from "./MessageBubble";
 import TitleButton from "./TitleButton";
-import Heading from "./Heading";
 import ImageButton from "./ImageButton";
 import LoadingPage from "./LoadingPage";
 import LoadingScreen from "./LoadingScreen";
@@ -34,7 +33,6 @@ export {
     AccountSlip,
     MessageBubble,
     TitleButton,
-    Heading,
     ImageButton,
     LoadingPage,
     LoadingScreen,

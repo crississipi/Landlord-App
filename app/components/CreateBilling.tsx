@@ -1,43 +1,27 @@
 import React from 'react'
-import { UnitBilling } from './customcomponents'
-import { ChangePageProps, SetSetttleProps } from '@/types'
+import { MdOutlineCalculate, MdOutlineHistory } from 'react-icons/md';
 
-type CreateBillingProps = ChangePageProps & SetSetttleProps;
-const CreateBilling: React.FC<CreateBillingProps> = ({ setPage, setSettleBilling, setUnit }) => {
+const CreateBilling = () => {
   return (
-    <div className='column__align text-customViolet rounded-sm'>
-        <div className='w-full grid grid-cols-12 text-sm font-medium border-b border-zinc-200 py-1.5 mb-2'>
-            <span className='col-span-1 pl-3'>Unit</span>
-            <span className='col-span-3 text-right'>March</span>
-            <span className='col-span-3 text-right'>Previous</span>
-            <span className='col-span-3 text-right'>Current</span>
-        </div>
-        <div className='max-h-50 column__align overflow-x-hidden'>
-            <UnitBilling 
-                setSettleBilling={setSettleBilling}
-                setUnit={setUnit}
-                setPage={setPage} 
-                unit={101} 
-                prev={3211.19} 
-                curr={0}
-            />
-            <UnitBilling 
-                setSettleBilling={setSettleBilling}
-                setUnit={setUnit}
-                setPage={setPage} 
-                unit={102} 
-                prev={4321.56} 
-                curr={0}
-            />
-            <UnitBilling 
-                setSettleBilling={setSettleBilling}
-                setUnit={setUnit}
-                setPage={setPage} 
-                unit={201} 
-                prev={3345.92} 
-                curr={0}
-            />
-        </div>
+    <div className='column__align overflow-hidden text-customViolet mt-3'>
+      <p className='w-full pl-3'><strong>3</strong> pending billing transactions.</p>
+      <p className='w-full pl-3'><strong>2</strong> delayed payments.</p>
+      <div className='max__size flex gap-2 mt-5'>
+        <button 
+          type="button"
+          className='flex-grow rounded-md text-nowrap bg-customViolet text-white text-sm flex items-center justify-between p-3 pl-4 gap-3 hover:scale-101 focus:scale-101 click__action'
+        >
+          Compute Billing
+          <MdOutlineCalculate className='text-2xl'/>
+        </button>
+        <button 
+          type="button"
+          className='flex-grow rounded-md text-nowrap bg-customViolet text-white text-sm flex items-center justify-between p-3 pl-4 gap-3'  
+        >
+          Show Billing History
+          <MdOutlineHistory className='text-2xl'/>
+        </button>
+      </div>
     </div>
   )
 }

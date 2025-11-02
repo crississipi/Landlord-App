@@ -47,6 +47,11 @@ const SettingsPage = ({ setPage }:ChangePageProps ) => {
               <input type="password" placeholder='Confirm Password' className='col-span-full text__overflow input__text main__input'/>
             </div>
           </div>
+          <button 
+            type="button" 
+            className='w-full py-3 rounded-md border border-rose-500 text-rose-500 hover:bg-rose-500/70 focus:bg-rose-500 focus:text-white ease-out duration-200'
+            onClick={() => setPage(99)}
+          >Log Out</button>
           <div className='w-full flex justify-end gap-2 mt-5 md:flex md:items-center md:justify-center md:mt-10'>
             <button className='click__action hover__action focus__action flex__center__y border border-zinc-400 rounded-sm gap-3 text-zinc-400 justify-between px-5 md:gap-5'><HiOutlineArrowNarrowLeft className='text-2xl'/> Cancel</button>
             <button className='primary__btn click__action hover__action focus__action flex__center__y justify-between px-5 md:gap-5'>Confirm Changes <HiOutlineArrowNarrowRight className='text-2xl'/></button>

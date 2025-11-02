@@ -1,3 +1,5 @@
+"use client"
+
 import { SettlePaymentProps } from '@/types';
 import React, { useState } from 'react'
 import { AiOutlineCaretDown } from 'react-icons/ai';
@@ -68,10 +70,12 @@ const SettlePayment = ({ billType }: SettlePaymentProps) => {
           <TbCurrencyPeso className='h-4 min-w-4 ml-3 text-zinc-400'/>
           <input type="text" className='bg-transparent max__size' placeholder='0.00'/>
         </div>
-        <button className='outline-none col-span-6 px-3 py-2 bg-zinc-100 rounded-sm flex__center__y relative click__action focus:bg-zinc-200' onClick={() => dropdown(false)}>
-          <span className='text-nowrap'>Paid By </span>
-          <span className='font-medium mx-2 text-nowrap overflow-hidden text-ellipses'>{tenant}</span>
-          <AiOutlineCaretDown className={`text-base ${show ? 'text-emerald-700' : 'rotate-90 text-customViolet'} click__action`}/>
+        <div className='col-span-6 flex flex-col relative'>
+          <button className='outline-none px-3 py-2 bg-zinc-100 rounded-sm flex__center__y relative click__action focus:bg-zinc-200' onClick={() => dropdown(false)}>
+            <span className='text-nowrap'>Paid By </span>
+            <span className='font-medium mx-2 text-nowrap overflow-hidden text-ellipses'>{tenant}</span>
+            <AiOutlineCaretDown className={`text-base ${show ? 'text-emerald-700' : 'rotate-90 text-customViolet'} click__action`}/>
+          </button>
           { show2 && (
             <div className='absolute top-full right-0 px-3 mt-1 bg-zinc-100 rounded-sm flex flex-col overflow-hidden z-50'>
               {tenantlist.map((list, i) => (
@@ -79,7 +83,8 @@ const SettlePayment = ({ billType }: SettlePaymentProps) => {
               ))}    
             </div>
           )}
-        </button>
+        </div>
+        
         <div className='col-span-6 flex__center__y justify-between px-3 py-2 bg-zinc-100 rounded-sm'>
           <MdCalendarToday className='text-lg mr-2'/>
           <input type="date" className='bg-transparent max__size' value={date} onChange={(e) => setDate(e.target.value)}/>

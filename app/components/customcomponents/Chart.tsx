@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { BarChart, barLabelClasses } from '@mui/x-charts/BarChart';;
-import { ChartProps } from '@/types';
+import { ChartLandlordProps } from '@/types';
 import { pieArcLabelClasses, PieChart } from '@mui/x-charts';
 
 const maintenanceCost = {
@@ -14,7 +14,7 @@ const netRevenue = {
     label: "Net Revenue",
 }
 
-const Chart = ({ type }: ChartProps) => {
+const Chart = ({ type }: ChartLandlordProps) => {
   const [currWidth, setWidth] = useState(0);
 
   const adjustSize = () => { setWidth(window.innerWidth >= 1024 ? 12 : 16) };

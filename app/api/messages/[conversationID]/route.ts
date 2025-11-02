@@ -1,0 +1,71 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { PrismaClient } from '@prisma/client';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+
+const prisma = new PrismaClient();
+
+// GET /api/messages/[conversationId] - Get messages with a specific user
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { conversationID: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userId = parseInt(session.user.id);
+    const partnerId = parseInt(params.conversationID);
+
+    // Get messages between current user and the partner
+    const messages = await prisma.messages.findMany({
+      where: {
+        OR: [
+          {
+            senderID: userId,
+            receiverID: partnerId
+          },
+          {
+            senderID: partnerId,
+            receiverID: userId
+          }
+        ]
+      },
+      include: {
+        sender: {
+          select: {
+            userID: true,
+            firstName: true,
+            lastName: true
+          }
+        }
+      },
+      orderBy: {
+        dateSent: 'asc'
+      }
+    });
+
+    // Mark messages as read
+    await prisma.messages.updateMany({
+      where: {
+        senderID: partnerId,
+        receiverID: userId,
+        read: false
+      },
+      data: {
+        read: true
+      }
+    });
+
+    return NextResponse.json(messages);
+  } catch (error) {
+    console.error('Error fetching conversation:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

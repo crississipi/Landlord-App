@@ -1,3 +1,5 @@
+"use client"
+
 import { BillingSlipProps } from '@/types'
 import React, { useState } from 'react'
 import ReceiptSlip from './ReceiptSlip';
