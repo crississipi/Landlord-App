@@ -12,7 +12,7 @@ interface EmailConfig {
   };
 }
 
-// Email content interface
+// Email content interface - UPDATED with document URLs
 interface EmailCredentials {
   to: string;
   firstName: string;
@@ -20,6 +20,8 @@ interface EmailCredentials {
   unitNumber: string;
   username: string;
   password: string;
+  rulesDocumentUrl?: string; // Add document URLs
+  contractDocumentUrl?: string; // Add document URLs
 }
 
 // Create transporter function
@@ -37,11 +39,62 @@ const createTransporter = () => {
   return nodemailer.createTransport(config);
 };
 
-// Send tenant credentials email
+// Function to download PDF from URL
+const downloadPDF = async (url: string): Promise<Buffer> => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to download PDF: ${response.statusText}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  } catch (error) {
+    console.error('Error downloading PDF:', error);
+    throw error;
+  }
+};
+
+// Send tenant credentials email - UPDATED with document attachments
 export const sendTenantCredentials = async (credentials: EmailCredentials): Promise<{ success: boolean; error?: string }> => {
   try {
     const transporter = createTransporter();
 
+    // Prepare attachments
+    const attachments = [];
+    
+    // Download and attach rules document
+    if (credentials.rulesDocumentUrl) {
+      try {
+        const rulesPDF = await downloadPDF(credentials.rulesDocumentUrl);
+        attachments.push({
+          filename: `Panuntunan_at_Regulasyon_${credentials.firstName}_${credentials.lastName}.pdf`,
+          content: rulesPDF,
+          contentType: 'application/pdf'
+        });
+      } catch (error) {
+        console.error('Error downloading rules PDF:', error);
+        // Continue without the attachment rather than failing the entire email
+      }
+    }
+
+    // Download and attach contract document
+    if (credentials.contractDocumentUrl) {
+      try {
+        const contractPDF = await downloadPDF(credentials.contractDocumentUrl);
+        attachments.push({
+          filename: `Kasunduan_sa_Paupa_${credentials.firstName}_${credentials.lastName}.pdf`,
+          content: contractPDF,
+          contentType: 'application/pdf'
+        });
+      } catch (error) {
+        console.error('Error downloading contract PDF:', error);
+        // Continue without the attachment rather than failing the entire email
+      }
+    }
+
+    // Generate email template with document information
+    const hasDocuments = attachments.length > 0;
+    
     const emailTemplate = `
 <!DOCTYPE html>
 <html>
@@ -56,13 +109,14 @@ export const sendTenantCredentials = async (credentials: EmailCredentials): Prom
         .label { font-weight: bold; color: #4f46e5; display: block; margin-bottom: 5px; }
         .value { font-family: monospace; background: #f3f4f6; padding: 8px 12px; border-radius: 4px; display: inline-block; }
         .warning { background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 6px; margin: 20px 0; }
+        .documents { background: #e0f2fe; border: 1px solid #0ea5e9; padding: 15px; border-radius: 6px; margin: 20px 0; }
         .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Welcome to Co-Living!</h1>
+            <h1>Welcome to Rodriguez Properties!</h1>
         </div>
         <div class="content">
             <p>Hello ${credentials.firstName} ${credentials.lastName},</p>
@@ -83,12 +137,24 @@ export const sendTenantCredentials = async (credentials: EmailCredentials): Prom
                 </div>
             </div>
 
+            ${hasDocuments ? `
+            <div class="documents">
+                <strong>📎 Important Documents Attached:</strong>
+                <p>Your signed tenancy documents are attached to this email:</p>
+                <ul>
+                    ${credentials.rulesDocumentUrl ? '<li>• <strong>Panuntunan at Regulasyon</strong> (Rules and Regulations)</li>' : ''}
+                    ${credentials.contractDocumentUrl ? '<li>• <strong>Kasunduan sa Paupa</strong> (Lease Agreement)</li>' : ''}
+                </ul>
+                <p>Please save these documents for your records and reference.</p>
+            </div>
+            ` : ''}
+
             <div class="warning">
                 <strong>Important Security Notice:</strong>
                 <p>For your security, please change your password immediately after logging in for the first time.</p>
             </div>
 
-            <p>You can access your account through our Co-Living application.</p>
+            <p>You can access your account through our Rodriguez Properties application.</p>
             
             <div class="footer">
                 <p>If you have any questions, please contact the property management.</p>
@@ -102,12 +168,13 @@ export const sendTenantCredentials = async (credentials: EmailCredentials): Prom
 
     const mailOptions = {
       from: {
-        name: process.env.EMAIL_FROM_NAME || 'Co-Living Management',
+        name: process.env.EMAIL_FROM_NAME || 'Rodriguez Properties Management',
         address: process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER!,
       },
       to: credentials.to,
-      subject: `Your Co-Living Account Credentials - Unit ${credentials.unitNumber}`,
+      subject: `Your Tenant Account Credentials - Unit ${credentials.unitNumber}`,
       html: emailTemplate,
+      attachments: attachments.length > 0 ? attachments : undefined,
     };
 
     const result = await transporter.sendMail(mailOptions);
@@ -115,6 +182,7 @@ export const sendTenantCredentials = async (credentials: EmailCredentials): Prom
     console.log('✅ Email sent successfully:', {
       to: credentials.to,
       messageId: result.messageId,
+      attachments: attachments.length,
     });
 
     return { success: true };

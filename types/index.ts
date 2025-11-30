@@ -125,6 +125,7 @@ export interface ChartLandlordProps {
 
 export interface DropDownProps {
     list: string[];
+    onSelect?: (selected: string) => void;
 }
 
 export interface ChatInfoProps {

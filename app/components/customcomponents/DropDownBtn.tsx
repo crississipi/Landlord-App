@@ -1,34 +1,86 @@
 "use client"
-import { DropDownProps } from '@/types';
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { AiOutlineCaretDown } from 'react-icons/ai'
 
-const DropDownBtn = ({ list }: DropDownProps) => {
-  const [currCat, setCurrCat] = useState(list[0]);
-  const [category, setCategory] = useState(false);
-  const toggleCategory = () => {
-    setCategory(!category);
-  }
-  const changeCat = (cat: number) => {
-    list.forEach((btn, i) => {
-      if (i === cat) {
-        setCurrCat(btn);
-        setCategory(false);
+export interface DropDownProps {
+  list: string[];
+  onSelect?: (selected: string) => void;
+  defaultValue?: string;
+}
+
+const DropDownBtn = ({ list, onSelect, defaultValue }: DropDownProps) => {
+  const [currCat, setCurrCat] = useState(defaultValue || list[0]);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
       }
-    })
-  }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+  
+  const handleSelect = (selected: string) => {
+    setCurrCat(selected);
+    setIsOpen(false);
+    
+    // Call the onSelect callback if provided
+    if (onSelect) {
+      onSelect(selected);
+    }
+  };
+
   return (
-    <div className='h-auto w-auto min-w-32 flex flex-col relative rounded-sm shadow-sm md:w-40'>
-        <button className='flex__center__y click__action pl-3 pr-2 py-1.5 bg-zinc-100 rounded-sm text-customViolet gap-1 relative outline-none justify-between group md:py-2' onClick={toggleCategory}>
-            <span className='text-sm md:text-base'>{currCat}</span>
-            <AiOutlineCaretDown className={`text-base rounded-xs ${category ? 'rotate-0 scale-110 text-emerald-700' : 'rotate-90'} group-focus:text-emerald-700 group-focus:scale-110 ease-in-out duration-150`}/>
+    <div ref={dropdownRef} className='h-auto w-auto min-w-32 flex flex-col relative rounded-sm shadow-sm md:w-40'>
+        <button 
+          className='flex items-center click__action pl-3 pr-2 py-1.5 bg-zinc-100 rounded-sm text-customViolet gap-1 relative outline-none justify-between group md:py-2 w-full' 
+          onClick={toggleDropdown}
+          type="button"
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
+        >
+            <span className='text-sm md:text-base truncate'>{currCat}</span>
+            <AiOutlineCaretDown 
+              className={`text-base transition-transform duration-150 ${
+                isOpen ? 'rotate-0 scale-110 text-emerald-700' : '-rotate-90'
+              } group-focus:text-emerald-700 group-focus:scale-110`}
+            />
         </button>
-        {category && (<div className='column__align rounded-sm bg-zinc-100 py-1 absolute top-full mt-1 z-50'>
-            { list.map((btn, i) => (
-                <button key={i} className='click__action outline-none py-1 text-sm w-full focus:bg-customViolet/70 focus:text-white text-nowrap md:text-base' onClick={()=>changeCat(i)}>{btn}</button>
-                ))
-            }
-        </div>)}
+        
+        {isOpen && (
+          <div 
+            className='flex flex-col rounded-sm bg-zinc-100 py-1 absolute top-full mt-1 z-50 w-full max-h-60 overflow-y-auto shadow-lg'
+            role="listbox"
+          >
+            {list.map((item, index) => (
+                <button 
+                  key={index} 
+                  className={`click__action outline-none py-2 text-sm w-full px-3 text-left transition-colors duration-150 ${
+                    item === currCat 
+                      ? 'bg-customViolet text-white' 
+                      : 'hover:bg-customViolet/20 focus:bg-customViolet/70 focus:text-white'
+                  }`} 
+                  onClick={() => handleSelect(item)}
+                  type="button"
+                  role="option"
+                  aria-selected={item === currCat}
+                >
+                  {item}
+                </button>
+            ))}
+          </div>
+        )}
     </div>
   )
 }

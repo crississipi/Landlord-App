@@ -18,13 +18,20 @@ model Users {
   sex              String?      @db.VarChar(10)
   bday             DateTime?    @db.Date
   propertyId       Int?         
-  email            String?      @db.VarChar(255)
+  email            String?      @db.VarChar(255) @unique
   firstNumber      String?      @db.VarChar(20)
   secondNumber     String?      @db.VarChar(20)
   created_at       DateTime?    @default(now()) @db.Timestamp(0)
   isOnline Boolean @default(true)
   hasLeftProperty  Boolean      @default(false) 
   leftDate         DateTime?   
+  otpCode       String?   @db.VarChar(10)
+  otpExpires    DateTime?
+  otpUsed       Boolean   @default(false)
+  signedRulesUrl       String?      @db.Text
+  signedContractUrl    String?      @db.Text
+  rulesSignedAt        DateTime?
+  contractSignedAt     DateTime?
 
   // Relations
   property         Property?    @relation(fields: [propertyId], references: [propertyId])

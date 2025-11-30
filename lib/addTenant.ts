@@ -7,23 +7,41 @@ import bcrypt from "bcryptjs";
 export interface TenantFormData {
   firstName: string;
   lastName: string;
-  middleInitial?: string;
+  middleInitial: string;
   sex: string;
-  age: string;
-  bday: string; // string type for input value, converted to Date before saving
+  bday: string;
   unitNumber: string;
+  propertyId: number;
   email: string;
   firstNumber: string;
-  secondNumber?: string;
-  profileImage?: File | null;
-  idImages: File[]; // two ID uploads
-  propertyId?: number; // optional if tenant belongs to a property
+  secondNumber: string;
+  profileImage: File | null;
+  idImages: File[];
+  signature: string;
+  agreedToRules: boolean;
+  agreedToContract: boolean;
+  signedRulesUrl?: string; // Add these
+  signedContractUrl?: string; // Add these
 }
 
 export interface UploadResult {
   success: boolean;
   urls?: string[];
   message?: string;
+}
+
+function calculateAge(birthday: string): number {
+  const birthDate = new Date(birthday);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  // Adjust age if birthday hasn't occurred this year yet
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  
+  return age;
 }
 
 // ---------------------------
@@ -36,7 +54,6 @@ export function validateTenantForm(data: TenantFormData): string[] {
   if (!data.firstName) errors.push("First name is required");
   if (!data.lastName) errors.push("Last name is required");
   if (!data.sex || data.sex === "Sex") errors.push("Sex is required");
-  if (!data.age || isNaN(Number(data.age))) errors.push("Age must be a valid number");
   if (!data.bday) errors.push("Birthdate is required");
   if (!data.unitNumber) errors.push("Unit number is required");
   if (!data.email) errors.push("Email address is required");
@@ -128,14 +145,18 @@ export async function encryptPassword(password: string): Promise<string> {
 // ---------------------------
 
 export async function submitTenant(
-  data: TenantFormData & { password: string },
+  data: TenantFormData & { 
+    password: string;
+    signedRulesUrl?: string;
+    signedContractUrl?: string;
+  },
   imageUrls: string[]
 ): Promise<{ success: boolean; message?: string }> {
   const res = await fetch("/api/add-tenant", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      username: data.email, // ✅ email used as username
+      username: data.email,
       password: data.password,
       role: "tenant",
       firstName: data.firstName,
@@ -148,7 +169,9 @@ export async function submitTenant(
       firstNumber: data.firstNumber,
       secondNumber: data.secondNumber,
       unitNumber: data.unitNumber,
-      imageUrls, // all uploaded images (profile + IDs)
+      imageUrls,
+      signedRulesUrl: data.signedRulesUrl, // Include document URLs
+      signedContractUrl: data.signedContractUrl // Include document URLs
     }),
   });
 
@@ -183,7 +206,7 @@ export async function handleTenantUploadAndSubmit(
       return;
     }
 
-    // ✅ Generate + encrypt tenant password
+    // Generate + encrypt tenant password
     const plainPassword = generateTenantPassword(
       data.firstName,
       data.lastName,
@@ -191,11 +214,13 @@ export async function handleTenantUploadAndSubmit(
     );
     const hashedPassword = await encryptPassword(plainPassword);
 
-    // ✅ Submit tenant data with email as username
+    // Submit tenant data with document URLs
     const submitRes = await submitTenant(
       {
         ...data,
         password: hashedPassword,
+        signedRulesUrl: data.signedRulesUrl, // Pass document URLs
+        signedContractUrl: data.signedContractUrl // Pass document URLs
       },
       uploadRes.urls
     );

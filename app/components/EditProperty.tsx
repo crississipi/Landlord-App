@@ -69,8 +69,8 @@ const EditProperty = ({ setPage }: ChangePageProps) => {
 
   return (
     <div className="max__size px-5 py-3 gap-5 text-customViolet flex flex-col items-start overflow-hidden bg-white rounded-t-2xl">
-      <div className="w-full flex items-center justify-between mt-10 gap-3 text-customViolet">
-        <button type="button" className="text-4xl" onClick={() => setPage(99)}>
+      <div className="w-full flex items-center justify-between mt-3 gap-3 text-customViolet">
+        <button type="button" className="text-4xl" onClick={() => setPage(0)}>
           <HiArrowSmallLeft />
         </button>
         <h1 className="font-poppins text-xl font-light w-full text-left">

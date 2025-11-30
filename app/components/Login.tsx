@@ -45,7 +45,7 @@ const Login = ({ setPage }: ChangePageProps) => {
     }
     
     return (
-        <div className='max__size px-5 flex flex-col'>
+        <div className='max__size px-5 flex flex-col bg-customViolet'>
             <h1 className='font-poppins text-3xl text-white font-light w-full text-center mt-20'>Log In Account</h1>
             <div className='max__size flex__center__all flex-col'>
                 <form onSubmit={handleSubmit} className="w-full">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { TbCurrencyPeso } from 'react-icons/tb'
 
 import Maintenance from './Maintenance'
@@ -8,13 +8,58 @@ import { CustomNavBtn } from './customcomponents'
 import { ChangePageProps } from '@/types'
 import { changePage } from '@/utils/changePage'
 
+interface Property {
+  propertyId: number;
+  name: string;
+  rent: number;
+  address: string;
+  currentTenants: number;
+  isAvailable: boolean;
+}
+
 const MainPage = ({ setPage }: ChangePageProps) => {
   const today = new Date();
   const [page, newPage] = useState(0);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch properties data
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/properties');
+        const data = await response.json();
+        
+        if (data.success) {
+          setProperties(data.properties);
+        } else {
+          setError(data.error || 'Failed to fetch properties');
+        }
+      } catch (err) {
+        setError('Network error: Unable to fetch properties');
+        console.error('Error fetching properties:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperties();
+  }, []);
+
   changePage(page).then((p) => {
     setPage(p);
   });
-  
+
+  // Function to format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-PH', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
+
   return (
     <div className='h-auto w-full flex flex-col justify-start bg-customViolet text-customViolet relative scroll-smooth'>
       <div className='h-1/6 w-full bg-customViolet sticky top-0 z-10 grid grid-cols-2 px-5 items-start text-white'>
@@ -31,7 +76,6 @@ const MainPage = ({ setPage }: ChangePageProps) => {
           <h2 className='col-span-2 font-light text-sm'>Paid Tenants</h2>
           <h2 className='col-span-2 font-medium text-lg'>10 out of 14</h2>
         </div>
-
       </div>
       <div className={`h-[93vh] border border-black w-full flex flex-col gap-3 rounded-t-2xl bg-white z-30 overflow-x-hidden sticky top-full p-2`}>
         <div className='min-h-16 w-full bg-zinc-100 grid grid-cols-5 items-center rounded-lg'>
@@ -81,31 +125,79 @@ const MainPage = ({ setPage }: ChangePageProps) => {
                 <button type="button" className='px-3 py-2 rounded-md text-sm border border-customViolet bg-customViolet/10 hover:bg-customViolet/50 focus:bg-customViolet focus:text-white ease-out duration-200' onClick={() => newPage(14)}>Manage</button>
               </div>
               <div className='w-full h-auto flex flex-col gap-3 mt-3'>
-                <div className='w-full h-auto flex gap-3 overflow-y-hidden flex-nowrap'>
-                  {Array.from({length: 5}).map((_,i) => (
-                    <div key={i} className='min-w-3/4 aspect-square border border-customViolet/30 flex flex-col'>
-                      <span className='h-3/4 w-full bg-customViolet/70'></span>
-                      <div className='h-1/4 w-full flex items-center justify-between px-3'>
-                        <span className='flex flex-col justify-center leading-2'>
-                          <h3 className='text-lg font-medium'>Unit 10{i}</h3>
-                          <p className='text-sm'>Pasay City</p>
-                          <h4 className='flex mt-1 gap-1'><strong className='font-semibold'>125</strong> sqm.</h4>
-                        </span>
-                        <span className='flex flex-col'>
-                          <h4 className='flex items-center text-sm'>
-                            <TbCurrencyPeso className='text-xl'/><strong className='text-xl font-semibold'>3,000</strong>/month
-                          </h4>
-                          <p className='ml-auto'><em>Occupied</em></p>
-                        </span>
-                      </div>
+                {loading ? (
+                  <div className="w-full flex justify-center py-8">
+                    <p className="text-customViolet/70">Loading properties...</p>
+                  </div>
+                ) : error ? (
+                  <div className="w-full flex justify-center py-8">
+                    <p className="text-red-500">{error}</p>
+                  </div>
+                ) : properties.length === 0 ? (
+                  <div className="w-full flex justify-center py-8">
+                    <p className="text-customViolet/70">No properties found</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className='w-full h-auto flex gap-3 overflow-y-hidden flex-nowrap'>
+                      {/** 
+                        * PROPERTIES DATA DISPLAYED:
+                        * Property ID: {property.propertyId}
+                        * Name: {property.name}
+                        * Address: {property.address}
+                        * Rent: ₱{property.rent}
+                        * Current Tenants: {property.currentTenants}
+                        * Status: {property.isAvailable ? "Available" : "Occupied"}
+                        */}
+                      {properties.map((property) => (
+                        <div key={property.propertyId} className='min-w-3/4 aspect-square border border-customViolet/30 flex flex-col rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200'>
+                          {/* Property Image/Color Placeholder */}
+                          <span 
+                            className={`h-3/4 w-full ${
+                              property.isAvailable ? 'bg-green-200' : 'bg-customViolet/70'
+                            }`}
+                          ></span>
+                          
+                          {/* Property Details */}
+                          <div className='h-1/4 w-full flex items-center justify-between px-3 py-2 bg-white'>
+                            <span className='flex flex-col justify-center'>
+                              <h3 className='text-lg font-medium text-customViolet'>{property.name}</h3>
+                              <p className='text-sm text-gray-600 truncate max-w-[120px] -mt-1'>{property.address}</p>
+                              <h4 className='flex gap-1 text-xs text-gray-500 -mt-1'>
+                                <strong className='font-semibold'>{property.currentTenants}</strong> 
+                                {property.currentTenants === 1 ? ' tenant' : ' tenants'}
+                              </h4>
+                            </span>
+                            <span className='flex flex-col items-end'>
+                              <h4 className='flex items-center text-sm text-customViolet'>
+                                <TbCurrencyPeso className='text-xl'/>
+                                <strong className='text-xl font-semibold'>{formatCurrency(property.rent)}</strong>
+                                <span className='text-xs'></span>
+                              </h4>
+                              <p className={`text-xs mt-1 ${
+                                property.isAvailable 
+                                  ? 'text-green-600 font-medium' 
+                                  : 'text-orange-600'
+                              }`}>
+                                <em>{property.isAvailable ? "Available" : "Occupied"}</em>
+                              </p>
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div className='w-full h-auto flex gap-2 items-center justify-center'>
-                  {Array.from({length: 5}).map((_,i) => (
-                    <span key={i} className='h-3 w-3 rounded-full bg-customViolet'></span>
-                  ))}
-                </div>
+                    
+                    {/* Navigation Dots */}
+                    <div className='w-full h-auto flex gap-2 items-center justify-center'>
+                      {properties.map((_, index) => (
+                        <span 
+                          key={index} 
+                          className='h-3 w-3 rounded-full bg-customViolet/30 hover:bg-customViolet cursor-pointer transition-colors duration-200'
+                        ></span>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

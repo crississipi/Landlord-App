@@ -27,6 +27,8 @@ type Body = {
   secondNumber?: string | null;
   unitNumber?: string | null;
   imageUrls?: string[]; // uploaded images from GitHub (profile + IDs)
+  signedRulesUrl?: string; // Add document URLs
+  signedContractUrl?: string; // Add document URLs
 };
 
 function isProbablyBcryptHash(s: string) {
@@ -46,6 +48,19 @@ export async function POST(req: NextRequest) {
     if (!body || !body.username || !body.password) {
       return NextResponse.json(
         { success: false, message: "username and password are required" },
+        { status: 400 }
+      );
+    }
+
+    const requiredFields = ['firstName', 'lastName', 'unitNumber'];
+    const missingFields = requiredFields.filter(field => !body[field as keyof Body]);
+    
+    if (missingFields.length > 0) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: `Missing required fields: ${missingFields.join(', ')}` 
+        },
         { status: 400 }
       );
     }
@@ -77,7 +92,7 @@ export async function POST(req: NextRequest) {
     // Parse bday if provided
     const parsedBday = body.bday ? new Date(body.bday) : undefined;
 
-    // Create the user
+    // Create the user with document URLs
     const createdUser = await prisma.users.create({
       data: {
         username,
@@ -92,7 +107,10 @@ export async function POST(req: NextRequest) {
         email: body.email ?? username,
         firstNumber: body.firstNumber ?? null,
         secondNumber: body.secondNumber ?? null,
-        // created_at will default to now() per Prisma schema
+        signedRulesUrl: body.signedRulesUrl ?? null, // Save document URLs
+        signedContractUrl: body.signedContractUrl ?? null, // Save document URLs
+        rulesSignedAt: body.signedRulesUrl ? new Date() : null, // Timestamp when signed
+        contractSignedAt: body.signedContractUrl ? new Date() : null, // Timestamp when signed
       },
     });
 
@@ -102,8 +120,10 @@ export async function POST(req: NextRequest) {
       firstName: body.firstName ?? '',
       lastName: body.lastName ?? '',
       unitNumber: body.unitNumber!,
-      username: body.email!,
+      username: body.email ?? username,
       password: cleanedPassword, // Use the cleaned plain text password (no "Unit" word)
+      rulesDocumentUrl: body.signedRulesUrl, // Pass document URLs to email function
+      contractDocumentUrl: body.signedContractUrl
     });
 
     // If imageUrls provided, create Resource rows referencing this user
