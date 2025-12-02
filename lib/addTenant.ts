@@ -1,3 +1,4 @@
+//lib\addTenant.ts
 import bcrypt from "bcryptjs";
 
 // ---------------------------

@@ -1,5 +1,7 @@
+// app/api/generate-tenancy-documents/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN!;
 const GITHUB_USERNAME = process.env.GITHUB_USERNAME!;
@@ -12,23 +14,22 @@ function calculateAge(birthday: string): number {
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
-  
-  // Adjust age if birthday hasn't occurred this year yet
+
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
-  
+
   return age;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { 
-      tenantData, 
+    const {
+      tenantData,
       signature,
       contractSignature,
       rulesSignature,
-      property, 
+      property,
     } = await req.json();
 
     const finalContractSignature = contractSignature || signature;
@@ -42,17 +43,17 @@ export async function POST(req: NextRequest) {
     }
 
     const documents = await generateTenancyDocuments(
-      tenantData, 
-      finalContractSignature, 
-      finalRulesSignature, 
+      tenantData,
+      finalContractSignature,
+      finalRulesSignature,
       property
     );
-    
+
     const uploadResults = await uploadDocumentsToGitHub(documents, tenantData);
-    
+
     return NextResponse.json({
       success: true,
-      documents: uploadResults
+      documents: uploadResults,
     });
   } catch (error: any) {
     console.error("Document Generation Error:", error);
@@ -63,30 +64,38 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// ============================================================================
+// PDF GENERATION FUNCTIONS
+// ============================================================================
+
 async function generateTenancyDocuments(
-  tenantData: any, 
-  contractSignature: string, 
-  rulesSignature: string, 
+  tenantData: any,
+  contractSignature: string,
+  rulesSignature: string,
   property: any
 ) {
   const documents = [];
-  
+
   const rulesPdfBytes = await generateRulesPDF(tenantData, rulesSignature, property);
   documents.push({
     name: `PANUNTUNAN_AT_REGULASYON_${tenantData.firstName}_${tenantData.lastName}.pdf`,
-    content: Buffer.from(rulesPdfBytes).toString('base64'),
-    type: 'rules'
+    content: Buffer.from(rulesPdfBytes).toString("base64"),
+    type: "rules",
   });
 
   const contractPdfBytes = await generateContractPDF(tenantData, contractSignature, property);
   documents.push({
     name: `LEASE_AGREEMENT_${tenantData.firstName}_${tenantData.lastName}.pdf`,
-    content: Buffer.from(contractPdfBytes).toString('base64'),
-    type: 'contract'
+    content: Buffer.from(contractPdfBytes).toString("base64"),
+    type: "contract",
   });
 
   return documents;
 }
+
+// ============================================================================
+// RULES PDF GENERATION
+// ============================================================================
 
 async function generateRulesPDF(tenantData: any, signature: string, property: any) {
   const pdfDoc = await PDFDocument.create();
@@ -95,208 +104,229 @@ async function generateRulesPDF(tenantData: any, signature: string, property: an
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  let yPosition = height - 50;
+  let yPosition = height - 40;
   const margin = 50;
-  const lineHeight = 12;
-  const sectionSpacing = 20;
-  const bottomMargin = 100; // Space at bottom for signatures
+  const lineHeight = 14;
+  const sectionSpacing = 18;
+  const bottomMargin = 120;
 
-  // Calculate age from birthday
   const age = calculateAge(tenantData.bday);
 
-  // Function to check if we need a new page
   const checkNewPage = (linesNeeded: number = 1) => {
     const spaceNeeded = linesNeeded * lineHeight;
     if (yPosition - spaceNeeded < bottomMargin) {
       page = pdfDoc.addPage([595.28, 841.89]);
-      yPosition = height - 50;
+      yPosition = height - 40;
       return true;
     }
     return false;
   };
 
-  // Function to add text with proper page breaks
   const addText = (text: string, size: number, isBold: boolean = false, maxWidth?: number) => {
     const currentFont = isBold ? boldFont : font;
-    const actualMaxWidth = maxWidth || (width - (margin * 2));
-    
+    const actualMaxWidth = maxWidth || width - margin * 2;
+
     page.drawText(text, {
       x: margin,
       y: yPosition,
-      size: size,
+      size,
       font: currentFont,
       color: rgb(0, 0, 0),
       maxWidth: actualMaxWidth,
     });
-    yPosition -= lineHeight + 2;
+    yPosition -= lineHeight;
   };
 
-  // Function to add multiline text with word wrapping
   const addMultilineText = (text: string, size: number, isBold: boolean = false) => {
     const currentFont = isBold ? boldFont : font;
-    const maxWidth = width - (margin * 2);
-    const words = text.split(' ');
-    let currentLine = '';
-    
+    const maxWidth = width - margin * 2;
+    const words = text.split(" ");
+    let currentLine = "";
+
     for (const word of words) {
-      const testLine = currentLine + word + ' ';
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
       const testWidth = currentFont.widthOfTextAtSize(testLine, size);
-      
-      if (testWidth > maxWidth && currentLine !== '') {
+
+      if (testWidth > maxWidth && currentLine) {
         checkNewPage();
         addText(currentLine, size, isBold);
-        currentLine = word + ' ';
+        currentLine = word;
       } else {
         currentLine = testLine;
       }
     }
-    
+
     if (currentLine) {
       checkNewPage();
       addText(currentLine, size, isBold);
     }
   };
 
-  // Title
-  checkNewPage(3);
-  addText('MGA PANUNTUNAN, REGULASYON, AT PANANAGUTAN SA PAG-UPA', 16, true);
+  // Professional Header
+  checkNewPage(4);
+  addText("MGA PANUNTUNAN, REGULASYON, AT PANANAGUTAN SA PAG-UPA", 15, true);
+  yPosition -= 8;
+  addText("RODRIGUEZ PROPERTIES", 11, true);
   yPosition -= 20;
-  addText('RODRIGUEZ PROPERTIES', 12, true);
-  yPosition -= 30;
 
-  // Introduction
+  // Introduction Section
   checkNewPage(5);
-  addMultilineText('Ang dokumentong ito ay naglalayong magbigay ng malinaw at legal na mga panuntunan para sa ugnayan ng Lessor (May-lupa / Nagpapaupa) at Lessee (Umuupa / Nangungupahan). Sundin ang mga probisyon ng Batas at kontrata ng pag-upa.', 10);
-  yPosition -= 20;
+  addMultilineText(
+    "Ang dokumentong ito ay naglalayong magbigay ng malinaw at legal na mga panuntunan para sa ugnayan ng Lessor (May-lupa / Nagpapaupa) at Lessee (Umuupa / Nangungupahan). Sundin ang mga probisyon ng Batas at kontrata ng pag-upa.",
+    9.5
+  );
+  yPosition -= 16;
 
   // Tenant Information Section
   checkNewPage(10);
-  addText('IMPORMASYON NG UMUUPA:', 12, true);
-  yPosition -= 15;
+  addText("IMPORMASYON NG UMUUPA", 11, true);
+  yPosition -= 10;
 
   const tenantInfo = [
-    `Pangalan: ${tenantData.firstName} ${tenantData.middleInitial ? tenantData.middleInitial + '. ' : ''}${tenantData.lastName}`,
+    `Pangalan: ${tenantData.firstName} ${
+      tenantData.middleInitial ? `${tenantData.middleInitial}. ` : ""
+    }${tenantData.lastName}`,
     `Kasarian: ${tenantData.sex}`,
-    `Edad: ${age}`,
-    `Kaarawan: ${tenantData.bday ? new Date(tenantData.bday).toLocaleDateString() : ''}`,
+    `Edad: ${age} taong gulang`,
+    `Kaarawan: ${
+      tenantData.bday ? new Date(tenantData.bday).toLocaleDateString("fil-PH") : "—"
+    }`,
     `Unit: ${tenantData.unitNumber}`,
     `Email: ${tenantData.email}`,
-    `Telepono: ${tenantData.firstNumber}`
+    `Telepono: ${tenantData.firstNumber}`,
   ];
 
-  tenantInfo.forEach(info => {
+  tenantInfo.forEach((info) => {
     checkNewPage();
-    addText(info, 10, false);
+    addText(info, 9.5);
   });
 
-  yPosition -= sectionSpacing;
+  yPosition -= 14;
 
   // Rules Content
   const rules = [
     {
-      title: '1. Pangkalahatang Tuntunin',
-      content: 'a) Ang kontrata ng pag-upa (Contract of Lease) ay ang pangunahing gabay ng ugnayan ng partido; ang anumang probisyon dito ang susundan hangga\'t hindi ito labag sa umiiral na batas. (Civil Code: Mga Artikulo tungkol sa Pag-upa).'
+      title: "1. Pangkalahatang Tuntunin",
+      content:
+        "a) Ang kontrata ng pag-upa (Contract of Lease) ay ang pangunahing gabay ng ugnayan ng partido; ang anumang probisyon dito ang susundan hangga't hindi ito labag sa umiiral na batas. (Civil Code: Mga Artikulo tungkol sa Pag-upa).",
     },
     {
-      title: '2. Pagbabayad ng Upa at Mga Deposito',
-      content: 'a) Ang buwanang upa ay babayaran sa itinakdang araw na nakasaad sa kontrata. Karaniwang ang pamantayan ay bayad nang advance sa loob ng unang limang (5) araw ng buwan maliban kung may ibang kasunduan. (Civil Code).\n\nb) Limitasyon sa hinihinging paunang bayad at deposito: Hindi maaaring hingin ng lessor ang higit sa isang (1) buwan na advance rent at higit sa dalawang (2) buwan na deposito. Ang deposito ay dapat panatilihin sa bangko sa pangalan ng lessor sa buong panahon ng kontrata, kung kinakailangan ayon sa umiiral na batas. (RA 9653 / Rent Control Act - Sek. 7).'
+      title: "2. Pagbabayad ng Upa at Mga Deposito",
+      content:
+        "a) Ang buwanang upa ay babayaran sa itinakdang araw na nakasaad sa kontrata. Karaniwang ang pamantayan ay bayad nang advance sa loob ng unang limang (5) araw ng buwan maliban kung may ibang kasunduan. (Civil Code).\n\nb) Limitasyon sa hinihinging paunang bayad at deposito: Hindi maaaring hingin ng lessor ang higit sa isang (1) buwan na advance rent at higit sa dalawang (2) buwan na deposito. Ang deposito ay dapat panatilihin sa bangko sa pangalan ng lessor sa buong panahon ng kontrata, kung kinakailangan ayon sa umiiral na batas. (RA 9653 / Rent Control Act - Sek. 7).",
     },
     {
-      title: '3. Security Deposit at Pagbabalik',
-      content: 'a) Ang security deposit ay ginagamit lamang para sa mga sumusunod na pinahihintulutang bawas: (i) hindi nabayarang upa; (ii) bayarin para sa mga nai-uyong pagkukumpuni na dapat sagutin ng lessee; (iii) hindi nabayarang utility at association dues; at (iv) pinsalang lampas sa normal na pagsuot at pagluwal.\n\nb) Ang anumang balanse ng deposito ay dapat ibalik sa lessee pagkatapos ng pag-termino at aktwal na turnover ng unit ayon sa napagkasunduan; karaniwan may itinakdang oras ng refund sa kontrata o alinsunod sa batas.'
+      title: "3. Security Deposit at Pagbabalik",
+      content:
+        "a) Ang security deposit ay ginagamit lamang para sa mga sumusunod na pinahihintulutang bawas: (i) hindi nabayarang upa; (ii) bayarin para sa mga nai-uyong pagkukumpuni na dapat sagutin ng lessee; (iii) hindi nabayarang utility at association dues; at (iv) pinsalang lampas sa normal na pagsuot at pagluwal.\n\nb) Ang anumang balanse ng deposito ay dapat ibalik sa lessee pagkatapos ng pag-termino at aktwal na turnover ng unit ayon sa napagkasunduan; karaniwan may itinakdang oras ng refund sa kontrata o alinsunod sa batas.",
     },
     {
-      title: '4. Mga Pananagutan ng Lessor (Nagpapaupa)',
-      content: 'a) Ibigay ang unit sa kundisyon na angkop para sa nilalayong gamit at tiyaking mapayapa at sapat ang pag-aari sa buong panahon ng pag-upa.\n\nb) Tiyaking magsagawa ng kinakailangang mga pagkukumpuni maliban kung may kasulatang napagkasunduan na ibang partido ang sasagot. (Civil Code Art. 1654).'
+      title: "4. Mga Pananagutan ng Lessor (Nagpapaupa)",
+      content:
+        "a) Ibigay ang unit sa kundisyon na angkop para sa nilalayong gamit at tiyaking mapayapa at sapat ang pag-aari sa buong panahon ng pag-upa.\n\nb) Tiyaking magsagawa ng kinakailangang mga pagkukumpuni maliban kung may kasulatang napagkasunduan na ibang partido ang sasagot. (Civil Code Art. 1654).",
     },
     {
-      title: '5. Mga Pananagutan ng Lessee (Umuupa)',
-      content: 'a) Bayaran ang upa sa takdang oras at gamitin ang unit nang may pananagutang katulad ng maingat na tao.\n\nb) Huwag magsagawa ng pagbabago o malakihang improvement nang walang nakasulat na pahintulot ng lessor. Kung may inaprubahang improvement, maaaring magkaroon ng kasunduan kung ang gastos ay mababawi o hindi.\n\nc) Ibalik ang unit sa katapusan ng lease sa kondisyon na katulad ng tinanggap maliban sa normal na pagsuot at pagluwal. (Civil Code).'
+      title: "5. Mga Pananagutan ng Lessee (Umuupa)",
+      content:
+        "a) Bayaran ang upa sa takdang oras at gamitin ang unit nang may pananagutang katulad ng maingat na tao.\n\nb) Huwag magsagawa ng pagbabago o malakihang improvement nang walang nakasulat na pahintulot ng lessor. Kung may inaprubahang improvement, maaaring magkaroon ng kasunduan kung ang gastos ay mababawi o hindi.\n\nc) Ibalik ang unit sa katapusan ng lease sa kondisyon na katulad ng tinanggap maliban sa normal na pagsuot at pagluwal. (Civil Code).",
     },
     {
-      title: '6. Pagwawakas ng Kontrata at Paunawa',
-      content: 'a) Ang paunang pagwawakas (early termination) ay dapat nakasaad sa kontrata; karaniwang may kinakailangang paunang abiso, madalas 30 hanggang 60 araw o kabayaran bilang kompensasyon, depende sa napagkasunduan. (Civil Code Art. 1659 at jurisprudence).\n\nb) Kapag ang yunit ay ibinalik bago matapos ang kontrata, ang mga obligasyon sa pag-aayos ng upa at deposito ay iuulat ayon sa kontraktwal na mga probisyon at umiiral na batas.'
+      title: "6. Pagwawakas ng Kontrata at Paunawa",
+      content:
+        "a) Ang paunang pagwawakas (early termination) ay dapat nakasaad sa kontrata; karaniwang may kinakailangang paunang abiso, madalas 30 hanggang 60 araw o kabayaran bilang kompensasyon, depende sa napagkasunduan. (Civil Code Art. 1659 at jurisprudence).\n\nb) Kapag ang yunit ay ibinalik bago matapos ang kontrata, ang mga obligasyon sa pag-aayos ng upa at deposito ay iuulat ayon sa kontraktwal na mga probisyon at umiiral na batas.",
     },
     {
-      title: '7. Mga Bayarin sa Utilities',
-      content: 'a) Ang responsibilidad para sa kuryente, tubig, at internet ay dapat malinaw na nakasaad sa kontrata, alin ang sasagot, at kung paano ibabayad.'
+      title: "7. Mga Bayarin sa Utilities",
+      content:
+        "a) Ang responsibilidad para sa kuryente, tubig, at internet ay dapat malinaw na nakasaad sa kontrata, alin ang sasagot, at kung paano ibabayad.",
     },
     {
-      title: '8. Panuntunan sa Mga Bisita, Pagsasalin-salin at Sublease',
-      content: 'a) Ang regular na bisita (guests) ay pinahihintulutan hangga\'t hindi nagiging permanente o hindi lumalabag sa kasunduan.\n\nb) Ang assignment ng lease o subleasing ay dapat may nakasulat na pahintulot mula sa lessor maliban kung sinang-ayunan ng kontrata. (Civil Code Art. 1652).'
+      title: "8. Panuntunan sa Mga Bisita, Pagsasalin-salin at Sublease",
+      content:
+        "a) Ang regular na bisita (guests) ay pinahihintulutan hangga't hindi nagiging permanente o hindi lumalabag sa kasunduan.\n\nb) Ang assignment ng lease o subleasing ay dapat may nakasulat na pahintulot mula sa lessor maliban kung sinang-ayunan ng kontrata. (Civil Code Art. 1652).",
     },
     {
-      title: '9. Inspeksyon, Access at Maintenance',
-      content: 'a) Maaaring magkaroon ng makatwirang inspeksyon ang lessor matapos magbigay ng sapat na paunawa (karaniwang 24-48 oras) maliban kung emergency.\n\nb) Sa mga emergency (hal., sunog, baha, malaking sira), ang lessor/kinatawan ay maaaring pumasok agad upang magsagawa ng kinakailangang aksyon.'
+      title: "9. Inspeksyon, Access at Maintenance",
+      content:
+        "a) Maaaring magkaroon ng makatwirang inspeksyon ang lessor matapos magbigay ng sapat na paunawa (karaniwang 24-48 oras) maliban kung emergency.\n\nb) Sa mga emergency (hal., sunog, baha, malaking sira), ang lessor/kinatawan ay maaaring pumasok agad upang magsagawa ng kinakailangang aksyon.",
     },
     {
-      title: '10. Paglabag, Multa at Resolusyon ng Alitan',
-      content: 'a) Ang hindi pagbabayad ng upa sa itinakdang panahon ay maaaring magresulta sa penalty o interest na nakasaad sa kontrata at/o legal na remedyo ng lessor.\n\nb) Para sa mga seryosong paglabag (hal., ilegal na gawain, malakihang pinsala), maaaring simulan ng lessor ang pag-uutos ng pag-alis ayon sa batas at proseso ng korte.\n\nc) Ang mga usapin ay unang sisikaping maresolba sa pamamagitan ng pag-uusap; kung hindi, maaaring gumamit ng mediation o arbitrasyon at huli ay pagdala sa korte.'
+      title: "10. Paglabag, Multa at Resolusyon ng Alitan",
+      content:
+        "a) Ang hindi pagbabayad ng upa sa itinakdang panahon ay maaaring magresulta sa penalty o interest na nakasaad sa kontrata at/o legal na remedyo ng lessor.\n\nb) Para sa mga seryosong paglabag (hal., ilegal na gawain, malakihang pinsala), maaaring simulan ng lessor ang pag-uutos ng pag-alis ayon sa batas at proseso ng korte.\n\nc) Ang mga usapin ay unang sisikaping maresolba sa pamamagitan ng pag-uusap; kung hindi, maaaring gumamit ng mediation o arbitrasyon at huli ay pagdala sa korte.",
     },
     {
-      title: '11. Iba pang Tuntunin at Kondisyon',
-      content: 'a) Ang responsable ng mga partido na sumunod sa lokal na ordinansa, pati na rin sa mga regulasyon ng building o barangay (hal., garbage segregation, noise ordinances).\n\nb) Ang paglalagay ng signage, negosyo o komersyal na operasyon mula sa residential unit ay dapat malinaw na pinapayagan sa kontrata.'
+      title: "11. Iba pang Tuntunin at Kondisyon",
+      content:
+        "a) Ang responsable ng mga partido na sumunod sa lokal na ordinansa, pati na rin sa mga regulasyon ng building o barangay (hal., garbage segregation, noise ordinances).\n\nb) Ang paglalagay ng signage, negosyo o komersyal na operasyon mula sa residential unit ay dapat malinaw na pinapayagan sa kontrata.",
     },
     {
-      title: '12. Pagkuha ng Dokumento at Pagpapatunay',
-      content: 'a) Lahat ng mahahalagang kasulatan, kabilang ang id, kontrata, resibo ng bayad at inventory o condition report sa pagsisimula ng lease ay dapat nasa dokument at itago ng parehong partido.'
-    }
+      title: "12. Pagkuha ng Dokumento at Pagpapatunay",
+      content:
+        "a) Lahat ng mahahalagang kasulatan, kabilang ang id, kontrata, resibo ng bayad at inventory o condition report sa pagsisimula ng lease ay dapat nasa dokument at itago ng parehong partido.",
+    },
   ];
 
-  // Add all rules
   for (const rule of rules) {
     checkNewPage(3);
-    addText(rule.title, 12, true);
-    yPosition -= 5;
-    
-    // Split content by paragraphs and add each
-    const paragraphs = rule.content.split('\n\n');
+    addText(rule.title, 10, true);
+    yPosition -= 8;
+
+    const paragraphs = rule.content.split("\n\n");
     for (const paragraph of paragraphs) {
       checkNewPage(3);
-      addMultilineText(paragraph, 10, false);
-      yPosition -= 5;
+      addMultilineText(paragraph, 9.5, false);
+      yPosition -= 8;
     }
-    
+
     yPosition -= sectionSpacing;
   }
 
-  // Signature section
-  checkNewPage(10);
-  addMultilineText('Nagpapatunay na nabasa at naintindihan ko ang lahat ng panuntunan at regulasyong nakasaad sa itaas:', 10, false);
-  yPosition -= 30;
+  // Professional Signature Section
+  checkNewPage(12);
+  addMultilineText(
+    "Nagpapatunay na nabasa at naintindihan ko ang lahat ng panuntunan at regulasyong nakasaad sa itaas:",
+    10,
+    true
+  );
+  yPosition -= 20;
 
-  // Add signature if available
+  // Add signature image if available
   if (signature) {
     try {
-      checkNewPage(8); // Space for signature image
-      const signatureData = signature.split(',')[1];
-      const signatureImage = await pdfDoc.embedPng(Buffer.from(signatureData, 'base64'));
+      checkNewPage(8);
+      const signatureData = signature.split(",")[1];
+      const signatureImage = await pdfDoc.embedPng(Buffer.from(signatureData, "base64"));
       const signatureDims = signatureImage.scale(0.3);
-      
+
       page.drawImage(signatureImage, {
         x: margin,
         y: yPosition - signatureDims.height,
         width: signatureDims.width,
         height: signatureDims.height,
       });
-      
-      yPosition -= signatureDims.height + 20;
+
+      yPosition -= signatureDims.height + 15;
     } catch (error) {
-      console.error('Error adding signature:', error);
+      console.error("Error adding signature:", error);
       checkNewPage();
-      addText('_________________________', 10, false);
-      yPosition -= 20;
+      addText("_" + "_".repeat(25), 10, false);
+      yPosition -= 15;
     }
   }
 
   checkNewPage(3);
-  addText(`Pangalan: ${tenantData.firstName} ${tenantData.lastName}`, 10, false);
-  checkNewPage();
-  addText(`Petsa: ${new Date().toLocaleDateString()}`, 10, false);
+  addText(`Pangalan: ${tenantData.firstName} ${tenantData.lastName}`, 9.5, false);
+  yPosition -= 10;
+  addText(`Petsa: ${new Date().toLocaleDateString("fil-PH")}`, 9.5, false);
 
   const pdfBytes = await pdfDoc.save();
   return pdfBytes;
 }
+
+// ============================================================================
+// CONTRACT PDF GENERATION
+// ============================================================================
 
 async function generateContractPDF(tenantData: any, signature: string, property: any) {
   const pdfDoc = await PDFDocument.create();
@@ -305,365 +335,373 @@ async function generateContractPDF(tenantData: any, signature: string, property:
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  let yPosition = height - 50;
+  let yPosition = height - 40;
   const margin = 50;
-  const lineHeight = 12;
-  const sectionSpacing = 15;
-  const bottomMargin = 150; // Extra space for signatures
+  const lineHeight = 14;
+  const sectionSpacing = 16;
+  const bottomMargin = 150;
 
-  // Function to check if we need a new page
   const checkNewPage = (linesNeeded: number = 1) => {
     const spaceNeeded = linesNeeded * lineHeight;
     if (yPosition - spaceNeeded < bottomMargin) {
       page = pdfDoc.addPage([595.28, 841.89]);
-      yPosition = height - 50;
+      yPosition = height - 40;
       return true;
     }
     return false;
   };
 
-  // Function to add text with proper page breaks
   const addText = (text: string, size: number, isBold: boolean = false, maxWidth?: number) => {
     const currentFont = isBold ? boldFont : font;
-    const actualMaxWidth = maxWidth || (width - (margin * 2));
-    
+    const actualMaxWidth = maxWidth || width - margin * 2;
+
     page.drawText(text, {
       x: margin,
       y: yPosition,
-      size: size,
+      size,
       font: currentFont,
       color: rgb(0, 0, 0),
       maxWidth: actualMaxWidth,
     });
-    yPosition -= lineHeight + 2;
+    yPosition -= lineHeight;
   };
 
-  // Function to add multiline text with word wrapping
   const addMultilineText = (text: string, size: number, isBold: boolean = false) => {
     const currentFont = isBold ? boldFont : font;
-    const maxWidth = width - (margin * 2);
-    const words = text.split(' ');
-    let currentLine = '';
-    
+    const maxWidth = width - margin * 2;
+    const words = text.split(" ");
+    let currentLine = "";
+
     for (const word of words) {
-      const testLine = currentLine + word + ' ';
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
       const testWidth = currentFont.widthOfTextAtSize(testLine, size);
-      
-      if (testWidth > maxWidth && currentLine !== '') {
+
+      if (testWidth > maxWidth && currentLine) {
         checkNewPage();
         addText(currentLine, size, isBold);
-        currentLine = word + ' ';
+        currentLine = word;
       } else {
         currentLine = testLine;
       }
     }
-    
+
     if (currentLine) {
       checkNewPage();
       addText(currentLine, size, isBold);
     }
   };
 
-  // Title
-  checkNewPage(3);
-  addText('KASUNDUAN SA PAUPA (LEASE AGREEMENT)', 16, true);
-  yPosition -= sectionSpacing;
+  // Professional Title
+  checkNewPage(4);
+  addText("KASUNDUAN SA PAUPA", 16, true);
+  addText("(LEASE AGREEMENT)", 13, true);
+  yPosition -= 18;
 
-  // Contract content
   const contractContent = [
     {
-      type: 'text',
-      content: `Ang kasunduang ito ay ginawa at pinasok ngayong ${new Date().getDate()} araw ng ${new Date().toLocaleString('default', { month: 'long' })}, ${new Date().getFullYear()}, sa pagitan nina:`,
+      type: "text",
+      content: `Ang kasunduang ito ay ginawa at pinasok ngayong ${new Date().getDate()} araw ng ${new Date().toLocaleString(
+        "default",
+        { month: "long" }
+      )}, ${new Date().getFullYear()}, sa pagitan nina:`,
       size: 10,
-      bold: false
+      bold: false,
     },
-    { type: 'spacing', lines: 1 },
+    { type: "spacing", lines: 1 },
     {
-      type: 'text',
-      content: 'NAGPAPAUPA (LESSOR): MARILOU STA ANA RODRIGUEZ',
+      type: "text",
+      content: "NAGPAPAUPA (LESSOR): MARILOU STA ANA RODRIGUEZ",
       size: 10,
-      bold: false
+      bold: true,
     },
-    { type: 'spacing', lines: 1 },
+    { type: "spacing", lines: 1 },
+    { type: "text", content: "AT", size: 10, bold: false },
+    { type: "spacing", lines: 1 },
     {
-      type: 'text',
-      content: 'AT',
+      type: "text",
+      content: `UMUUPA (LESSEE): ${tenantData.firstName.toUpperCase()} ${
+        tenantData.middleInitial ? `${tenantData.middleInitial.toUpperCase()}. ` : ""
+      }${tenantData.lastName.toUpperCase()}`,
       size: 10,
-      bold: false
+      bold: true,
     },
-    { type: 'spacing', lines: 1 },
+    { type: "spacing", lines: 1 },
     {
-      type: 'text',
-      content: `UMUUPA (LESSEE): ${tenantData.firstName.toUpperCase()} ${tenantData.middleInitial.toUpperCase() ? tenantData.middleInitial.toUpperCase() + '. ' : ''}${tenantData.lastName.toUpperCase()}`,
-      size: 10,
-      bold: false
-    },
-    { type: 'spacing', lines: 1 },
-    {
-      type: 'text',
+      type: "text",
       content: 'SAMA-SAMANG TINATAWAG NA MGA "PARTIDO."',
       size: 10,
-      bold: false
+      bold: false,
     },
-    { type: 'spacing', lines: 2 },
+    { type: "spacing", lines: 2 },
     {
-      type: 'section',
-      content: '1. LAYUNIN NG KASUNDUAN',
-      size: 12,
-      bold: true
+      type: "section",
+      content: "1. LAYUNIN NG KASUNDUAN",
+      size: 11,
+      bold: true,
     },
     {
-      type: 'text',
-      content: `Ang NAGPAPAUPA ay pumapayag na magpaupa at ang UMUUPA ay tumatanggap sa pag-upa ng sumusunod na ari-arian: ${tenantData.unitNumber} sa ${property?.address || '________________________________'}.`,
+      type: "text",
+      content: `Ang NAGPAPAUPA ay pumapayag na magpaupa at ang UMUUPA ay tumatanggap sa pag-upa ng sumusunod na ari-arian: ${tenantData.unitNumber} sa ${
+        property?.address || "________________________________"
+      }.`,
       size: 10,
-      bold: false
+      bold: false,
     },
-    { type: 'spacing', lines: 2 },
+    { type: "spacing", lines: 2 },
     {
-      type: 'section',
-      content: '2. HALAGA NG UPA',
-      size: 12,
-      bold: true
+      type: "section",
+      content: "2. HALAGA NG UPA",
+      size: 11,
+      bold: true,
     },
     {
-      type: 'text',
-      content: `Ang buwanang upa ay nagkakahalaga ng PHP ${property?.rent?.toLocaleString('en-US', { 
-        minimumFractionDigits: 2, 
-        maximumFractionDigits: 2 
-      }) || '__________'}, na babayaran tuwing unang araw ng bawat buwan.`,
+      type: "text",
+      content: `Ang buwanang upa ay nagkakahalaga ng PHP ${
+        property?.rent?.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }) || "__________"
+      }, na babayaran tuwing unang araw ng bawat buwan.`,
       size: 10,
-      bold: false
+      bold: false,
     },
-    { type: 'spacing', lines: 2 },
+    { type: "spacing", lines: 2 },
     {
-      type: 'section',
-      content: '3. DEPOSITO',
-      size: 12,
-      bold: true
+      type: "section",
+      content: "3. DEPOSITO",
+      size: 11,
+      bold: true,
     },
     {
-      type: 'text',
-      content: 'Ang UMUUPA ay magbibigay ng isang (1) buwang advance at isang (1) buwang security deposit. Ang security deposit ay maaaring gamitin para sa anumang hindi nabayarang upa o sira sa ari-arian at ibabalik matapos ang inspeksiyon sa pag-alis ng UMUUPA.',
+      type: "text",
+      content:
+        "Ang UMUUPA ay magbibigay ng isang (1) buwang advance at isang (1) buwang security deposit. Ang security deposit ay maaaring gamitin para sa anumang hindi nabayarang upa o sira sa ari-arian at ibabalik matapos ang inspeksiyon sa pag-alis ng UMUUPA.",
       size: 10,
-      bold: false
+      bold: false,
     },
-    { type: 'spacing', lines: 2 },
+    { type: "spacing", lines: 2 },
     {
-      type: 'section',
-      content: '4. GAMIT NG ARI-ARIAN',
-      size: 12,
-      bold: true
+      type: "section",
+      content: "4. GAMIT NG ARI-ARIAN",
+      size: 11,
+      bold: true,
     },
     {
-      type: 'text',
-      content: 'Ang Ari-arian ay gagamitin lamang bilang tirahan at hindi maaaring gamitin sa ilegal o komersyal na aktibidad nang walang pahintulot ng NAGPAPAUPA.',
+      type: "text",
+      content:
+        "Ang Ari-arian ay gagamitin lamang bilang tirahan at hindi maaaring gamitin sa ilegal o komersyal na aktibidad nang walang pahintulot ng NAGPAPAUPA.",
       size: 10,
-      bold: false
+      bold: false,
     },
-    { type: 'spacing', lines: 2 },
+    { type: "spacing", lines: 2 },
     {
-      type: 'section',
-      content: '5. RESPONSIBILIDAD SA PAGPAPAREPAIR',
-      size: 12,
-      bold: true
+      type: "section",
+      content: "5. RESPONSIBILIDAD SA PAGPAPAREPAIR",
+      size: 11,
+      bold: true,
     },
     {
-      type: 'bullet',
-      content: 'Minor repairs (hal. ilaw, gripo, maliit na sira) ay responsibilidad ng UMUUPA.',
+      type: "bullet",
+      content:
+        "Minor repairs (hal. ilaw, gripo, maliit na sira) ay responsibilidad ng UMUUPA.",
       size: 10,
-      bold: false
+      bold: false,
     },
     {
-      type: 'bullet',
-      content: 'Major structural repairs ay sagot ng NAGPAPAUPA maliban kung ang sira ay dulot ng kapabayaan ng UMUUPA.',
+      type: "bullet",
+      content:
+        "Major structural repairs ay sagot ng NAGPAPAUPA maliban kung ang sira ay dulot ng kapabayaan ng UMUUPA.",
       size: 10,
-      bold: false
+      bold: false,
     },
-    { type: 'spacing', lines: 2 },
+    { type: "spacing", lines: 2 },
     {
-      type: 'section',
-      content: '6. MGA ALITUNTUNIN SA BAHAY (HOUSE RULES)',
-      size: 12,
-      bold: true
+      type: "section",
+      content: "6. MGA ALITUNTUNIN SA BAHAY (HOUSE RULES)",
+      size: 11,
+      bold: true,
     },
     {
-      type: 'bullet',
-      content: 'Ipinagbabawal ang malakas na ingay mula 10:00 PM hanggang 6:00 AM.',
+      type: "bullet",
+      content:
+        "Ipinagbabawal ang malakas na ingay mula 10:00 PM hanggang 6:00 AM.",
       size: 10,
-      bold: false
+      bold: false,
     },
     {
-      type: 'bullet',
-      content: 'Hindi pinahihintulutan ang pagdadala ng mga alagang hayop maliban kung may pahintulot ng NAGPAPAUPA.',
+      type: "bullet",
+      content:
+        "Hindi pinahihintulutan ang pagdadala ng mga alagang hayop maliban kung may pahintulot ng NAGPAPAUPA.",
       size: 10,
-      bold: false
+      bold: false,
     },
     {
-      type: 'bullet',
-      content: 'Mahigpit na ipinagbabawal ang paninigarilyo sa loob ng Ari-arian.',
+      type: "bullet",
+      content: "Mahigpit na ipinagbabawal ang paninigarilyo sa loob ng Ari-arian.",
       size: 10,
-      bold: false
+      bold: false,
     },
     {
-      type: 'bullet',
-      content: 'Responsibilidad ng UMUUPA na panatilihing malinis at maayos ang Ari-arian.',
+      type: "bullet",
+      content:
+        "Responsibilidad ng UMUUPA na panatilihing malinis at maayos ang Ari-arian.",
       size: 10,
-      bold: false
+      bold: false,
     },
-    { type: 'spacing', lines: 2 },
+    { type: "spacing", lines: 2 },
     {
-      type: 'section',
-      content: '7. PENALTIES',
-      size: 12,
-      bold: true
+      type: "section",
+      content: "7. PENALTIES",
+      size: 11,
+      bold: true,
     },
     {
-      type: 'bullet',
-      content: 'Sira sa Ari-arian: Ang anumang sira maliban sa normal wear and tear ay ibabawas sa security deposit o ipapabayad sa UMUUPA.',
+      type: "bullet",
+      content:
+        "Sira sa Ari-arian: Ang anumang sira maliban sa normal wear and tear ay ibabawas sa security deposit o ipapabayad sa UMUUPA.",
       size: 10,
-      bold: false
+      bold: false,
     },
     {
-      type: 'bullet',
-      content: 'Paglabag sa house rules: Maaaring magresulta sa verbal warning; paulit-ulit na paglabag ay maaaring magresulta sa termination ng kontrata.',
+      type: "bullet",
+      content:
+        "Paglabag sa house rules: Maaaring magresulta sa verbal warning; paulit-ulit na paglabag ay maaaring magresulta sa termination ng kontrata.",
       size: 10,
-      bold: false
+      bold: false,
     },
-    { type: 'spacing', lines: 2 },
+    { type: "spacing", lines: 2 },
     {
-      type: 'section',
-      content: '8. BISITA AT MGA NAKATIRA',
-      size: 12,
-      bold: true
+      type: "section",
+      content: "8. BISITA AT MGA NAKATIRA",
+      size: 11,
+      bold: true,
     },
     {
-      type: 'text',
-      content: 'Hindi maaaring manirahan ang sinumang hindi nakasaad sa kasunduang ito nang walang abiso at pahintulot mula sa NAGPAPAUPA. Ang mga bisita ay hindi maaaring manatili nang lampas 3 araw nang walang pahintulot.',
+      type: "text",
+      content:
+        "Hindi maaaring manirahan ang sinumang hindi nakasaad sa kasunduang ito nang walang abiso at pahintulot mula sa NAGPAPAUPA. Ang mga bisita ay hindi maaaring manatili nang lampas 3 araw nang walang pahintulot.",
       size: 10,
-      bold: false
+      bold: false,
     },
-    { type: 'spacing', lines: 2 },
+    { type: "spacing", lines: 2 },
     {
-      type: 'section',
-      content: '9. PAGTATAPOS NG KONTRATA',
-      size: 12,
-      bold: true
+      type: "section",
+      content: "9. PAGTATAPOS NG KONTRATA",
+      size: 11,
+      bold: true,
     },
     {
-      type: 'text',
-      content: 'Ang alinmang partido ay maaaring magbigay ng paunang abiso na hindi bababa sa 30 araw bago umalis o tapusin ang kontrata.',
+      type: "text",
+      content:
+        "Ang alinmang partido ay maaaring magbigay ng paunang abiso na hindi bababa sa 30 araw bago umalis o tapusin ang kontrata.",
       size: 10,
-      bold: false
+      bold: false,
     },
-    { type: 'spacing', lines: 2 },
+    { type: "spacing", lines: 2 },
     {
-      type: 'section',
-      content: '10. PAGLABAG SA KASUNDUAN',
-      size: 12,
-      bold: true
+      type: "section",
+      content: "10. PAGLABAG SA KASUNDUAN",
+      size: 11,
+      bold: true,
     },
     {
-      type: 'text',
-      content: 'Ang paglabag ng alinmang partido sa mga probisyon ay maaaring magresulta sa agarang pagpapaalis o legal na aksyon alinsunod sa batas ng Pilipinas.',
+      type: "text",
+      content:
+        "Ang paglabag ng alinmang partido sa mga probisyon ay maaaring magresulta sa agarang pagpapaalis o legal na aksyon alinsunod sa batas ng Pilipinas.",
       size: 10,
-      bold: false
+      bold: false,
     },
-    { type: 'spacing', lines: 2 },
+    { type: "spacing", lines: 2 },
     {
-      type: 'section',
-      content: '11. PAGPAPATUPAD NG BATAS',
-      size: 12,
-      bold: true
+      type: "section",
+      content: "11. PAGPAPATUPAD NG BATAS",
+      size: 11,
+      bold: true,
     },
     {
-      type: 'text',
-      content: 'Ang kasunduang ito ay pinamamahalaan at bibigyang-kahulugan ayon sa umiiral na batas ng Republika ng Pilipinas.',
+      type: "text",
+      content:
+        "Ang kasunduang ito ay pinamamahalaan at bibigyang-kahulugan ayon sa umiiral na batas ng Republika ng Pilipinas.",
       size: 10,
-      bold: false
+      bold: false,
     },
-    { type: 'spacing', lines: 2 },
+    { type: "spacing", lines: 2 },
     {
-      type: 'text',
-      content: 'PINATUTUNAYAN NG MGA PARTIDO na kanilang nabasa, naintindihan, at kusang tinanggap ang lahat ng nilalaman ng kasunduang ito.',
+      type: "text",
+      content:
+        "PINATUTUNAYAN NG MGA PARTIDO na kanilang nabasa, naintindihan, at kusang tinanggap ang lahat ng nilalaman ng kasunduang ito.",
       size: 10,
-      bold: false
+      bold: true,
     },
   ];
 
-  // Add all contract content
   for (const item of contractContent) {
     switch (item.type) {
-      case 'spacing':
-        yPosition -= item.lines! * lineHeight;
+      case "spacing":
+        yPosition -= (item.lines as number) * lineHeight;
         break;
-        
-      case 'section':
+      case "section":
         checkNewPage(3);
-        addText(item.content!, item.size!, item.bold);
-        yPosition -= 5;
+        addText(item.content as string, item.size as number, item.bold as boolean);
+        yPosition -= 8;
         break;
-        
-      case 'bullet':
+      case "bullet":
         checkNewPage();
-        addText(`• ${item.content}`, item.size!, item.bold);
+        addText(`• ${item.content}`, item.size as number, item.bold as boolean);
         yPosition -= 2;
         break;
-        
-      case 'text':
+      case "text":
         checkNewPage(3);
-        addMultilineText(item.content!, item.size!, item.bold);
-        yPosition -= 2;
+        addMultilineText(item.content as string, item.size as number, item.bold as boolean);
+        yPosition -= 4;
         break;
     }
   }
 
-  // Signature section
-  checkNewPage(10);
-  addText('INAPRUBAHAN NG:', 10, false);
-  yPosition -= 30;
+  // ========== PROFESSIONAL SIGNATURE SECTION (FIXED) ==========
+  checkNewPage(14);
+  addText("INAPRUBAHAN NG:", 11, true);
+  yPosition -= 22;
 
-  const signatureLines = [
-    '_________________________',
-    'MARILOU STA ANA RODRIGUEZ',
-    'NAGPAPAUPA (Lessor)',
-    `Petsa: ${new Date().toLocaleDateString()}`,
-    '',
-  ];
+  // Lessor Signature Block
+  addText("_" + "_".repeat(25), 10, false);
+  yPosition -= 12;
+  addText("MARILOU STA ANA RODRIGUEZ", 10, true);
+  yPosition -= 8;
+  addText("NAGPAPAUPA (Lessor)", 9, false);
+  yPosition -= 10;
+  addText(`Petsa: ${new Date().toLocaleDateString("fil-PH")}`, 9, false);
+  yPosition -= 28;
 
-  signatureLines.forEach(line => {
-    if (line.trim() === '') {
-      yPosition -= lineHeight;
-    } else {
-      checkNewPage();
-      addText(line, 10, false);
-    }
-  });
-
-  signatureLines.concat(
-    [
-      '_________________________',
-      `${tenantData.firstName.toUpperCase()} ${tenantData.lastName.toUpperCase()}`,
-      'UMUUPA (Lessee)',
-      `Petsa: ${new Date().toLocaleDateString()}`
-    ]
-  )
+  // Lessee Signature Block (FIXED - Properly added instead of concat)
+  addText("_" + "_".repeat(25), 10, false);
+  yPosition -= 12;
+  addText(
+    `${tenantData.firstName.toUpperCase()} ${tenantData.lastName.toUpperCase()}`,
+    10,
+    true
+  );
+  yPosition -= 8;
+  addText("UMUUPA (Lessee)", 9, false);
+  yPosition -= 10;
+  addText(`Petsa: ${new Date().toLocaleDateString("fil-PH")}`, 9, false);
 
   // Add digital signature
   if (signature) {
     try {
       checkNewPage(6);
-      const signatureData = signature.split(',')[1];
-      const signatureImage = await pdfDoc.embedPng(Buffer.from(signatureData, 'base64'));
+      const signatureData = signature.split(",")[1];
+      const signatureImage = await pdfDoc.embedPng(Buffer.from(signatureData, "base64"));
       const signatureDims = signatureImage.scale(0.25);
-      
+
       page.drawImage(signatureImage, {
         x: margin,
-        y: yPosition,
+        y: yPosition - 40,
         width: signatureDims.width,
         height: signatureDims.height,
       });
     } catch (error) {
-      console.error('Error adding signature to contract:', error);
+      console.error("Error adding signature to contract:", error);
     }
   }
 
@@ -671,23 +709,29 @@ async function generateContractPDF(tenantData: any, signature: string, property:
   return pdfBytes;
 }
 
+// ============================================================================
+// GITHUB UPLOAD
+// ============================================================================
+
 async function uploadDocumentsToGitHub(documents: any[], tenantData: any) {
   const uploadedUrls = [];
-  
+
   for (const doc of documents) {
     try {
-      const folderName = `tenant-documents/${tenantData.firstName}_${tenantData.lastName}`.replace(/\s+/g, '_');
+      const folderName = `tenant-documents/${tenantData.firstName}_${tenantData.lastName}`.replace(
+        /\s+/g,
+        "_"
+      );
       const filePath = `${folderName}/${doc.name}`;
-      
+
       const githubApiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${filePath}`;
 
-      // Step 1: Check if file exists and get SHA
       let existingFileSha = null;
       const checkResponse = await fetch(githubApiUrl, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${GITHUB_TOKEN}`,
-          "User-Agent": "NextJS-App", // GitHub API requires a User-Agent
+          "User-Agent": "NextJS-App",
         },
       });
 
@@ -696,19 +740,16 @@ async function uploadDocumentsToGitHub(documents: any[], tenantData: any) {
         existingFileSha = existingFileData.sha;
         console.log(`File exists, using SHA: ${existingFileSha}`);
       } else if (checkResponse.status !== 404) {
-        // If it's not a 404, it's some other error
         const errorData = await checkResponse.json();
         throw new Error(`GitHub check failed: ${errorData.message}`);
       }
 
-      // Step 2: Upload the file
       const requestBody: any = {
         message: `Upload ${doc.name} for ${tenantData.firstName} ${tenantData.lastName}`,
         content: doc.content,
         branch: GITHUB_BRANCH,
       };
 
-      // Include SHA only if file exists (for updates)
       if (existingFileSha) {
         requestBody.sha = existingFileSha;
       }
@@ -729,17 +770,16 @@ async function uploadDocumentsToGitHub(documents: any[], tenantData: any) {
         console.error("GitHub upload failed:", uploadData);
         throw new Error(uploadData.message || `Failed to upload ${doc.name} to GitHub.`);
       }
-      
+
       const documentUrl = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${GITHUB_BRANCH}/${filePath}`;
-      
+
       uploadedUrls.push({
         type: doc.type,
         url: documentUrl,
-        success: true
+        success: true,
       });
 
       console.log(`Successfully uploaded ${doc.name}`);
-
     } catch (error) {
       console.error(`Error uploading ${doc.name}:`, error);
       uploadedUrls.push({
@@ -750,10 +790,9 @@ async function uploadDocumentsToGitHub(documents: any[], tenantData: any) {
     }
   }
 
-  // Check if all uploads failed
-  const successfulUploads = uploadedUrls.filter(doc => doc.success);
+  const successfulUploads = uploadedUrls.filter((doc) => doc.success);
   if (successfulUploads.length === 0) {
-    throw new Error('All document uploads failed');
+    throw new Error("All document uploads failed");
   }
 
   return uploadedUrls;

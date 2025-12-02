@@ -430,21 +430,64 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
     return !Object.values(errors).some(error => error);
   };
 
+  const resetForm = () => {
+    setFormData({
+      lastName: '',
+      firstName: '',
+      middleInitial: '',
+      sex: '',
+      bday: '',
+      unitNumber: '',
+      email: '',
+      firstNumber: '',
+      secondNumber: '',
+    });
+    setSelectedProperty(null);
+    setImage(null);
+    setProfileFile(null);
+    setSelectedImages([null, null]);
+    setIdImages([null as any, null as any]);
+    setCurrSex('Male');
+    setRulesSignature('');
+    setContractSignature('');
+    setSignedRules(false);
+    setSignedContract(false);
+    setFieldErrors({
+      lastName: '',
+      firstName: '',
+      firstNumber: '',
+      secondNumber: '',
+    });
+  };  
+
   const handleSubmit = async () => {
     if (!validateForm()) {
-      alert("Please complete all required fields correctly and sign both documents.");
+      alert('Please complete all required fields correctly and sign both documents.');
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
-      // 1. Generate PDF documents and upload to GitHub
+      // 1. Check if email already exists in database
+      const emailCheckResponse = await fetch('/api/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email.toLowerCase() }),
+      });
+  
+      const emailCheckResult = await emailCheckResponse.json();
+  
+      if (!emailCheckResult.available) {
+        alert('This email address is already registered in our system. Please use a different email.');
+        setLoading(false);
+        return;
+      }
+  
+      // 2. Generate PDF documents and upload to GitHub
       const documentsResponse = await fetch('/api/generate-tenancy-documents', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tenantData: {
             firstName: formData.firstName,
@@ -454,94 +497,64 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
             bday: formData.bday,
             email: formData.email,
             firstNumber: formData.firstNumber.replace(/\s/g, ''),
-            unitNumber: selectedProperty?.name || "",
+            unitNumber: selectedProperty?.name,
+            rulesSignature: rulesSignature,
+            contractSignature: contractSignature,
+            property: selectedProperty,
+            rulesAgreed: signedRules,
+            contractAgreed: signedContract,
           },
-          rulesSignature: rulesSignature,
-          contractSignature: contractSignature,
-          property: selectedProperty,
-          rulesAgreed: signedRules,
-          contractAgreed: signedContract
         }),
       });
-
+  
       const documentsResult = await documentsResponse.json();
-      
       if (!documentsResult.success) {
         alert('Failed to generate tenancy documents. Please try again.');
         setLoading(false);
         return;
       }
-
-      // Extract document URLs
+  
       const rulesDoc = documentsResult.documents.find((doc: any) => doc.type === 'rules');
       const contractDoc = documentsResult.documents.find((doc: any) => doc.type === 'contract');
-
-      // 2. Rename files before submission
+  
+      // 3. Rename files before submission (no arguments)
       const { profileFile: renamedProfileFile, idFiles: renamedIdFiles } = renameFiles();
-
-      // Create the tenant data with document URLs
+  
+      // 4. Build tenant data payload
       const tenantData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         middleInitial: formData.middleInitial,
         sex: currSex,
         bday: formData.bday,
-        unitNumber: selectedProperty?.name || "",
-        propertyId: selectedProperty?.propertyId || 0,
+        // force string here
+        unitNumber: selectedProperty?.name ?? '',
+        propertyId: selectedProperty?.propertyId ?? 0,
         email: formData.email,
         firstNumber: formData.firstNumber.replace(/\s/g, ''),
         secondNumber: formData.secondNumber.replace(/\s/g, ''),
         profileImage: renamedProfileFile,
         idImages: renamedIdFiles,
-        signature: contractSignature, // Use contract signature as main signature
+        signature: contractSignature,
         agreedToRules: signedRules,
         agreedToContract: signedContract,
-        // Add document URLs to be passed to the API
         signedRulesUrl: rulesDoc?.url,
-        signedContractUrl: contractDoc?.url
+        signedContractUrl: contractDoc?.url,
       };
-
-      // 3. Submit tenant data with document URLs
-      await handleTenantUploadAndSubmit(tenantData, setLoading, () => {
-        // 4. Send email with document attachments after successful account creation
-        sendCredentialsEmail(rulesDoc?.url, contractDoc?.url);
-        
-        // Reset form
-        setFormData({
-          lastName: "",
-          firstName: "",
-          middleInitial: "",
-          sex: "",
-          bday: "",
-          unitNumber: "",
-          email: "",
-          firstNumber: "",
-          secondNumber: "",
-        });
-        setSelectedProperty(null);
-        setImage(null);
-        setProfileFile(null);
-        setSelectedImages([null, null]);
-        setIdImages([null as any, null as any]);
-        setCurrSex("Sex");
-        setRulesSignature("");
-        setContractSignature("");
-        setSignedRules(false);
-        setSignedContract(false);
-        setFieldErrors({
-          lastName: "",
-          firstName: "",
-          firstNumber: "",
-          secondNumber: ""
-        });
-      });
-
+  
+      // 5. Submit tenant data (with resetForm as 3rd arg)
+      await handleTenantUploadAndSubmit(tenantData, setLoading, resetForm);
+  
+      // 6. Send credentials email with document URLs (2 args)
+      await sendCredentialsEmail(rulesDoc?.url, contractDoc?.url);
     } catch (error) {
       console.error('Error in handleSubmit:', error);
       alert('An error occurred during submission. Please try again.');
       setLoading(false);
     }
   };
+  
+  
 
   // Generate password for display
   const generatedPassword = formData.firstName && formData.lastName && formData.unitNumber

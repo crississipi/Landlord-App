@@ -269,3 +269,21 @@ export interface MessageBubbleProps {
   message: string;
   timestamp: string;
 }
+
+export type UnitBillingRow = {
+    unit: string;
+    prev: number;
+    curr: number;
+  };
+  
+  export type BillingCreatePayload = {
+    userID: number;      // tenant userID
+    propertyId: number;  // property id
+    unit: string;        // unit identifier
+    month: string;       // e.g. "2025-12"
+    totalRent: number;
+    totalWater: number;
+    totalElectric: number;
+    // optional: used for storing payment status
+    note?: string;
+  };
