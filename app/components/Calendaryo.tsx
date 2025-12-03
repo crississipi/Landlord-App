@@ -96,7 +96,7 @@ const Calendaryo = ({ setPage }: ChangePageProps) => {
               onClick={() => selectedDate(day)}
             >
               {day}
-              {/** this span elements are indicators the level of priority/urgency of the request. Green is the lowest, red is highest */}
+              {/** this span elements are indicators the level of priority/urgency of the requests scheduled in that particular date. Green is the lowest, red is highest. Add an indicator that if the request is fixed/done, the color will darken to highlight unfinished tasks. can only display up to 4 request urgency per day*/}
               <div className="w-full grid grid-cols-3 gap-1 items-center px-2">
                 <span className="h-0.5 col-span-1 bg-emerald-400 rounded-full"></span>
                 <span className="h-0.5 col-span-1 bg-blue-400 rounded-full"></span>

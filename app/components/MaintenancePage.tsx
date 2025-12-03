@@ -4,7 +4,7 @@ import MaintenanceCard from './customcomponents/MaintenanceCard';
 import { ChangePageProps, ImageProps } from '@/types';
 import { TitleButton } from './customcomponents';
 import DropDownBtn from './customcomponents/DropDownBtn';
-import Calendaryo from './Calendaryo';
+import Calendaryo from './CalendaryoNew';
 
 type MaintenanceProps = ChangePageProps & ImageProps;
 

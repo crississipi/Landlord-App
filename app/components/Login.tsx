@@ -7,7 +7,7 @@ import { RiHome9Line } from 'react-icons/ri'
 import { signIn } from "next-auth/react";
 
 // Tenant web app URL - this will be replaced with actual URL
-const TENANT_APP_URL = process.env.NEXT_PUBLIC_TENANT_APP_URL || "https://your-tenant-app.vercel.app";
+const TENANT_APP_URL = process.env.NEXT_PUBLIC_TENANT_APP_URL || "http://localhost:3000";
 
 const Login = ({ setPage }: ChangePageProps) => {
     const [username, setUsername] = useState("")
@@ -55,6 +55,7 @@ const Login = ({ setPage }: ChangePageProps) => {
                 username,
                 password,
                 redirect: false,
+                callbackUrl: "/"
             });
 
             if (result?.error) {
@@ -63,9 +64,8 @@ const Login = ({ setPage }: ChangePageProps) => {
                 // Login successful - session cookie is now set
                 console.log("Login successful, session established")
                 
-                // Simply reload the page - the session will be detected by page.tsx
-                // and it will show the main content instead of login
-                window.location.href = window.location.origin;
+                // Directly navigate to MainPage (page 0)
+                setPage(0);
             }
         } catch (err) {
             console.error("Login error:", err)

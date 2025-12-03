@@ -6,7 +6,7 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 // Tenant web app URL - update this with your actual tenant app URL
-const TENANT_APP_URL = process.env.TENANT_APP_URL || "https://your-tenant-app.vercel.app";
+const TENANT_APP_URL = process.env.NEXT_PUBLIC_TENANT_APP_URL || "http://localhost:3000";
 
 export const authOptions: NextAuthOptions = {
   providers: [

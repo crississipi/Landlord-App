@@ -3,6 +3,7 @@ import { RefObject } from "react";
 export interface HeaderProps {
   login: boolean;
   setNav: (nav: string) => void;
+  page: number;
 }
 
 export interface CustomInputProps {
@@ -290,37 +291,111 @@ export type UnitBillingRow = {
     note?: string;
   };
 
-  export interface UnbilledUnit {
-    unitNumber: string;
-    rent: number;
-    tenants: {
-      userID: number;
-      name: string;
-    }[];
-  }
+export interface UnbilledUnit {
+  unitNumber: string;
+  rent: number;
+  tenants: {
+    userID: number;
+    name: string;
+  }[];
+}
 
-  export interface BillingRecord {
-    billingID: number;
-    unit: string | null;
-    month: string | null;
-    totalRent: number;
-    totalWater: number;
-    totalElectric: number;
-    totalAmount: number;
-    dateIssued: string;
-    tenant: {
-      userID: number;
-      name: string;
-      email: string | null;
-    };
-    property: {
-      name: string;
-      address: string;
-    };
-  }
-
-  export interface UnitTenant {
+export interface BillingRecord {
+  billingID: number;
+  unit: string | null;
+  month: string | null;
+  totalRent: number;
+  totalWater: number;
+  totalElectric: number;
+  totalAmount: number;
+  dateIssued: string;
+  tenant: {
     userID: number;
     name: string;
     email: string | null;
-  }
+  };
+  property: {
+    name: string;
+    address: string;
+  };
+}
+
+export interface UnitTenant {
+  userID: number;
+  name: string;
+  email: string | null;
+}
+
+// Maintenance Types
+export interface MaintenanceRequest {
+  maintenanceId: number;
+  userId: number;
+  propertyId: number;
+  rawRequest: string;
+  processedRequest: string;
+  urgency: string;
+  urgencyColor: string;
+  status: string;
+  schedule: string | null;
+  dateIssued: string;
+  createdAt: string;
+  updatedAt: string;
+  isFixed: boolean;
+  tenantName: string;
+  user?: {
+    userID: number;
+    firstName: string | null;
+    lastName: string | null;
+    propertyId: number | null;
+  };
+  property?: {
+    propertyId: number;
+    name: string;
+  };
+  documentations?: {
+    docuID: number;
+    dateFixed: string;
+  }[];
+  availabilities?: {
+    id: number;
+    day: string | null;
+    date: string | null;
+    timeAvailableFrom: string;
+    timeAvailableTo: string;
+  }[];
+}
+
+export interface ScheduledByDate {
+  [date: string]: MaintenanceRequest[];
+}
+
+export interface DocumentationMaterial {
+  id?: number;
+  material: string;
+  cost: number | string;
+}
+
+export interface DocumentationImage {
+  id?: number;
+  url: string;
+  fileName: string;
+}
+
+export interface MaintenanceDocumentation {
+  docuID: number;
+  maintenanceID: number;
+  remarks: string;
+  inChargeName: string | null;
+  inChargeNumber: string | null;
+  inChargePayment: number | null;
+  totalMaterialCost: number | null;
+  dateFixed: string;
+  dateIssued: string;
+  maintenance?: MaintenanceRequest;
+  materials?: DocumentationMaterial[];
+  images?: DocumentationImage[];
+}
+
+export interface CalendaryoProps extends ChangePageProps {
+  onSelectMaintenance?: (maintenance: MaintenanceRequest) => void;
+}

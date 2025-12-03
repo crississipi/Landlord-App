@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DB_URL")
+  url      = env("DATABASE_URL")
 }
 
 model Users {
@@ -115,13 +115,41 @@ model Availability {
 }
 
 model Documentation {
-  docuID        Int         @id @default(autoincrement())
-  maintenanceID Int
-  documentation String      @db.Text
-  dateIssued    DateTime    @default(now())
-  maintenance   Maintenance @relation(fields: [maintenanceID], references: [maintenanceId])
+  docuID            Int         @id @default(autoincrement())
+  maintenanceID     Int         @unique
+  remarks           String      @db.Text
+  inChargeName      String?     @db.VarChar(255)
+  inChargeNumber    String?     @db.VarChar(20)
+  inChargePayment   Float?
+  totalMaterialCost Float?      @default(0)
+  dateFixed         DateTime    @default(now())
+  dateIssued        DateTime    @default(now())
+  maintenance       Maintenance @relation(fields: [maintenanceID], references: [maintenanceId])
+  materials         DocumentationMaterial[]
+  images            DocumentationImage[]
 
   @@index([maintenanceID], map: "Documentation_maintenanceID_fkey")
+}
+
+model DocumentationMaterial {
+  id              Int           @id @default(autoincrement())
+  documentationID Int
+  material        String        @db.VarChar(255)
+  cost            Float
+  documentation   Documentation @relation(fields: [documentationID], references: [docuID], onDelete: Cascade)
+
+  @@index([documentationID], map: "DocumentationMaterial_documentationID_fkey")
+}
+
+model DocumentationImage {
+  id              Int           @id @default(autoincrement())
+  documentationID Int
+  url             String        @db.Text
+  fileName        String        @db.VarChar(255)
+  createdAt       DateTime      @default(now())
+  documentation   Documentation @relation(fields: [documentationID], references: [docuID], onDelete: Cascade)
+
+  @@index([documentationID], map: "DocumentationImage_documentationID_fkey")
 }
 
 model Feedback {

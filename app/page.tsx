@@ -67,7 +67,7 @@ const Billing = dynamic(() => import("./components/BillingPage"), {
 });
 
 export default function Home() {
-  const [page, setPage] = useState(99);
+  const [page, setPage] = useState(-1); // -1 means "not initialized yet"
   const [image, setImage] = useState(false);
   const [nav, setNav] = useState("-right-[9999px]");
   const [contentLoading, setContentLoading] = useState(true);
@@ -75,10 +75,24 @@ export default function Home() {
   const [settleBilling, setSettleBilling] = useState(false);
   const [unit, setUnit] = useState(0);
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
-  const [selectedChatUserId, setSelectedChatUserId] = useState<number | undefined>(); // ✅ Add this state
+  const [selectedChatUserId, setSelectedChatUserId] = useState<number | undefined>(); // 
+  const [selectedMaintenanceId, setSelectedMaintenanceId] = useState<number | undefined>(); // For documentation
   const comRef = useRef<HTMLDivElement | null>(null);
 
   const { data: session, status } = useSession();
+
+  // Set initial page based on authentication status
+  useEffect(() => {
+    if (status === "authenticated" && session) {
+      // User is logged in - go to MainPage if page is not initialized or is login page
+      if (page === -1 || page === 99) {
+        setPage(0);
+      }
+    } else if (status === "unauthenticated") {
+      // User is not logged in - show login page
+      setPage(99);
+    }
+  }, [status, session, page]);
 
   // FOR LOADING SCREEN
   useEffect(() => {
@@ -108,11 +122,16 @@ export default function Home() {
     };
   }, []);
 
-  // ✅ Updated setPage function that handles chatUserId
-  const handleSetPage = (page: number, chatUserId?: number) => {
-    console.log('Setting page:', page, 'with chatUserId:', chatUserId); // Debug log
-    if (chatUserId !== undefined) {
-      setSelectedChatUserId(chatUserId);
+  // Updated setPage function that handles chatUserId and maintenanceId
+  const handleSetPage = (page: number, contextId?: number) => {
+    console.log('Setting page:', page, 'with contextId:', contextId); // Debug log
+    if (contextId !== undefined) {
+      // Page 9 is Chat, Page 12 is Documentation
+      if (page === 9) {
+        setSelectedChatUserId(contextId);
+      } else if (page === 12) {
+        setSelectedMaintenanceId(contextId);
+      }
     }
     setPage(page);
   };
@@ -120,8 +139,8 @@ export default function Home() {
   // Tenant web app URL for redirect
   const TENANT_APP_URL = process.env.NEXT_PUBLIC_TENANT_APP_URL || "https://your-tenant-app.vercel.app";
 
-  // Show loading state while checking authentication
-  if (status === "loading") {
+  // Show loading state while checking authentication or page not initialized
+  if (status === "loading" || page === -1) {
     return (
       <div className='h-full w-full flex flex-col bg-neutral-50 items-center justify-center'>
         <div className="text-center">
@@ -225,7 +244,7 @@ export default function Home() {
         <LoadingPage />
       ) : (
         <main className="h-full w-full flex flex-col items-center relative bg-customViolet">
-          <Header login={page !== 99} setNav={setNav} setPage={handleSetPage} />
+          <Header login={page !== 99} setNav={setNav} setPage={handleSetPage} page={page}/>
           <div className="h-full w-full flex flex-col relative overflow-x-hidden">
             {pages[page] || null}
 
