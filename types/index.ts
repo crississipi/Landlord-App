@@ -284,6 +284,43 @@ export type UnitBillingRow = {
     totalRent: number;
     totalWater: number;
     totalElectric: number;
-    // optional: used for storing payment status
+    waterMeterImage?: string;    // base64 image
+    electricMeterImage?: string; // base64 image
+    tenantNames?: string;
     note?: string;
   };
+
+  export interface UnbilledUnit {
+    unitNumber: string;
+    rent: number;
+    tenants: {
+      userID: number;
+      name: string;
+    }[];
+  }
+
+  export interface BillingRecord {
+    billingID: number;
+    unit: string | null;
+    month: string | null;
+    totalRent: number;
+    totalWater: number;
+    totalElectric: number;
+    totalAmount: number;
+    dateIssued: string;
+    tenant: {
+      userID: number;
+      name: string;
+      email: string | null;
+    };
+    property: {
+      name: string;
+      address: string;
+    };
+  }
+
+  export interface UnitTenant {
+    userID: number;
+    name: string;
+    email: string | null;
+  }

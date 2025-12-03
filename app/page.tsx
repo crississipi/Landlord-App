@@ -117,7 +117,10 @@ export default function Home() {
     setPage(page);
   };
 
-    // Show loading state while checking authentication
+  // Tenant web app URL for redirect
+  const TENANT_APP_URL = process.env.NEXT_PUBLIC_TENANT_APP_URL || "https://your-tenant-app.vercel.app";
+
+  // Show loading state while checking authentication
   if (status === "loading") {
     return (
       <div className='h-full w-full flex flex-col bg-neutral-50 items-center justify-center'>
@@ -138,14 +141,65 @@ export default function Home() {
     );
   }
 
-  // User is authenticated, show main content
+  // User is authenticated - check role
   const user = session.user;
+  const userRole = user?.role?.toLowerCase();
 
-  // ✅ Pass `setSelectedTenant` to Tenants page
+  // Debug log for session info
+  console.log("Session user:", user);
+  console.log("User role:", userRole);
+
+  // If user is a tenant, redirect to tenant app
+  if (userRole === 'tenant') {
+    // Redirect tenant to tenant app
+    if (typeof window !== 'undefined') {
+      window.location.href = TENANT_APP_URL;
+    }
+    return (
+      <div className='h-full w-full flex flex-col bg-customViolet items-center justify-center'>
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h2 className='font-poppins text-2xl text-white font-light mb-2'>Tenant Account Detected</h2>
+          <p className='text-white/80 text-sm'>Redirecting you to the Tenant Portal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Allow access if role is landlord, admin, or if role is not set (for backwards compatibility)
+  // This handles cases where existing sessions might not have the role set
+  const allowedRoles = ['landlord', 'admin'];
+  const hasValidRole = !userRole || allowedRoles.includes(userRole);
+
+  if (!hasValidRole) {
+    return (
+      <div className='h-full w-full flex flex-col bg-neutral-50 items-center justify-center'>
+        <div className="text-center p-8">
+          <h2 className='text-2xl font-semibold text-red-600 mb-2'>Access Denied</h2>
+          <p className='text-gray-600 mb-4'>Your account does not have permission to access this application.</p>
+          <button 
+            onClick={() => {
+              // Sign out and redirect to login
+              import('next-auth/react').then(({ signOut }) => {
+                signOut({ redirect: false }).then(() => {
+                  window.location.reload();
+                });
+              });
+            }}
+            className='px-6 py-2 bg-customViolet text-white rounded-lg hover:bg-customViolet/90'
+          >
+            Back to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 
   const pages: Record<number, JSX.Element> = {
     0: <Mainpage setPage={handleSetPage} />,
     1: <Dashboard setPage={handleSetPage} />,
-    2: <Messages setPage={handleSetPage} />, // ✅ This will pass chatUserId when clicking on a message
+    2: <Messages setPage={handleSetPage} />, // 
     4: <Maintenance setPage={handleSetPage} setImage={setImage} />,
     5: <Tenants setPage={handleSetPage} onTenantSelect={setSelectedTenant} />,
     6: <Settings setPage={handleSetPage} />,
@@ -154,16 +208,10 @@ export default function Home() {
     7: <Tenant setPage={handleSetPage} tenant={selectedTenant} />,
 
     8: <NewTenant setPage={handleSetPage} />,
-    9: <Chat setPage={handleSetPage} setChatInfo={setChatInfo} chatUserId={selectedChatUserId} />, // ✅ Pass the chatUserId here
+    9: <Chat setPage={handleSetPage} setChatInfo={setChatInfo} chatUserId={selectedChatUserId} />, // 
     11: <AllMedia setPage={handleSetPage} setImage={setImage} />,
     12: <Docu setPage={handleSetPage} setImage={setImage} />,
-    13: (
-      <Billing
-        setPage={handleSetPage}
-        setSettleBilling={setSettleBilling}
-        setUnit={setUnit}
-      />
-    ),
+    13: <Billing propertyId={1} />,
     14: <ManageProperty setPage={handleSetPage} />,
     15: <EditProperty setPage={handleSetPage} />,
     98: <ForgotPass setPage={handleSetPage} />,

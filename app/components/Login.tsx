@@ -6,11 +6,15 @@ import { ChangePageProps } from '@/types'
 import { RiHome9Line } from 'react-icons/ri'
 import { signIn } from "next-auth/react";
 
+// Tenant web app URL - this will be replaced with actual URL
+const TENANT_APP_URL = process.env.NEXT_PUBLIC_TENANT_APP_URL || "https://your-tenant-app.vercel.app";
+
 const Login = ({ setPage }: ChangePageProps) => {
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
+    const [redirecting, setRedirecting] = useState(false)
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -18,6 +22,35 @@ const Login = ({ setPage }: ChangePageProps) => {
         setError("")
 
         try {
+            // Step 1: Check user role first
+            const checkRoleResponse = await fetch('/api/auth/check-role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const roleData = await checkRoleResponse.json();
+
+            if (!roleData.success) {
+                setError(roleData.error || "Invalid username or password")
+                setLoading(false)
+                return
+            }
+
+            // Step 2: Handle based on role
+            if (!roleData.allowLogin) {
+                // User is a tenant - redirect to tenant app
+                setRedirecting(true)
+                setError("") // Clear any error
+                
+                // Show redirect message briefly before redirecting
+                setTimeout(() => {
+                    window.location.href = roleData.redirectUrl || TENANT_APP_URL;
+                }, 1500);
+                return
+            }
+
+            // Step 3: User is landlord/admin - proceed with login
             const result = await signIn("credentials", {
                 username,
                 password,
@@ -26,22 +59,40 @@ const Login = ({ setPage }: ChangePageProps) => {
 
             if (result?.error) {
                 setError("Invalid username or password")
-            } else {
-                // ✅ Login successful - redirect to Mainpage (page 0)
-                console.log("Login successful, redirecting to Mainpage")
-                setPage(0) // This will redirect to Mainpage
+            } else if (result?.ok) {
+                // Login successful - session cookie is now set
+                console.log("Login successful, session established")
+                
+                // Simply reload the page - the session will be detected by page.tsx
+                // and it will show the main content instead of login
+                window.location.href = window.location.origin;
             }
-        } catch (error) {
-            console.error("Login error:", error)
-            setError("An unexpected error occurred")
+        } catch (err) {
+            console.error("Login error:", err)
+            setError("An unexpected error occurred. Please try again.")
         } finally {
-            setLoading(false)
+            if (!redirecting) {
+                setLoading(false)
+            }
         }
     }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         handleLogin(e)
+    }
+
+    // Show redirecting state for tenants
+    if (redirecting) {
+        return (
+            <div className='max__size px-5 flex flex-col bg-customViolet items-center justify-center'>
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <h2 className='font-poppins text-2xl text-white font-light mb-2'>Tenant Account Detected</h2>
+                    <p className='text-white/80 text-sm'>Redirecting you to the Tenant Portal...</p>
+                </div>
+            </div>
+        )
     }
     
     return (
@@ -65,7 +116,7 @@ const Login = ({ setPage }: ChangePageProps) => {
                     />
                     
                     {error && (
-                        <div className="text-red-500 text-sm mb-4 text-center">
+                        <div className="bg-red-500/20 border border-red-400 text-red-100 text-sm py-2 px-4 rounded-lg mt-4 text-center">
                             {error}
                         </div>
                     )}
@@ -82,7 +133,12 @@ const Login = ({ setPage }: ChangePageProps) => {
                         className='px-14 primary__btn click__action hover__action focus__action bg-white text-customViolet text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed w-full'
                         disabled={loading || !username || !password}
                     >
-                        {loading ? "LOGGING IN..." : "LOGIN"}
+                        {loading ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <span className="w-5 h-5 border-2 border-customViolet border-t-transparent rounded-full animate-spin"></span>
+                                LOGGING IN...
+                            </span>
+                        ) : "LOGIN"}
                     </button>
                 </form>
             </div>

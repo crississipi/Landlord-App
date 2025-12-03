@@ -1,105 +1,90 @@
+// app/api/billings/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
-// GET: Fetch billings for units
+// GET: Fetch billings for a property (current month by default)
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const unitId = searchParams.get('unit');
-    const month = searchParams.get('month');
-    const year = searchParams.get('year');
-
-    let whereClause: any = {};
-
-    if (unitId) {
-      const user = await prisma.users.findFirst({
-        where: { propertyId: parseInt(unitId) }
-      });
-      if (user) {
-        whereClause.userID = user.userID;
-      }
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const propertyId = parseInt(searchParams.get('propertyId') || '0');
+    const monthParam = searchParams.get('month');
+
+    if (!propertyId) {
+      return NextResponse.json({ error: 'Property ID required' }, { status: 400 });
+    }
+
+    // Default to current month
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = `${now.getMonth() + 1}`.padStart(2, '0');
+    const currentMonth = monthParam || `${yyyy}-${mm}`;
+
     const billings = await prisma.billing.findMany({
-      where: whereClause,
+      where: {
+        propertyId,
+        month: currentMonth,
+      },
       include: {
         user: {
           select: {
             userID: true,
             firstName: true,
             lastName: true,
-            propertyId: true
-          }
+            username: true,
+            email: true,
+          },
         },
         property: {
           select: {
-            propertyId: true,
             name: true,
-            rent: true
-          }
-        }
+            address: true,
+          },
+        },
       },
-      orderBy: { dateIssued: 'desc' }
+      orderBy: { dateIssued: 'desc' },
     });
 
-    return NextResponse.json(billings);
+    // Transform billings for frontend
+    const formattedBillings = billings.map((b) => ({
+      billingID: b.billingID,
+      unit: b.unit,
+      month: b.month,
+      totalRent: b.totalRent,
+      totalWater: b.totalWater,
+      totalElectric: b.totalElectric,
+      totalAmount: b.totalRent + b.totalWater + b.totalElectric,
+      dateIssued: b.dateIssued.toISOString(),
+      tenant: {
+        userID: b.user.userID,
+        name: b.user.firstName && b.user.lastName
+          ? `${b.user.firstName} ${b.user.lastName}`.trim()
+          : b.user.username,
+        email: b.user.email,
+      },
+      property: {
+        name: b.property.name,
+        address: b.property.address,
+      },
+    }));
+
+    return NextResponse.json({
+      success: true,
+      month: currentMonth,
+      billings: formattedBillings,
+    });
   } catch (error) {
+    console.error('Error fetching billings:', error);
     return NextResponse.json(
       { error: 'Failed to fetch billings' },
-      { status: 500 }
-    );
-  }
-}
-
-// POST: Create new billing
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { unit, electric, water, month, year } = body;
-
-    // Find user by property/unit
-    const user = await prisma.users.findFirst({
-      where: { propertyId: unit }
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User/Unit not found' },
-        { status: 404 }
-      );
-    }
-
-    // Get property rent
-    const property = await prisma.property.findFirst({
-      where: { propertyId: unit }
-    });
-
-    if (!property) {
-      return NextResponse.json(
-        { error: 'Property not found' },
-        { status: 404 }
-      );
-    }
-
-    // Create billing record
-    const billing = await prisma.billing.create({
-      data: {
-        userID: user.userID,
-        propertyId: unit,
-        totalRent: property.rent,
-        totalWater: water,
-        totalElectric: electric,
-        dateIssued: new Date(parseInt(year), parseInt(month) - 1, 1)
-      }
-    });
-
-    return NextResponse.json(billing);
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to create billing' },
       { status: 500 }
     );
   }
