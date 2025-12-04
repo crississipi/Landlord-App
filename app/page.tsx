@@ -223,14 +223,14 @@ export default function Home() {
     5: <Tenants setPage={handleSetPage} onTenantSelect={setSelectedTenant} />,
     6: <Settings setPage={handleSetPage} />,
 
-    // ✅ Pass selected tenant to Tenant Info page
-    7: <Tenant setPage={handleSetPage} tenant={selectedTenant} />,
+    // Pass selected tenant to Tenant Info page (or chatUserId if from ChatInfo)
+    7: <Tenant setPage={handleSetPage} tenant={selectedTenant} chatUserId={selectedChatUserId} fromChatInfo={!!selectedChatUserId} />,
 
     8: <NewTenant setPage={handleSetPage} />,
     9: <Chat setPage={handleSetPage} setChatInfo={setChatInfo} chatUserId={selectedChatUserId} />, // 
     11: <AllMedia setPage={handleSetPage} setImage={setImage} />,
     12: <Docu setPage={handleSetPage} setImage={setImage} />,
-    13: <Billing propertyId={1} />,
+    13: <Billing propertyId={1} setPage={setPage} />,
     14: <ManageProperty setPage={handleSetPage} />,
     15: <EditProperty setPage={handleSetPage} />,
     98: <ForgotPass setPage={handleSetPage} />,
@@ -245,13 +245,14 @@ export default function Home() {
       ) : (
         <main className="h-full w-full flex flex-col items-center relative bg-customViolet">
           <Header login={page !== 99} setNav={setNav} setPage={handleSetPage} page={page}/>
-          <div className="h-full w-full flex flex-col relative overflow-x-hidden">
+          <div className="h-full w-full flex flex-col relative overflow-x-hidden max-w-[1920px] mx-auto">
             {pages[page] || null}
 
             <ChatInfo
               setPage={handleSetPage}
               setChatInfo={setChatInfo}
               chatInfo={chatInfo}
+              chatUserId={selectedChatUserId}
             />
 
             {image && <ShowImage setImage={setImage} />}

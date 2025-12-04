@@ -836,16 +836,16 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
   );
 
   return (
-    <div className="flex flex-col gap-3 px-5 py-3 select-none bg-white rounded-t-2xl overflow-hidden relative" style={{color: '#574964'}}>
+    <div className="flex flex-col gap-3 md:gap-5 px-5 md:px-8 lg:px-12 py-3 md:py-5 select-none bg-white rounded-t-2xl overflow-hidden relative" style={{color: '#574964'}}>
       <TitleButton setPage={setPage} title="Tenant Information" />
 
-      <div className="flex flex-col gap-5 overflow-x-hidden">
-        <h2 className="text-xl font-semibold">Personal Information</h2>
+      <div className="flex flex-col gap-5 md:gap-6 lg:gap-8 overflow-x-hidden max-w-5xl mx-auto w-full">
+        <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold">Personal Information</h2>
 
-        <div className="flex items-center justify-center h-auto w-full py-2 flex-col gap-2">
+        <div className="flex items-center justify-center h-auto w-full py-2 md:py-4 flex-col gap-2 md:gap-3">
           <button
             onClick={handleButtonClick}
-            className={`outline-none rounded-full h-24 w-24 text-white overflow-hidden flex items-center justify-center ${
+            className={`outline-none rounded-full h-24 w-24 md:h-28 md:w-28 lg:h-32 lg:w-32 text-white overflow-hidden flex items-center justify-center hover:scale-105 transition-transform ${
               validationErrors.profileImage ? "ring-2 ring-red-500" : ""
             }`}
             style={{backgroundColor: '#574964'}}
@@ -854,7 +854,7 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
             {image ? (
               <img src={image} alt="Selected" className="object-cover w-full h-full rounded-full" />
             ) : (
-              <AiOutlineUser className="w-12 h-12" />
+              <AiOutlineUser className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16" />
             )}
           </button>
           {validationErrors.profileImage && (
@@ -863,7 +863,7 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
           <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" required />
         </div>
 
-        <div className="grid grid-cols-12 gap-3 text-sm">
+        <div className="grid grid-cols-12 gap-3 md:gap-4 text-sm md:text-base">
           <div className="col-span-full">
             <input 
               name="lastName" 

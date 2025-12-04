@@ -50,16 +50,16 @@ const Tenant: React.FC<TenantComponentProps> = ({
 
   return (
     <button
-      className="flex__center__y gap-3 w-full text-sm outline-none py-2 px-3 focus:bg-white md:px-5 md:py-2 group hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex__center__y gap-3 md:gap-4 w-full text-sm md:text-base lg:text-lg outline-none py-2 md:py-3 px-3 md:px-5 lg:px-6 focus:bg-white group hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       onClick={handleClick}
       disabled={loading}
     >
-      <div className="flex__center__all h-9 w-9 rounded-full bg-sky-500 overflow-hidden text-white">
+      <div className="flex__center__all h-9 w-9 md:h-11 md:w-11 lg:h-12 lg:w-12 rounded-full bg-sky-500 overflow-hidden text-white">
         <Image
           alt="Profile Picture"
           src={profile}
-          height={36}
-          width={36}
+          height={48}
+          width={48}
           className="h-full w-full object-cover object-center"
         />
       </div>
@@ -67,7 +67,7 @@ const Tenant: React.FC<TenantComponentProps> = ({
         {name}
         {loading && " (Loading...)"}
       </span>
-      <AiOutlineRight className="text-2xl p-1 rounded-full text-emerald-700 group-hover:bg-customViolet group-hover:text-white transition-colors" />
+      <AiOutlineRight className="text-2xl md:text-3xl p-1 rounded-full text-emerald-700 group-hover:bg-customViolet group-hover:text-white transition-colors" />
     </button>
   );
 };

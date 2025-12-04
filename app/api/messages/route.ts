@@ -5,7 +5,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
-// GET /api/messages - Get all conversations for the current user
+// GET /api/messages - Get all conversations with tenants for the landlord, sorted by most recent
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -30,7 +30,9 @@ export async function GET(request: NextRequest) {
             userID: true,
             firstName: true,
             lastName: true,
-            isOnline: true
+            isOnline: true,
+            email: true,
+            role: true
           }
         },
         receiver: {
@@ -38,7 +40,9 @@ export async function GET(request: NextRequest) {
             userID: true,
             firstName: true,
             lastName: true,
-            isOnline: true
+            isOnline: true,
+            email: true,
+            role: true
           }
         }
       },
@@ -49,25 +53,51 @@ export async function GET(request: NextRequest) {
 
     // Group by conversation partner and get latest message
     const conversationMap = new Map();
+    const partnerIds = new Set<number>();
     
     conversations.forEach(message => {
       const partnerId = message.senderID === userId ? message.receiverID : message.senderID;
       const partner = message.senderID === userId ? message.receiver : message.sender;
       
+      // Only include tenants in the conversation list
+      if (partner.role !== 'tenant') {
+        return;
+      }
+      
+      partnerIds.add(partnerId);
+      
       if (!conversationMap.has(partnerId)) {
+        const partnerName = `${partner.firstName || ''} ${partner.lastName || ''}`.trim() || partner.email || 'Unknown';
         conversationMap.set(partnerId, {
           partner: {
             userID: partner.userID,
-            name: `${partner.firstName} ${partner.lastName}`,
+            name: partnerName,
             isOnline: partner.isOnline
           },
-          lastMessage: message.message,
+          lastMessage: message.message || '',
           timestamp: message.dateSent,
           unreadCount: 0,
-          lastMessageSender: message.senderID === userId ? 'You' : partner.firstName
+          lastMessageSender: message.senderID === userId ? 'You' : (partner.firstName || 'Tenant')
         });
       }
     });
+
+    // Fetch profile images for all conversation partners
+    const resources = await prisma.resource.findMany({
+      where: {
+        referenceId: { in: Array.from(partnerIds) },
+        referenceType: 'Users',
+        fileName: { contains: '_profile_' }
+      },
+      select: {
+        referenceId: true,
+        url: true
+      }
+    });
+
+    const profileImageMap = new Map(
+      resources.map(r => [r.referenceId, r.url])
+    );
 
     // Count unread messages for each conversation
     for (const [partnerId] of conversationMap) {
@@ -84,7 +114,16 @@ export async function GET(request: NextRequest) {
       conversationMap.set(partnerId, conversation);
     }
 
-    const conversationList = Array.from(conversationMap.values());
+    // Convert to array, add profile images, and sort by most recent timestamp
+    const conversationList = Array.from(conversationMap.values()).map(conv => ({
+      ...conv,
+      partner: {
+        ...conv.partner,
+        profileImage: profileImageMap.get(conv.partner.userID) || null
+      }
+    })).sort((a, b) => {
+      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    });
 
     return NextResponse.json(conversationList);
   } catch (error) {

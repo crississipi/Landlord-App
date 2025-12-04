@@ -194,14 +194,14 @@ const SettingsPage = ({ setPage }: ChangePageProps) => {
 
   if (loading) {
     return (
-      <div className='column__align gap-3 py-3 text-customViolet overflow-hidden bg-white rounded-t-2xl'>
-        <div className='px-5'>
+      <div className='column__align gap-3 md:gap-5 py-3 md:py-5 text-customViolet overflow-hidden bg-white rounded-t-2xl'>
+        <div className='px-5 md:px-8 lg:px-12'>
           <TitleButton setPage={setPage} title="Settings"/>
         </div>
-        <div className='w-full flex justify-center py-12'>
+        <div className='w-full flex justify-center py-12 md:py-16'>
           <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-3 border-customViolet border-t-transparent rounded-full animate-spin" />
-            <p className="text-customViolet/70">Loading profile...</p>
+            <div className="w-8 h-8 md:w-10 md:h-10 border-3 border-customViolet border-t-transparent rounded-full animate-spin" />
+            <p className="text-customViolet/70 md:text-lg">Loading profile...</p>
           </div>
         </div>
       </div>
@@ -209,12 +209,12 @@ const SettingsPage = ({ setPage }: ChangePageProps) => {
   }
 
   return (
-    <div className='column__align gap-3 py-3 text-customViolet overflow-hidden bg-white rounded-t-2xl'>
-      <div className='px-5'>
+    <div className='column__align gap-3 md:gap-5 py-3 md:py-5 text-customViolet overflow-hidden bg-white rounded-t-2xl'>
+      <div className='px-5 md:px-8 lg:px-12'>
         <TitleButton setPage={setPage} title="Settings"/>
       </div>
-      <div className='max__size overflow-x-hidden flex md:mt-5'>
-        <div className='column__align gap-5 px-5'>
+      <div className='max__size overflow-x-hidden flex md:mt-5 max-w-5xl mx-auto'>
+        <div className='column__align gap-5 md:gap-6 lg:gap-8 px-5 md:px-8 lg:px-12'>
           {/* Error/Success Messages */}
           {error && (
             <div className='w-full bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm'>
@@ -227,13 +227,13 @@ const SettingsPage = ({ setPage }: ChangePageProps) => {
             </div>
           )}
 
-          <h2 className='h2__style'>Personal Information</h2>
-          <div className='flex__center__all h-auto w-full py-2'>
-            <button className='focus__action click__action hover__action outline-none rounded-full bg-customViolet h-24 w-24 text-white'>
+          <h2 className='h2__style text-xl md:text-2xl lg:text-3xl'>Personal Information</h2>
+          <div className='flex__center__all h-auto w-full py-2 md:py-4'>
+            <button className='focus__action click__action hover__action outline-none rounded-full bg-customViolet h-24 w-24 md:h-28 md:w-28 lg:h-32 lg:w-32 text-white hover:scale-105 transition-transform'>
               <AiOutlineUser className='max__size mt-2'/>
             </button>
           </div>
-          <div className='primary__btn__holder text-sm md:text-base'>
+          <div className='primary__btn__holder text-sm md:text-base lg:text-lg'>
             <input 
               type="text" 
               placeholder='Last Name' 

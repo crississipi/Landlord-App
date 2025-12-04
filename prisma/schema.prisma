@@ -176,6 +176,7 @@ model Messages {
   fileName   String?
   fileType   String?
   fileSize   String?
+  batchId    String?  @db.VarChar(255)
   dateSent   DateTime @default(now())
   read       Boolean  @default(false)
   receiver   Users    @relation("ReceivedMessages", fields: [receiverID], references: [userID])
@@ -183,6 +184,7 @@ model Messages {
 
   @@index([receiverID], map: "Messages_receiverID_fkey")
   @@index([senderID], map: "Messages_senderID_fkey")
+  @@index([batchId], map: "Messages_batchId_idx")
 }
 
 model Resource {

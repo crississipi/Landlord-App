@@ -1,21 +1,25 @@
 "use client";
 import { ChangePageProps } from '@/types';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   AiOutlineDelete, 
-  AiOutlineDown, 
   AiOutlineEdit, 
   AiOutlineMan, 
   AiOutlineWoman,
   AiOutlineUpload, 
-  AiOutlineUser 
+  AiOutlineUser,
+  AiOutlineDownload,
+  AiOutlineFileText
 } from 'react-icons/ai';
 import { TbCurrencyPeso } from 'react-icons/tb';
+import { HiOutlineDocumentText } from 'react-icons/hi';
 import { TitleButton } from './customcomponents';
 import Image from 'next/image';
 
 interface TenantInfoProps extends ChangePageProps {
-  tenant: any;
+  tenant?: any;
+  chatUserId?: number;
+  fromChatInfo?: boolean;
 }
 
 interface TenantData {
@@ -41,6 +45,11 @@ interface TenantData {
   unitNumber: string | null;
   moveInDate: string | null;
   rentAmount: number;
+  signedContractUrl?: string | null;
+  signedRulesUrl?: string | null;
+  profileImage?: string | null;
+  primaryId?: string | null;
+  secondaryId?: string | null;
   resources?: { 
     url: string; 
     fileName?: string; 
@@ -49,24 +58,137 @@ interface TenantData {
   }[];
 }
 
-const TenantInfo = ({ setPage, tenant }: TenantInfoProps) => {
-  // Safe tenant data with fallbacks
-  const tenantData: TenantData = tenant || {
-    userID: 0,
-    firstName: '',
-    lastName: '',
-    middleInitial: '',
-    sex: '',
-    age: null,
-    birthDate: '',
-    email: '',
-    firstNumber: '',
-    secondNumber: '',
-    unitNumber: '',
-    moveInDate: '',
-    created_at: '',
-    rentAmount: 0
+const TenantInfo = ({ setPage, tenant, chatUserId, fromChatInfo }: TenantInfoProps) => {
+  const [tenantData, setTenantData] = useState<TenantData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editedUsername, setEditedUsername] = useState('');
+  const [editedPassword, setEditedPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (chatUserId) {
+      fetchTenantData(chatUserId);
+    } else if (tenant) {
+      setTenantData(tenant);
+      setEditedUsername(tenant.username || '');
+    }
+  }, [chatUserId, tenant]);
+
+  const fetchTenantData = async (userId: number) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/users/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setTenantData(data);
+        setEditedUsername(data.username || '');
+      }
+    } catch (error) {
+      console.error('Error fetching tenant data:', error);
+      setError('Failed to load tenant information');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSaveCredentials = async () => {
+    if (!tenantData) return;
+
+    if (editedPassword && editedPassword !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (editedPassword && editedPassword.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError(null);
+      const updateData: any = {
+        username: editedUsername,
+      };
+
+      if (editedPassword) {
+        updateData.password = editedPassword;
+      }
+
+      const response = await fetch(`/api/users/${tenantData.userID}/credentials`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData),
+      });
+
+      if (response.ok) {
+        setSuccess('Credentials updated successfully');
+        setEditMode(false);
+        setEditedPassword('');
+        setConfirmPassword('');
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Failed to update credentials');
+      }
+    } catch (error) {
+      setError('Network error: Unable to save changes');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDownloadDocument = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      setError('Failed to download document');
+    }
+  };
+
+  const handleBack = () => {
+    if (fromChatInfo) {
+      setPage(9, chatUserId);
+    } else {
+      setPage(5);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className='max__size flex flex-col px-5 gap-3 text-customViolet py-3 overflow-hidden bg-white rounded-t-2xl'>
+        <TitleButton setPage={handleBack} title="Tenant Information" />
+        <div className='flex justify-center py-12'>
+          <div className="w-8 h-8 border-3 border-customViolet border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!tenantData) {
+    return (
+      <div className='max__size flex flex-col px-5 gap-3 text-customViolet py-3 overflow-hidden bg-white rounded-t-2xl'>
+        <TitleButton setPage={handleBack} title="Tenant Information" />
+        <div className='flex justify-center py-12'>
+          <p className='text-zinc-500'>No tenant data available</p>
+        </div>
+      </div>
+    );
+  }
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A';
@@ -97,7 +219,6 @@ const TenantInfo = ({ setPage, tenant }: TenantInfoProps) => {
 
   const formatPhoneNumber = (phone: string | null) => {
     if (!phone) return '';
-    // Remove +63 if present and format
     return phone.replace('+63', '').replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
   };
 
@@ -106,138 +227,66 @@ const TenantInfo = ({ setPage, tenant }: TenantInfoProps) => {
       <AiOutlineWoman /> : <AiOutlineMan />;
   };
 
-  // Get profile image (first resource or resource with type 'profile')
-  const getProfileImage = () => {
-    if (!tenantData.resources || tenantData.resources.length === 0) return null;
-    
-    const profileResource = tenantData.resources.find(res => 
-      res.type === 'profile' || res.fileName?.includes('profile')
-    ) || tenantData.resources[0];
-    
-    return profileResource.url;
-  };
-
-  // Get credential images (all resources except profile)
-  const getCredentialImages = () => {
-    if (!tenantData.resources || tenantData.resources.length === 0) return [];
-    
-    return tenantData.resources.filter(res => 
-      !res.type?.includes('profile') && !res.fileName?.includes('profile')
-    );
-  };
-
-  const profileImage = getProfileImage();
-  const credentialImages = getCredentialImages();
+  // Use the direct properties from API response
+  const profileImage = tenantData.profileImage || null;
+  const primaryId = tenantData.primaryId || null;
+  const secondaryId = tenantData.secondaryId || null;
 
   return (
-    <div className='max__size flex flex-col px-5 gap-3 text-customViolet py-3 overflow-hidden bg-white rounded-t-2xl'>
-      <TitleButton setPage={setPage} title="Tenant Information" />
+    <div className='max__size flex flex-col px-5 md:px-8 lg:px-12 gap-3 md:gap-5 text-customViolet py-3 md:py-5 overflow-hidden bg-white rounded-t-2xl'>
+      <TitleButton setPage={handleBack} title="Tenant Information" />
       
-      <div className='h-full w-full flex flex-col gap-5 overflow-x-hidden'>
-        <h2 className='h2__style mr-auto md:mt-5'>Personal Information</h2>
+      {error && (
+        <div className='w-full bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm'>
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className='w-full bg-emerald-50 border border-emerald-200 text-emerald-600 px-4 py-3 rounded-lg text-sm'>
+          {success}
+        </div>
+      )}
+      
+      <div className='h-full w-full flex flex-col gap-5 md:gap-6 lg:gap-8 overflow-y-auto overflow-x-hidden pb-5 max-w-6xl mx-auto'>
+        <h2 className='h2__style mr-auto md:mt-5 text-xl md:text-2xl lg:text-3xl'>Personal Information</h2>
         
         {/* Profile Image */}
-        <div className='h-auto w-full flex__center__all py-2'>
-          <div className='relative rounded-full bg-customViolet h-24 w-24 md:h-28 md:w-28 overflow-hidden'>
+        <div className='h-auto w-full flex__center__all py-2 md:py-4'>
+          <div className='relative rounded-full bg-gradient-to-br from-indigo-500 to-customViolet h-24 w-24 md:h-32 md:w-32 lg:h-40 lg:w-40 overflow-hidden flex items-center justify-center text-white text-3xl md:text-4xl lg:text-5xl font-bold hover:scale-105 transition-transform'>
             {profileImage ? (
               <Image
                 src={profileImage}
                 alt={`${tenantData.firstName} ${tenantData.lastName}`}
                 fill
-                className="object-cover h-full w-full"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
+                className="object-cover"
               />
             ) : (
-              <div className="flex__center__all h-full w-full">
-                <AiOutlineUser className="h-12 w-12 text-white md:h-16 md:w-16" />
-              </div>
+              <AiOutlineUser className="h-12 w-12 md:h-16 md:w-16" />
             )}
           </div>
         </div>
 
-        {/* Personal Information Form */}
+        {/* Personal Information */}
         <div className='primary__btn__holder text-sm md:text-base'>
-          <input 
-            type="text" 
-            value={tenantData.lastName || ''}
-            placeholder='Last Name'
-            className='col-span-6 text__overflow input__text main__input'
-            disabled
-          />
-          <input 
-            type="text" 
-            value={tenantData.firstName || ''}
-            placeholder='First Name'
-            className='col-span-6 text__overflow input__text main__input'
-            disabled
-          />
-          <input 
-            type="text" 
-            value={tenantData.middleInitial || ''}
-            placeholder='M.I.'
-            className='col-span-2 text__overflow input__text main__input text-center md:col-span-1'
-            disabled
-          />
-          <div className='col-span-2 text__overflow input__text main__input flex__center__all md:col-span-1'>
-            {getGenderIcon()}
-          </div>
-          <input 
-            type="number" 
-            value={tenantData.age || ''}
-            placeholder='Age'
-            min={0}
-            className='col-span-2 text__overflow input__text main__input text-center md:col-span-1'
-            disabled
-          />
-          <input 
-            type="date" 
-            value={tenantData.birthDate || ''}
-            className='col-span-6 text__overflow input__text main__input md:col-span-6'
-            disabled
-          />
-          <div className='col-span-4 text__overflow input__text main__input md:col-span-3'>
-            <p>Unit No: {tenantData.unitNumber || 'N/A'}</p>
-          </div>
-          <input 
-            type="email" 
-            value={tenantData.email || ''}
-            placeholder='Email'
-            className='col-span-8 text__overflow input__text main__input md:col-span-7'
-            disabled
-          />
+          <input type="text" value={tenantData.lastName || ''} placeholder='Last Name' className='col-span-6 text__overflow input__text main__input' disabled />
+          <input type="text" value={tenantData.firstName || ''} placeholder='First Name' className='col-span-6 text__overflow input__text main__input' disabled />
+          <input type="text" value={tenantData.middleInitial || ''} placeholder='M.I.' className='col-span-2 text__overflow input__text main__input text-center md:col-span-1' disabled />
+          <div className='col-span-2 text__overflow input__text main__input flex__center__all md:col-span-1'>{getGenderIcon()}</div>
+          <input type="number" value={tenantData.age || ''} placeholder='Age' className='col-span-2 text__overflow input__text main__input text-center md:col-span-1' disabled />
+          <input type="date" value={tenantData.birthDate || ''} className='col-span-6 text__overflow input__text main__input md:col-span-6' disabled />
+          <div className='col-span-4 text__overflow input__text main__input md:col-span-3'><p>Unit No: {tenantData.unitNumber || 'N/A'}</p></div>
+          <input type="email" value={tenantData.email || ''} placeholder='Email' className='col-span-8 text__overflow input__text main__input md:col-span-7' disabled />
           <div className='col-span-6 text__overflow input__text main__input flex gap-3 md:col-span-5'>
             <span className='font-medium'>+63</span>
-            <input 
-              type="text" 
-              value={formatPhoneNumber(tenantData.firstNumber)}
-              className='text__overflow input__text w-full bg-transparent'
-              placeholder='9xx xxx xxxx'
-              disabled
-            />
+            <input type="text" value={formatPhoneNumber(tenantData.firstNumber)} className='text__overflow input__text w-full bg-transparent' placeholder='9xx xxx xxxx' disabled />
           </div>
           <div className='col-span-6 bg-zinc-100 py-3 px-5 tracking-wide flex gap-3 md:col-span-5'>
             <span className='font-medium'>+63</span>
-            <input 
-              type="text" 
-              value={formatPhoneNumber(tenantData.secondNumber)}
-              className='outline-none placeholder:text-customViolet/70 w-full bg-transparent'
-              placeholder='9xx xxx xxxx'
-              disabled
-            />
+            <input type="text" value={formatPhoneNumber(tenantData.secondNumber)} className='outline-none placeholder:text-customViolet/70 w-full bg-transparent' placeholder='9xx xxx xxxx' disabled />
           </div>
-          <div className='col-span-8 text__overflow main__input md:col-span-4'>
-            <p>Renting Since: {formatRentSince(tenantData.moveInDate)}</p>
-          </div>
+          <div className='col-span-8 text__overflow main__input md:col-span-4'><p>Renting Since: {formatRentSince(tenantData.moveInDate)}</p></div>
           <div className='col-span-4 text__overflow main__input md:col-span-3'>
-            <p className='flex__center__y'>
-              Rent: 
-              <TbCurrencyPeso className='text-xs ml-1 text-emerald-700'/>
-              <span className='text-emerald-700'>
-                {formatCurrency(tenantData.rentAmount || 0)}
-              </span>
-            </p>
+            <p className='flex__center__y'>Rent: <TbCurrencyPeso className='text-xs ml-1 text-emerald-700'/><span className='text-emerald-700'>{formatCurrency(tenantData.rentAmount || 0)}</span></p>
           </div>
         </div>
 
@@ -246,92 +295,111 @@ const TenantInfo = ({ setPage, tenant }: TenantInfoProps) => {
           <>
             <h2 className='h2__style mr-auto mt-5'>Property Information</h2>
             <div className='primary__btn__holder text-sm md:text-base'>
-              <div className='col-span-12 text__overflow input__text main__input'>
-                <p><strong>Property:</strong> {tenantData.property.name}</p>
-              </div>
-              <div className='col-span-12 text__overflow input__text main__input'>
-                <p><strong>Address:</strong> {tenantData.property.address}</p>
-              </div>
+              <div className='col-span-12 text__overflow input__text main__input'><p><strong>Property:</strong> {tenantData.property.name}</p></div>
+              <div className='col-span-12 text__overflow input__text main__input'><p><strong>Address:</strong> {tenantData.property.address}</p></div>
             </div>
           </>
         )}
 
         {/* Credentials Section */}
-        <h2 className='h2__style mr-auto mt-5'>Credentials</h2>
-        <div className='primary__btn__holder md:gap-5'>
-          {/* Credential 1 */}
+        <h2 className='h2__style mr-auto mt-5 text-xl md:text-2xl lg:text-3xl'>ID Credentials</h2>
+        <div className='primary__btn__holder md:gap-5 lg:gap-6'>
+          {/* Primary ID */}
           <div className='col-span-6 rounded-sm bg-zinc-100 h-40 flex flex-col relative md:col-span-4 md:h-52 shadow-sm overflow-hidden'>
-            {credentialImages[0] ? (
+            {primaryId ? (
               <div className="relative w-full h-full">
-                <Image
-                  src={credentialImages[0].url}
-                  alt={`Credential 1 - ${credentialImages[0].fileName || 'ID Document'}`}
-                  fill
-                  className="object-cover"
-                  onError={(e) => {
-                    // Fallback to upload UI if image fails to load
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+                <Image src={primaryId} alt="Primary ID" fill className="object-cover" />
               </div>
             ) : (
-              <span className='flex__center__all h-full w-full text-xs flex-col text-customViolet/70 bg-slate-50 outline-none group md:text-base'>
-                <AiOutlineUpload className='text-5xl group-focus:text-6xl md:text-6xl'/>
-                No Image Uploaded
+              <span className='flex__center__all h-full w-full text-xs flex-col text-customViolet/70 bg-slate-50'>
+                <AiOutlineUpload className='text-5xl md:text-6xl'/>No Primary ID Uploaded
               </span>
             )}
           </div>
-
-          {/* Credential 2 */}
+          
+          {/* Secondary ID */}
           <div className='col-span-6 rounded-sm bg-zinc-100 h-40 flex flex-col relative md:col-span-4 md:h-52 shadow-sm overflow-hidden'>
-            {credentialImages[1] ? (
+            {secondaryId ? (
               <div className="relative w-full h-full">
-                <Image
-                  src={credentialImages[1].url}
-                  alt={`Credential 2 - ${credentialImages[1].fileName || 'ID Document'}`}
-                  fill
-                  className="object-cover"
-                  onError={(e) => {
-                    // Fallback to upload UI if image fails to load
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+                <Image src={secondaryId} alt="Secondary ID" fill className="object-cover" />
               </div>
             ) : (
-              <span className='flex__center__all h-full w-full text-xs flex-col text-customViolet/70 bg-slate-50 outline-none group md:text-base'>
-                <AiOutlineUpload className='text-5xl group-focus:text-6xl md:text-6xl'/>
-                No Image Uploaded
+              <span className='flex__center__all h-full w-full text-xs flex-col text-customViolet/70 bg-slate-50'>
+                <AiOutlineUpload className='text-5xl md:text-6xl'/>No Secondary ID Uploaded
               </span>
             )}
           </div>
+        </div>
 
-          {/* Additional Credentials (if more than 2) */}
-          {credentialImages.slice(2).map((credential, index) => (
-            <div key={index + 2} className='col-span-6 rounded-sm bg-zinc-100 h-40 flex flex-col relative md:col-span-4 md:h-52 shadow-sm overflow-hidden'>
-              <div className="relative w-full h-full">
-                <Image
-                  src={credential.url}
-                  alt={`Credential ${index + 3} - ${credential.fileName || 'ID Document'}`}
-                  fill
-                  className="object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+        {/* Login Credentials */}
+        <div className='mt-5'>
+          <div className='flex items-center justify-between mb-3'>
+            <h2 className='h2__style'>Login Credentials</h2>
+            {!editMode && <button onClick={() => setEditMode(true)} className='text-sm text-customViolet hover:underline flex items-center gap-1'><AiOutlineEdit /> Edit</button>}
+          </div>
+          
+          {editMode ? (
+            <div className='primary__btn__holder text-sm md:text-base'>
+              <div className='col-span-12 mb-2'>
+                <label className='text-sm font-medium text-zinc-700 mb-1 block'>Username</label>
+                <input type="text" value={editedUsername} onChange={(e) => setEditedUsername(e.target.value)} placeholder='Username' className='w-full text__overflow input__text main__input' />
+              </div>
+              <div className='col-span-12 mb-2'>
+                <label className='text-sm font-medium text-zinc-700 mb-1 block'>New Password (leave blank to keep current)</label>
+                <input type="password" value={editedPassword} onChange={(e) => setEditedPassword(e.target.value)} placeholder='New Password' className='w-full text__overflow input__text main__input' />
+              </div>
+              <div className='col-span-12 mb-4'>
+                <label className='text-sm font-medium text-zinc-700 mb-1 block'>Confirm Password</label>
+                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder='Confirm Password' className={`w-full text__overflow input__text main__input ${confirmPassword && editedPassword !== confirmPassword ? 'border-red-400' : ''}`} />
+                {confirmPassword && editedPassword !== confirmPassword && <p className='text-xs text-red-500 mt-1'>Passwords do not match</p>}
+              </div>
+              <div className='col-span-12 flex gap-2'>
+                <button onClick={() => { setEditMode(false); setEditedPassword(''); setConfirmPassword(''); setEditedUsername(tenantData?.username || ''); }} className='flex-1 px-4 py-2 border border-zinc-300 text-zinc-700 rounded-lg hover:bg-zinc-50' disabled={saving}>Cancel</button>
+                <button onClick={handleSaveCredentials} disabled={saving} className='flex-1 px-4 py-2 bg-customViolet text-white rounded-lg hover:bg-customViolet/90 disabled:opacity-50'>{saving ? 'Saving...' : 'Save Changes'}</button>
               </div>
             </div>
-          ))}
+          ) : (
+            <div className='bg-zinc-50 rounded-lg p-4'>
+              <div className='flex items-center justify-between mb-2'><span className='text-sm text-zinc-600'>Username:</span><span className='font-medium'>{tenantData?.username}</span></div>
+              <div className='flex items-center justify-between'><span className='text-sm text-zinc-600'>Password:</span><span className='font-medium'>••••••••</span></div>
+            </div>
+          )}
+        </div>
+
+        {/* Signed Documents */}
+        <div className='mt-5'>
+          <h2 className='h2__style mb-3'>Signed Documents</h2>
+          <div className='flex flex-col gap-3'>
+            {tenantData.signedContractUrl ? (
+              <div className='bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between'>
+                <div className='flex items-center gap-3'>
+                  <div className='w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center'><HiOutlineDocumentText className='text-2xl text-white' /></div>
+                  <div><h4 className='font-semibold text-zinc-900'>Signed Contract</h4><p className='text-sm text-zinc-600'>Rental agreement document</p></div>
+                </div>
+                <button onClick={() => handleDownloadDocument(tenantData.signedContractUrl!, 'Signed_Contract.pdf')} className='px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2'><AiOutlineDownload className='text-lg' />Download</button>
+              </div>
+            ) : (
+              <div className='bg-zinc-50 border border-zinc-200 rounded-lg p-4 text-center'><AiOutlineFileText className='text-4xl text-zinc-400 mx-auto mb-2' /><p className='text-sm text-zinc-500'>No signed contract available</p></div>
+            )}
+
+            {tenantData.signedRulesUrl ? (
+              <div className='bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg p-4 flex items-center justify-between'>
+                <div className='flex items-center gap-3'>
+                  <div className='w-12 h-12 bg-emerald-500 rounded-lg flex items-center justify-center'><HiOutlineDocumentText className='text-2xl text-white' /></div>
+                  <div><h4 className='font-semibold text-zinc-900'>Signed Rules</h4><p className='text-sm text-zinc-600'>House rules agreement</p></div>
+                </div>
+                <button onClick={() => handleDownloadDocument(tenantData.signedRulesUrl!, 'Signed_Rules.pdf')} className='px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2'><AiOutlineDownload className='text-lg' />Download</button>
+              </div>
+            ) : (
+              <div className='bg-zinc-50 border border-zinc-200 rounded-lg p-4 text-center'><AiOutlineFileText className='text-4xl text-zinc-400 mx-auto mb-2' /><p className='text-sm text-zinc-500'>No signed rules available</p></div>
+            )}
+          </div>
         </div>
 
         {/* Action Buttons */}
         <div className='primary__btn__holder mt-5 md:flex md:items-center md:justify-center md:mt-10 md:gap-5'>
-          <button className='col-span-6 primary__btn click__action hover__action focus__action flex__center__all md:min-w-[200px] md:gap-3 hover:bg-customViolet/90 transition-colors'>
-            <AiOutlineEdit className='text-xl'/> 
-            Edit
-          </button>
-          <button className='col-span-6 primary__btn click__action hover__action focus__action flex__center__all md:min-w-[200px] md:gap-3 hover:bg-rose-600 transition-colors group'>
-            <AiOutlineDelete className='text-xl group-hover:text-rose-100'/> 
-            Delete
+          <button className='col-span-12 primary__btn click__action hover__action focus__action flex__center__all md:min-w-[200px] md:gap-3 hover:bg-rose-600 transition-colors group'>
+            <AiOutlineDelete className='text-xl group-hover:text-rose-100'/> Delete Tenant
           </button>
         </div>
       </div>

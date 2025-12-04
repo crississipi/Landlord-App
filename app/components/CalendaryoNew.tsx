@@ -185,27 +185,27 @@ const Calendaryo = ({ setPage, onSelectMaintenance }: CalendaryoProps) => {
   const hasSchedules = daySchedules.length > 0;
 
   return (
-    <div className="w-full flex flex-col gap-3">
+    <div className="w-full flex flex-col gap-3 md:gap-4 lg:gap-5">
       {/* Calendar */}
-      <div className="w-full h-auto flex flex-col bg-neutral-100 rounded-lg overflow-hidden">
+      <div className="w-full h-auto flex flex-col bg-neutral-100 rounded-lg md:rounded-xl overflow-hidden">
         {/* Month header */}
-        <div className="w-full flex items-center justify-between text-lg p-2">
+        <div className="w-full flex items-center justify-between text-lg md:text-xl lg:text-2xl p-2 md:p-3 lg:p-4">
           <button
             type="button"
-            className="p-1 rounded-sm text-2xl hover:bg-neutral-200 focus:bg-customViolet focus:text-white ease-out duration-200"
+            className="p-1 md:p-2 rounded-sm text-2xl md:text-3xl hover:bg-neutral-200 focus:bg-customViolet focus:text-white ease-out duration-200"
             onClick={handlePrevMonth}
           >
             <HiOutlineArrowSmallLeft />
           </button>
           <button
             type="button"
-            className="p-1 px-3 rounded-sm hover:bg-neutral-200 focus:bg-customViolet focus:text-white ease-out duration-200"
+            className="p-1 px-3 md:px-4 rounded-sm hover:bg-neutral-200 focus:bg-customViolet focus:text-white ease-out duration-200 font-medium"
           >
             {currMonth} {date.getFullYear()}
           </button>
           <button
             type="button"
-            className="p-1 rounded-sm text-2xl hover:bg-neutral-200 focus:bg-customViolet focus:text-white ease-out duration-200"
+            className="p-1 md:p-2 rounded-sm text-2xl md:text-3xl hover:bg-neutral-200 focus:bg-customViolet focus:text-white ease-out duration-200"
             onClick={handleNextMonth}
           >
             <HiOutlineArrowSmallRight />
@@ -215,7 +215,7 @@ const Calendaryo = ({ setPage, onSelectMaintenance }: CalendaryoProps) => {
         {/* Week headers */}
         <div className="w-full grid grid-cols-7">
           {days.map((day, i) => (
-            <span key={i} className="col-span-1 text-sm font-medium w-full text-center mt-3">
+            <span key={i} className="col-span-1 text-sm md:text-base lg:text-lg font-medium w-full text-center mt-3">
               {format(day, "EEE")}
             </span>
           ))}

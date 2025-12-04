@@ -21,7 +21,7 @@ export async function GET(
     const partnerId = parseInt(params.conversationID);
 
     // Get messages between current user and the partner
-    const messages = await prisma.messages.findMany({
+    const rawMessages = await prisma.messages.findMany({
       where: {
         OR: [
           {
@@ -48,6 +48,51 @@ export async function GET(
       }
     });
 
+    // Group messages by batchId
+    const batchMap = new Map();
+    const groupedMessages: any[] = [];
+
+    rawMessages.forEach((msg: any) => {
+      if (msg.batchId) {
+        if (!batchMap.has(msg.batchId)) {
+          // First message in batch - create the grouped message
+          batchMap.set(msg.batchId, {
+            messageID: msg.messageID,
+            senderID: msg.senderID,
+            receiverID: msg.receiverID,
+            message: msg.message,
+            dateSent: msg.dateSent,
+            read: msg.read,
+            sender: msg.sender,
+            batchId: msg.batchId,
+            files: []
+          });
+          groupedMessages.push(batchMap.get(msg.batchId));
+        }
+        
+        // Add file to the batch
+        if (msg.fileUrl) {
+          batchMap.get(msg.batchId).files.push({
+            url: msg.fileUrl,
+            fileName: msg.fileName,
+            fileType: msg.fileType,
+            fileSize: msg.fileSize
+          });
+        }
+      } else {
+        // Message without batch - add as is
+        groupedMessages.push({
+          ...msg,
+          files: msg.fileUrl ? [{
+            url: msg.fileUrl,
+            fileName: msg.fileName,
+            fileType: msg.fileType,
+            fileSize: msg.fileSize
+          }] : []
+        });
+      }
+    });
+
     // Mark messages as read
     await prisma.messages.updateMany({
       where: {
@@ -60,7 +105,7 @@ export async function GET(
       }
     });
 
-    return NextResponse.json(messages);
+    return NextResponse.json(groupedMessages);
   } catch (error) {
     console.error('Error fetching conversation:', error);
     return NextResponse.json(

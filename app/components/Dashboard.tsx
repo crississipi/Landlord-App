@@ -9,7 +9,7 @@ const Dashboard = ({ inDbPage }: DashboardProps ) => {
   const [chart, setChart] = useState(true);
   const toggleChart = () => { setChart(!chart); }
   return (
-    <div className='h-auto w-full flex__center__all flex-col gap-3 md:grid md:grid-cols-12 text-customViolet'>
+    <div className='h-auto w-full flex__center__all flex-col gap-3 md:gap-4 lg:gap-6 md:grid md:grid-cols-12 text-customViolet'>
       <div className='col-span-5 column__align md:hidden'>
         <div className='h-9 w-full flex justify-end'>
           <button className='outline-none flex__center__y gap-2 py-1 text-sm relative click__action mr-1' onClick={toggleChart}>
@@ -22,7 +22,7 @@ const Dashboard = ({ inDbPage }: DashboardProps ) => {
           {chart ? (<Chart type='bar'/>) : (<Chart type='pie'/>)}
         </div>
       </div>
-      <div className={`col-span-5 h-auto hidden md:block lg:col-span-4`}>
+      <div className={`col-span-5 h-auto hidden md:block lg:col-span-4 xl:col-span-3`}>
         <Chart type='pie'/>
       </div>
       <div className={`${!inDbPage ? 'grid-rows-11 md:col-span-7 md:h-48 lg:col-span-4 lg:h-40 lg:gap-1.5' : 'grid-rows-12 md:col-span-7 md:h-40 lg:h-32 lg:col-span-5'} primary__btn__holder text-customViolet text-sm`}>

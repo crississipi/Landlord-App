@@ -52,14 +52,14 @@ const TenantList: React.FC<TenantListProps> = ({ setPage, onTenantSelect }) => {
 
   if (loading) {
     return (
-      <div className="flex__center__all h-32">
-        <span className="text-gray-500">Loading tenants...</span>
+      <div className="flex__center__all h-32 md:h-40 lg:h-48">
+        <span className="text-gray-500 md:text-lg">Loading tenants...</span>
       </div>
     );
   }
 
   return (
-    <div className="primary__btn__holder">
+    <div className="primary__btn__holder md:gap-4 lg:gap-5">
       {Object.entries(tenantsByUnit).map(([unit, group]) => (
         <TenantsPerUnit
           key={unit}

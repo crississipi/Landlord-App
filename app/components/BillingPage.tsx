@@ -7,6 +7,7 @@ import { AiOutlineCaretDown } from 'react-icons/ai';
 import { HiOutlineArrowNarrowRight } from 'react-icons/hi';
 import { MdCalendarToday, MdOutlineElectricBolt, MdWaterDrop, MdHome, MdPerson, MdAttachMoney } from 'react-icons/md';
 import { BillingCreatePayload, UnbilledUnit, BillingRecord } from '@/types';
+import { TitleButton } from './customcomponents';
 
 // Image Upload Component
 function ImageUpload({ 
@@ -198,30 +199,26 @@ function BillingCard({
 }
 
 // Quick Stats Component
-function StatsCard({ title, value, subtitle, icon, color = 'indigo' }: { 
+function StatsCard({ title, value, subtitle, color = 'indigo' }: { 
   title: string; 
   value: string; 
   subtitle?: string; 
-  icon: React.ReactNode;
   color?: 'indigo' | 'emerald' | 'amber';
 }) {
   const colorClasses = {
-    indigo: 'from-indigo-500 to-indigo-600',
-    emerald: 'from-emerald-500 to-emerald-600',
-    amber: 'from-amber-500 to-amber-600',
+    indigo: 'bg-indigo-50 text-indigo-600',
+    emerald: 'bg-emerald-50 text-emerald-600',
+    amber: 'bg-amber-50 text-amber-600',
   };
 
   return (
-    <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-sm">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-zinc-500 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-zinc-900">{value}</p>
-          {subtitle && <p className="text-xs text-zinc-400 mt-1">{subtitle}</p>}
-        </div>
-        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center shadow-sm`}>
-          <span className="text-white">{icon}</span>
-        </div>
+    <div className={`bg-gradient-to-tr ${colorClasses[color]} w-full h-max p-4 rounded-xl border shadow-sm`}>
+      <div className='w-full flex justify-between'>
+        <p className="text-sm mb-1 font-semibold">{title}</p>
+        <span className='flex flex-col items-end'>
+          <p className="text-2xl font-bold">{value}</p>
+          {subtitle && <p className="text-xs mt-1">{subtitle}</p>}
+        </span>
       </div>
     </div>
   );
@@ -242,8 +239,10 @@ function EmptyState({ icon, title, description }: { icon: React.ReactNode; title
 
 export default function BillingPage({
   propertyId,
+  setPage
 }: {
   propertyId: number;
+  setPage: (page: number) => void;
 }) {
   // Form state
   const [selectedUnit, setSelectedUnit] = useState<string>('');
@@ -439,15 +438,17 @@ export default function BillingPage({
   const monthDisplay = new Date(month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 lg:p-6">
+    <div className="w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 bg-white rounded-t-2xl">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-8 md:mb-10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900">Billing Management</h1>
-            <p className="text-zinc-500 mt-1">Create and manage billing statements for tenants</p>
+          <div className='h-auto w-full flex items-end justify-between py-0.5'>
+            <TitleButton setPage={setPage} title="Billing Management"/>
           </div>
-          <div className="flex items-center gap-3">
+          <div>
+            <p className="text-zinc-500 mt-1 md:text-base lg:text-lg">Create and manage billing statements for tenants</p>
+          </div>
+          <div className="flex items-center gap-3 justify-end">
             <div className="relative">
               <MdCalendarToday className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400" />
               <input
@@ -466,21 +467,18 @@ export default function BillingPage({
             title="Total Billed" 
             value={`₱${totalBilled.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
             subtitle={monthDisplay}
-            icon={<TbCurrencyPeso className="text-xl" />}
             color="indigo"
           />
           <StatsCard 
             title="Units Billed" 
             value={totalUnits.toString()}
             subtitle="This month"
-            icon={<TbCheck className="text-xl" />}
             color="emerald"
           />
           <StatsCard 
             title="Pending Units" 
             value={pendingUnits.toString()}
             subtitle="Awaiting billing"
-            icon={<TbAlertCircle className="text-xl" />}
             color="amber"
           />
         </div>

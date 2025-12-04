@@ -235,6 +235,13 @@ export interface MessageType {
     firstName: string;
     lastName: string;
   };
+  files?: {
+    url: string;
+    fileName: string;
+    fileType: string;
+    fileSize?: string;
+  }[];
+  batchId?: string | null;
 }
 
 export interface Conversation {
@@ -242,6 +249,7 @@ export interface Conversation {
     userID: number;
     name: string;
     isOnline: boolean;
+    profileImage?: string | null;
   };
   lastMessage: string;
   timestamp: string;
@@ -253,6 +261,7 @@ export interface ChatHeadProps {
   name: string;
   userId?: number;
   isOnline?: boolean;
+  profileImage?: string | null;
 }
 
 export interface MessageFingerProps {
@@ -263,12 +272,20 @@ export interface MessageFingerProps {
   unreadCount: number;
   userId?: number;
   isOnline?: boolean;
+  profileImage?: string | null;
 }
 
 export interface MessageBubbleProps {
   sender: boolean;
   message: string;
   timestamp: string;
+  files?: {
+    url: string;
+    fileName: string;
+    fileType: string;
+    fileSize?: string;
+  }[];
+  batchId?: string | null;
 }
 
 export type UnitBillingRow = {

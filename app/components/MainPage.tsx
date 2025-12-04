@@ -146,31 +146,41 @@ const MainPage = ({ setPage }: ChangePageProps) => {
 
   return (
     <div className='h-auto w-full flex flex-col justify-start bg-customViolet text-customViolet relative scroll-smooth'>
-      <div className='h-1/6 w-full bg-customViolet sticky top-0 z-10 grid grid-cols-2 px-5 items-start text-white'>
-        <span className='col-span-full text-left text-sm font-light mb-auto'>{today.toDateString()}</span>
-        <div className='col-span-full w-full flex flex-col my-2'>
-          <h2 className='col-span-full text-base font-medium text-center'>This Month&apos;s Revenue</h2>
-          <h3 className='col-span-full font-semibold text-3xl flex items-center justify-center'>
-            <TbCurrencyPeso className='text-2xl stroke-2'/>
+      <div className='h-1/6 w-full bg-customViolet sticky top-0 z-10 grid grid-cols-6 px-3 gap-y-3 items-start text-white'>
+        <span className='col-span-full text-left text-sm md:text-base lg:text-lg font-light mb-auto'>{today.toDateString()}</span>
+        <div className='col-span-3 w-full flex flex-col md:my-4'>
+          <h2 className='col-span-full text-base md:text-lg lg:text-xl font-medium'>This Month&apos;s Revenue</h2>
+          <h3 className='col-span-full font-semibold text-3xl md:text-4xl lg:text-5xl flex items-center'>
+            <TbCurrencyPeso className='text-2xl md:text-3xl lg:text-4xl stroke-2'/>
             {dashboardData ? formatCurrency(dashboardData.stats.totalRevenue) : '0.00'}
           </h3>
         </div>
-        <div className='col-span-1 w-full flex flex-col items-center justify-center'>
-          <h2 className='col-span-2 font-light text-sm'>Billed Units</h2>
-          <h3 className='col-span-2 font-medium text-lg'>{dashboardData?.stats.billedUnits || 0}</h3>
+        <div className='col-span-3 w-full flex flex-col items-end justify-center'>
+          <h2 className='col-span-2 font-light text-sm md:text-base'>Delayed Payments</h2>
+          <h2 className='col-span-2 font-medium text-lg md:text-xl lg:text-2xl'>{dashboardData?.stats.pendingMaintenance || 0} / <strong className="text-sm ml-1">{dashboardData?.stats.totalProperties || 0}</strong></h2>
         </div>
-        <div className='col-span-1 w-full flex flex-col items-center justify-center'>
-          <h2 className='col-span-2 font-light text-sm'>Total Tenants</h2>
-          <h2 className='col-span-2 font-medium text-lg'>{dashboardData?.stats.totalTenants || 0}</h2>
+        <div className='col-span-2 w-full flex flex-col items-center justify-center'>
+          <h2 className='col-span-2 font-light text-sm md:text-base'>Paid Tenants</h2>
+          <h3 className='col-span-2 font-medium text-lg md:text-xl lg:text-2xl tracking-wider'>{dashboardData?.stats.billedUnits || 0}/
+            <strong className="text-sm ml-1">{dashboardData?.stats.totalTenants || 0}</strong>
+          </h3>
+        </div>
+        <div className='col-span-2 w-full flex flex-col items-center justify-center'>
+          <h2 className='col-span-2 font-light text-sm md:text-base'>Rented Units</h2>
+          <h2 className='col-span-2 font-medium text-lg md:text-xl lg:text-2xl'>{dashboardData?.stats.billedUnits || 0} / <strong className="text-sm ml-1">{dashboardData?.stats.totalProperties || 0}</strong></h2>
+        </div>
+        <div className='col-span-2 w-full flex flex-col items-center justify-center'>
+          <h2 className='col-span-2 font-light text-sm md:text-base'>Maintenance Cost</h2>
+          <h2 className='col-span-2 font-medium text-lg md:text-xl lg:text-2xl flex items-center'><TbCurrencyPeso className='text-base md:text-lg lg:text-xl stroke-2'/>1,500</h2>
         </div>
       </div>
-      <div className={`h-[93vh] border border-black w-full flex flex-col gap-3 rounded-t-2xl bg-white z-30 overflow-x-hidden sticky top-full p-2`}>
+      <div className={`h-[93vh] border border-black w-full flex flex-col gap-3 md:gap-4 lg:gap-5 rounded-t-2xl bg-white z-30 overflow-x-hidden sticky top-full p-2 md:p-4 lg:p-6`}>
         {/* DO NOT CHANGE THIS */}
-        <div className='min-h-16 w-full bg-zinc-100 grid grid-cols-5 items-center rounded-lg'>
+        <div className='min-h-16 md:min-h-20 w-full bg-zinc-100 grid grid-cols-5 items-center rounded-lg'>
           <CustomNavBtn 
-            btnName='Dashboard' 
+            btnName='Home' 
             mainPage={true} 
-            onClick={() => newPage(1)}
+            onClick={() => newPage(0)}
           />
           <CustomNavBtn 
             btnName='Billing' 
@@ -195,17 +205,17 @@ const MainPage = ({ setPage }: ChangePageProps) => {
         </div>
         {/* ONLY CHANGE THIS */}
         <div className='h-full w-full flex overflow-y-auto overflow-x-hidden'>
-          <div className='w-full flex flex-col gap-5 pb-6'>
+          <div className='w-full flex flex-col gap-5 md:gap-6 lg:gap-8 pb-6 max-w-7xl mx-auto'>
             {loading ? (
-              <div className="w-full flex justify-center py-12">
+              <div className="w-full flex justify-center py-12 md:py-16">
                 <div className="flex flex-col items-center gap-3">
-                  <div className="w-8 h-8 border-3 border-customViolet border-t-transparent rounded-full animate-spin" />
-                  <p className="text-customViolet/70">Loading dashboard...</p>
+                  <div className="w-8 h-8 md:w-10 md:h-10 border-3 border-customViolet border-t-transparent rounded-full animate-spin" />
+                  <p className="text-customViolet/70 md:text-lg">Loading dashboard...</p>
                 </div>
               </div>
             ) : error ? (
               <div className="w-full flex justify-center py-12">
-                <p className="text-red-500">{error}</p>
+                <p className="text-red-500 md:text-lg">{error}</p>
               </div>
             ) : dashboardData ? (
               <>

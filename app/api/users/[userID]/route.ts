@@ -16,16 +16,35 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const userId = parseInt(params.userID);
+    
     const user = await prisma.users.findUnique({
       where: {
-        userID: parseInt(params.userID)
+        userID: userId
       },
       select: {
         userID: true,
         firstName: true,
         lastName: true,
+        middleInitial: true,
+        sex: true,
+        bday: true,
         isOnline: true,
-        email: true
+        email: true,
+        firstNumber: true,
+        secondNumber: true,
+        role: true,
+        propertyId: true,
+        signedContractUrl: true,
+        signedRulesUrl: true,
+        property: {
+          select: {
+            propertyId: true,
+            name: true,
+            address: true,
+            rent: true
+          }
+        }
       }
     });
 
@@ -33,7 +52,34 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json(user);
+    // Fetch all resources for this user (profile, primary_id, secondary_id)
+    const resources = await prisma.resource.findMany({
+      where: {
+        referenceId: userId,
+        referenceType: 'Users'
+      },
+      select: {
+        resourceId: true,
+        url: true,
+        fileName: true
+      },
+      orderBy: {
+        fileName: 'asc'
+      }
+    });
+
+    // Categorize resources by type
+    const profileImage = resources.find(r => r.fileName.includes('_profile_'))?.url || null;
+    const primaryId = resources.find(r => r.fileName.includes('_primary_id_'))?.url || null;
+    const secondaryId = resources.find(r => r.fileName.includes('_secondary_id_'))?.url || null;
+
+    return NextResponse.json({
+      ...user,
+      profileImage,
+      primaryId,
+      secondaryId,
+      resources: resources.map(r => ({ url: r.url, fileName: r.fileName, resourceId: r.resourceId }))
+    });
   } catch (error) {
     console.error('Error fetching user:', error);
     return NextResponse.json(
