@@ -9,8 +9,8 @@ import { HiOutlineDocument } from 'react-icons/hi';
 interface MediaFile {
   url: string;
   fileName: string;
-  fileType: string;
-  fileSize?: string;
+  fileType: string | null;
+  fileSize?: string | null;
 }
 
 interface MediaPreviewModalProps {
@@ -48,14 +48,15 @@ const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({ files, initialInd
     }
   };
 
-  const getFileIcon = (fileType: string) => {
-    if (fileType.includes('pdf')) return '📄';
-    if (fileType.includes('word') || fileType.includes('doc')) return '📝';
-    if (fileType.includes('excel') || fileType.includes('sheet')) return '📊';
-    if (fileType.includes('powerpoint') || fileType.includes('presentation')) return '📽️';
-    if (fileType.includes('zip') || fileType.includes('rar')) return '🗜️';
-    if (fileType.includes('text')) return '📃';
-    return '📎';
+  const getFileIcon = (fileType: string | null) => {
+    if (!fileType) return 'UNKNOWN';
+    if (fileType.includes('pdf')) return 'PDF';
+    if (fileType.includes('word') || fileType.includes('doc')) return 'DOCS/WORD';
+    if (fileType.includes('excel') || fileType.includes('sheet')) return 'CSV/XLSX';
+    if (fileType.includes('powerpoint') || fileType.includes('presentation')) return 'PPTX';
+    if (fileType.includes('zip') || fileType.includes('rar')) return 'ZIP/RAR';
+    if (fileType.includes('text')) return 'TXT';
+    return '?';
   };
 
   const formatFileSize = (bytes: string | undefined) => {
@@ -67,12 +68,12 @@ const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({ files, initialInd
     return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
   };
 
-  const isImage = currentFile.fileType.startsWith('image/');
-  const isVideo = currentFile.fileType.startsWith('video/');
+  const isImage = currentFile.fileType?.startsWith('image/') || false;
+  const isVideo = currentFile.fileType?.startsWith('video/') || false;
   const isDocument = !isImage && !isVideo;
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black bg-opacity-95 flex items-center justify-center">
+    <div className="fixed inset-0 z-999 bg-black bg-opacity-95 flex items-center justify-center">
       {/* Close Button */}
       <button
         onClick={onClose}
@@ -96,13 +97,13 @@ const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({ files, initialInd
             onClick={handlePrevious}
             className="absolute left-4 md:left-8 z-50 text-white hover:text-gray-300 transition-colors p-3 md:p-4 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70"
           >
-            <AiOutlineLeft className="text-4xl md:text-5xl" />
+            <AiOutlineLeft className="text-3xl md:text-5xl" />
           </button>
           <button
             onClick={handleNext}
             className="absolute right-4 md:right-8 z-50 text-white hover:text-gray-300 transition-colors p-3 md:p-4 bg-black bg-opacity-50 rounded-full hover:bg-opacity-70"
           >
-            <AiOutlineRight className="text-4xl md:text-5xl" />
+            <AiOutlineRight className="text-3xl md:text-5xl" />
           </button>
         </>
       )}
@@ -144,10 +145,18 @@ const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({ files, initialInd
         {isDocument && (
           <div className="bg-white rounded-xl md:rounded-2xl p-8 md:p-10 lg:p-12 max-w-2xl w-full shadow-2xl">
             <div className="flex flex-col items-center gap-6 md:gap-8">
-              <div className="text-8xl md:text-9xl">{getFileIcon(currentFile.fileType)}</div>
+              <div className={`text-lg font-bold p-1 px-4 border rounded-lg 
+                ${currentFile.fileType?.includes('pdf') ? 'bg-rose-50 text-rose-600' : 
+                  currentFile.fileType?.includes('word') || currentFile.fileType?.includes('doc') ? 'bg-blue-50 text-blue-600' : 
+                  currentFile.fileType?.includes('excel') || currentFile.fileType?.includes('sheet') ? 'bg-emerald-50 text-emerald-600' :
+                  currentFile.fileType?.includes('powerpoint') || currentFile.fileType?.includes('presentation') ? 'bg-amber-50 text-amber-600' :
+                  currentFile.fileType?.includes('zip') || currentFile.fileType?.includes('rar') ? 'bg-violet-50 text-violet-600' :
+                  'bg-neutral-50 text-neutral-600'
+                }
+                
+              `}>{getFileIcon(currentFile.fileType)}</div>
               <div className="text-center">
                 <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold text-customViolet mb-2">{currentFile.fileName}</h3>
-                <p className="text-gray-600 mb-1 md:text-lg">Type: {currentFile.fileType}</p>
                 {currentFile.fileSize && (
                   <p className="text-gray-600 md:text-lg">Size: {formatFileSize(currentFile.fileSize)}</p>
                 )}
@@ -165,7 +174,7 @@ const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({ files, initialInd
               )}
 
               {/* Text file preview */}
-              {currentFile.fileType.startsWith('text/') && (
+              {currentFile.fileType?.startsWith('text/') && (
                 <div className="w-full max-h-96 overflow-auto bg-gray-100 p-4 rounded-lg">
                   <iframe
                     src={currentFile.url}

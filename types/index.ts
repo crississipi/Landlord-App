@@ -227,7 +227,7 @@ export interface MessageType {
   messageID: number;
   senderID: number;
   receiverID: number;
-  message: string;
+  message: string | null;
   dateSent: string;
   read: boolean;
   sender: {
@@ -238,8 +238,8 @@ export interface MessageType {
   files?: {
     url: string;
     fileName: string;
-    fileType: string;
-    fileSize?: string;
+    fileType: string | null;
+    fileSize?: string | null;
   }[];
   batchId?: string | null;
 }
@@ -277,13 +277,13 @@ export interface MessageFingerProps {
 
 export interface MessageBubbleProps {
   sender: boolean;
-  message: string;
+  message: string | null;
   timestamp: string;
   files?: {
     url: string;
     fileName: string;
-    fileType: string;
-    fileSize?: string;
+    fileType: string | null;
+    fileSize?: string | null;
   }[];
   batchId?: string | null;
 }
@@ -306,6 +306,7 @@ export type UnitBillingRow = {
     electricMeterImage?: string; // base64 image
     tenantNames?: string;
     note?: string;
+    billingType: 'rent' | 'utility'; // type of billing
   };
 
 export interface UnbilledUnit {
@@ -326,6 +327,10 @@ export interface BillingRecord {
   totalElectric: number;
   totalAmount: number;
   dateIssued: string;
+  billingType: 'rent' | 'utility';
+  paymentStatus: 'pending' | 'partial' | 'paid';
+  amountPaid: number;
+  dueDate: string | null;
   tenant: {
     userID: number;
     name: string;
@@ -335,6 +340,30 @@ export interface BillingRecord {
     name: string;
     address: string;
   };
+}
+
+export interface PaymentRecord {
+  paymentID: number;
+  billingID: number;
+  userID: number;
+  amount: number;
+  paymentMethod: 'cash' | 'gcash' | 'bank_transfer';
+  paymentStatus: 'partial' | 'fully_paid';
+  gcashReceiptImage?: string | null;
+  gcashTransactionId?: string | null;
+  datePaid: string;
+  notes?: string | null;
+}
+
+export interface PaymentCreatePayload {
+  billingID: number;
+  userID: number;
+  amount: number;
+  paymentMethod: 'cash' | 'gcash' | 'bank_transfer';
+  paymentStatus: 'partial' | 'fully_paid';
+  gcashReceiptImage?: string;
+  gcashTransactionId?: string;
+  notes?: string;
 }
 
 export interface UnitTenant {

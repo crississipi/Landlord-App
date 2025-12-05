@@ -27,7 +27,7 @@ interface Message {
   messageID: number;
   senderID: number;
   receiverID: number;
-  message: string;
+  message: string | null;
   dateSent: string;
   read: boolean;
   sender?: {
@@ -38,8 +38,15 @@ interface Message {
   };
   fileUrl?: string;
   fileName?: string;
-  fileType?: string;
-  fileSize?: number;
+  fileType?: string | null;
+  fileSize?: string | null;
+  files?: {
+    url: string;
+    fileName: string;
+    fileType: string | null;
+    fileSize?: string | null;
+  }[];
+  batchId?: string | null;
 }
 
 interface UploadedFile {
@@ -60,6 +67,7 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
   // File management state
   const [fileInfo, showFileInfo] = useState(false);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
+  const [selectedFileIndex, setSelectedFileIndex] = useState(0);
   const [option, setOption] = useState<'images' | 'videos' | 'files'>('images');
   const [allFiles, setAllFiles] = useState<UploadedFile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -110,27 +118,46 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
 
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/messages/${chatUserId}?all=true`);
+      const response = await fetch(`/api/messages/${chatUserId}`);
       
       if (response.ok) {
         const data = await response.json();
-        const messages: Message[] = data.messages || data;
+        const messages: Message[] = Array.isArray(data) ? data : (data.messages || []);
         
-        // Extract files from messages
-        const files: UploadedFile[] = messages
-          .filter(message => message.fileUrl && message.fileName)
-          .map(message => ({
-            url: message.fileUrl!,
-            name: message.fileName!,
-            type: message.fileType || 'application/octet-stream',
-            size: message.fileSize || 0,
-            uploadedAt: message.dateSent,
-            messageID: message.messageID,
-            senderID: message.senderID
-          }))
-          .reverse();
+        // Extract files from messages - handle both old format (fileUrl) and new format (files array)
+        const files: UploadedFile[] = [];
+        
+        messages.forEach(message => {
+          // Handle new format with files array
+          if (message.files && message.files.length > 0) {
+            message.files.forEach(file => {
+              files.push({
+                url: file.url,
+                name: file.fileName,
+                type: file.fileType || 'application/octet-stream',
+                size: parseInt(file.fileSize || '0') || 0,
+                uploadedAt: message.dateSent,
+                messageID: message.messageID,
+                senderID: message.senderID
+              });
+            });
+          }
+          // Handle old format with fileUrl
+          else if (message.fileUrl && message.fileName) {
+            files.push({
+              url: message.fileUrl,
+              name: message.fileName,
+              type: message.fileType || 'application/octet-stream',
+              size: parseInt(message.fileSize || '0') || 0,
+              uploadedAt: message.dateSent,
+              messageID: message.messageID,
+              senderID: message.senderID
+            });
+          }
+        });
 
-        setAllFiles(files);
+        // Reverse to show newest first
+        setAllFiles(files.reverse());
       }
     } catch (error) {
       console.error('Error fetching files:', error);
@@ -139,9 +166,18 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
     }
   };
 
-  const handleFileClick = (file: UploadedFile) => {
+  const handleFileClick = (file: UploadedFile, index: number) => {
     setSelectedFile(file);
+    setSelectedFileIndex(index);
     showFileInfo(true);
+  };
+
+  const handleNavigate = (index: number) => {
+    const newFile = filteredFiles[index];
+    if (newFile) {
+      setSelectedFile(newFile);
+      setSelectedFileIndex(index);
+    }
   };
 
   const downloadFile = async (url: string, filename: string) => {
@@ -162,14 +198,14 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
   };
 
   const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) return '🖼️';
-    if (fileType.startsWith('video/')) return '🎬';
-    if (fileType.startsWith('audio/')) return '🎵';
-    if (fileType.includes('pdf')) return '📄';
-    if (fileType.includes('word') || fileType.includes('document')) return '📝';
-    if (fileType.includes('excel') || fileType.includes('spreadsheet')) return '📊';
-    if (fileType.includes('zip') || fileType.includes('compressed')) return '🗜️';
-    return '📁';
+    if (fileType.startsWith('image/')) return { label: 'IMG', color: 'bg-emerald-500' };
+    if (fileType.startsWith('video/')) return { label: 'VID', color: 'bg-rose-500' };
+    if (fileType.startsWith('audio/')) return { label: 'AUD', color: 'bg-amber-500' };
+    if (fileType.includes('pdf')) return { label: 'PDF', color: 'bg-red-500' };
+    if (fileType.includes('word') || fileType.includes('document') || fileType.includes('doc')) return { label: 'DOC', color: 'bg-blue-500' };
+    if (fileType.includes('excel') || fileType.includes('spreadsheet') || fileType.includes('sheet')) return { label: 'XLS', color: 'bg-green-500' };
+    if (fileType.includes('zip') || fileType.includes('compressed') || fileType.includes('rar')) return { label: 'ZIP', color: 'bg-violet-500' };
+    return { label: 'FILE', color: 'bg-gray-500' };
   };
 
   const formatFileSize = (bytes: number) => {
@@ -272,7 +308,7 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
                             <div className='w-full flex items-center'>
                               <button 
                                 type="button" 
-                                className={`flex gap-2 items-center rounded-full py-3 pl-5 pr-3 ease-out duration-200 flex-1 justify-center ${
+                                className={`flex gap-2 items-center rounded-full py-3 px-5 ease-out duration-200 flex-1 justify-center ${
                                   option === 'images' 
                                     ? 'bg-customViolet text-white' 
                                     : 'hover:bg-customViolet/50 focus:bg-customViolet focus:text-white'
@@ -280,12 +316,7 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
                                 onClick={() => setOption('images')}
                               >
                                 <RiImageFill className='text-xl'/>
-                                <span>Images</span>
-                                {imageFiles.length > 0 && (
-                                  <span className="h-5 max-w-5 bg-white text-customViolet text-xs font-semibold rounded-full aspect-square flex items-center justify-center">
-                                    {imageFiles.length}
-                                  </span>
-                                )}
+                                <span className='text-sm'>Images</span>
                               </button>
                               <button 
                                 type="button" 
@@ -298,11 +329,6 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
                               >
                                 <RiVideoLine className='text-xl'/>
                                 <span>Videos</span>
-                                {videoFiles.length > 0 && (
-                                  <span className="bg-white text-customViolet text-xs rounded-full px-2 py-1 min-w-6">
-                                    {videoFiles.length}
-                                  </span>
-                                )}
                               </button>
                               <button 
                                 type="button" 
@@ -315,11 +341,6 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
                               >
                                 <RiFile3Line className='text-xl'/>
                                 <span>Files</span>
-                                {documentFiles.length > 0 && (
-                                  <span className="bg-white text-customViolet text-xs rounded-full px-2 py-1 min-w-6">
-                                    {documentFiles.length}
-                                  </span>
-                                )}
                               </button>
                             </div>
                       
@@ -344,33 +365,29 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
                                       key={`file-${file.messageID}-${i}`}
                                       type='button' 
                                       className='w-full p-3 bg-neutral-100 rounded-xl flex gap-3 items-center hover:bg-neutral-200 focus:bg-neutral-200 ease-out duration-200' 
-                                      onClick={() => handleFileClick(file)}
+                                      onClick={() => handleFileClick(file, i)}
                                     >
-                                      <span className='h-12 aspect-square rounded-md bg-white flex items-center justify-center text-2xl border'>
-                                        {getFileIcon(file.type)}
+                                      <span className={`h-10 px-2 rounded-lg flex items-center justify-center text-xs font-bold text-white ${getFileIcon(file.type).color}`}>
+                                        {getFileIcon(file.type).label}
                                       </span>
                                       <div className='flex-1 text-left min-w-0'>
-                                        <h3 className='font-medium truncate' title={file.name}>{file.name}</h3>
-                                        <div className='flex items-center gap-2 text-xs text-gray-600 mt-1'>
+                                        <h3 className='font-medium truncate text-sm' title={file.name}>{file.name}</h3>
+                                        <div className='flex items-center gap-1.5 text-xs text-gray-500 mt-0.5'>
                                           <span>{formatFileSize(file.size)}</span>
                                           <span>•</span>
                                           <span>{formatDate(file.uploadedAt)}</span>
-                                          <span>•</span>
-                                          <span className={isOwnFile(file) ? 'text-customViolet' : 'text-gray-500'}>
-                                            {isOwnFile(file) ? 'You' : currentConversation?.partner.name}
-                                          </span>
                                         </div>
                                       </div>
                                     </button>
                                   ))}
                                 </div>
                               ) : (
-                                <div className='w-full h-auto grid grid-cols-3 gap-2 p-3 overflow-y-auto'>
+                                <div className='w-full h-auto grid grid-cols-3 gap-1.5 p-3 overflow-y-auto'>
                                   {filteredFiles.map((file, i) => (
                                     <button 
                                       key={`media-${file.messageID}-${i}`}
-                                      className='aspect-square col-span-1 bg-neutral-200 overflow-hidden relative group hover:opacity-90 focus:opacity-90 ease-out duration-200'
-                                      onClick={() => handleFileClick(file)}
+                                      className='aspect-square col-span-1 rounded-lg overflow-hidden relative group hover:scale-[1.02] focus:scale-[1.02] transition-transform duration-200 shadow-sm'
+                                      onClick={() => handleFileClick(file, i)}
                                     >
                                       {file.type.startsWith('image/') ? (
                                         <img 
@@ -380,37 +397,27 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
                                           loading="lazy"
                                         />
                                       ) : file.type.startsWith('video/') ? (
-                                        <div className="w-full h-full flex items-center justify-center bg-black">
-                                          <video className="w-full h-full object-cover">
+                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900">
+                                          <video className="w-full h-full object-cover opacity-60">
                                             <source src={file.url} type={file.type} />
                                           </video>
                                           <div className="absolute inset-0 flex items-center justify-center">
-                                            <RiVideoLine className="text-3xl text-white opacity-70" />
+                                            <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
+                                              <RiVideoLine className="text-2xl text-white" />
+                                            </div>
                                           </div>
                                         </div>
                                       ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-customViolet">
+                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-customViolet to-indigo-600">
                                           <span className="text-2xl text-white">🎵</span>
                                         </div>
                                       )}
                                       
-                                      {/* Overlay on hover */}
-                                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                                        <Image
-                                          height={4096}
-                                          width={4096}
-                                          src={file.url}
-                                          alt={file.name}
-                                          className="w-full h-full object-cover"
-                                          loading="lazy"
-                                        />
-                                        {file.type.startsWith('video/') && (
-                                          <RiVideoLine className="text-white text-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                                        )}
-                                      </div>
+                                      {/* Hover overlay */}
+                                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200" />
                                       
-                                      {/* File type indicator */}
-                                      <div className="absolute bottom-1 right-1 bg-black/30 backdrop-blur-sm bg-opacity-50 text-white text-[10px] px-1.5 py-0.5 rounded">
+                                      {/* File type badge */}
+                                      <div className="absolute bottom-1 right-1 bg-black/50 backdrop-blur-sm text-white text-[9px] font-medium px-1.5 py-0.5 rounded">
                                         {file.type.startsWith('image/') ? 'IMG' : 
                                          file.type.startsWith('video/') ? 'VID' : 'AUD'}
                                       </div>
@@ -420,14 +427,6 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
                               )}
                             </div>
                       
-                            {/* File Info Modal */}
-                            {fileInfo && selectedFile && (
-                              <ShowFileInfo 
-                                showFileInfo={showFileInfo}
-                                file={selectedFile}
-                                onDownload={downloadFile}
-                              />
-                            )}
                   </div>
               </div>
             </>
@@ -439,6 +438,9 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
               showFileInfo={showFileInfo}
               file={selectedFile}
               onDownload={downloadFile}
+              allFiles={filteredFiles}
+              currentIndex={selectedFileIndex}
+              onNavigate={handleNavigate}
             />
           )}
       </div>

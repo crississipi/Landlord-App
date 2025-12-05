@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { AiFillFolderOpen, AiFillPicture, AiOutlineInfoCircle, AiOutlineLeft, AiOutlineClose, AiOutlinePlusCircle } from 'react-icons/ai'
+import { AiFillFolderOpen, AiFillPicture, AiFillVideoCamera, AiOutlineInfoCircle, AiOutlineLeft, AiOutlineClose, AiOutlinePlusCircle } from 'react-icons/ai'
 import { IoSend } from "react-icons/io5";
 import { HiOutlineDocument } from 'react-icons/hi'
 import { MessageBubble } from './customcomponents'
 import { ChangePageProps, ChatInfoProps, MessageType } from '@/types'
 import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
 type ChatProps = ChatInfoProps & ChangePageProps & {
   chatUserId?: number;
@@ -18,14 +19,17 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
   const [loading, setLoading] = useState(true);
   const [showMore, setShowMore] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const clickRef = useClickOutside<HTMLDivElement>(() => setShowMore(false))
 
-  // File preview states
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
+  // File preview states - now supports multiple files
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [filePreviews, setFilePreviews] = useState<{ file: File; preview: string | null }[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     console.log('chatUserId changed:', chatUserId);
@@ -36,6 +40,12 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
       setLoading(false);
     }
   }, [chatUserId]);
+
+  useEffect(() => {
+    if (!loading && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+    }
+  }, [messages, loading]);
 
   const fetchMessages = async () => {
     try {
@@ -107,52 +117,100 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
     }
   };
 
-  // Handle file selection
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Handle multiple file selection
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    setSelectedFile(file);
+    const fileArray = Array.from(files);
+    setSelectedFiles(prev => [...prev, ...fileArray]);
     
-    // Create preview for images
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFilePreview(reader.result as string);
-        setShowPreview(true);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setFilePreview(null);
-      setShowPreview(true);
+    // Create previews for images and videos
+    const newPreviews: { file: File; preview: string | null }[] = [];
+    
+    for (const file of fileArray) {
+      if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+        const preview = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+        newPreviews.push({ file, preview });
+      } else {
+        newPreviews.push({ file, preview: null });
+      }
     }
+    
+    setFilePreviews(prev => [...prev, ...newPreviews]);
+    setShowPreview(true);
+    
+    // Reset input value to allow selecting same files again
+    e.target.value = '';
   };
 
   // Cancel file selection
   const cancelFileUpload = () => {
-    setSelectedFile(null);
-    setFilePreview(null);
+    setSelectedFiles([]);
+    setFilePreviews([]);
     setShowPreview(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (imageInputRef.current) imageInputRef.current.value = '';
+    if (videoInputRef.current) videoInputRef.current.value = '';
   };
 
-  // Send file with message
+  // Remove a specific file from selection
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setFilePreviews(prev => prev.filter((_, i) => i !== index));
+    if (selectedFiles.length <= 1) {
+      setShowPreview(false);
+    }
+  };
+
+  // Convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove the data:mime/type;base64, prefix
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  // Send multiple files with message
   const sendFileMessage = async () => {
-    if (!selectedFile || !chatUserId) return;
+    if (selectedFiles.length === 0 || !chatUserId) return;
 
     try {
       setUploading(true);
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('receiverID', chatUserId.toString());
-      if (newMessage.trim()) {
-        formData.append('message', newMessage);
-      }
-
-      const response = await fetch('/api/messages/upload', {
+      
+      // Convert all files to base64
+      const filesData = await Promise.all(
+        selectedFiles.map(async (file) => ({
+          name: file.name,
+          content: await fileToBase64(file),
+          type: file.type,
+          size: file.size
+        }))
+      );
+      
+      // Use batch upload for multiple files, single upload for one file
+      const endpoint = selectedFiles.length > 1 ? '/api/messages/upload-batch' : '/api/messages/upload';
+      const body = selectedFiles.length > 1 
+        ? { receiverID: chatUserId, message: newMessage.trim() || null, files: filesData }
+        : { receiverID: chatUserId, message: newMessage.trim() || null, file: filesData[0] };
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
@@ -160,10 +218,11 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
         cancelFileUpload();
         fetchMessages();
       } else {
-        console.error('Failed to upload file');
+        const errorData = await response.json();
+        console.error('Failed to upload files:', errorData);
       }
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error('Error uploading files:', error);
     } finally {
       setUploading(false);
     }
@@ -229,7 +288,7 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
 
       {/* Messages */}
       <div className='h-full w-full overflow-x-hidden relative'>
-        <div className='absolute h-full w-full flex items-center justify-center bg-gradient-to-tr from-blue-200 via-indigo-50 to-customViolet/30 opacity-30'>
+        <div className='fixed top-0 h-full w-full flex items-center justify-center bg-gradient-to-tr from-blue-200 via-indigo-50 to-customViolet/30 opacity-30'>
           <Image
             src='/logo.png'
             alt='background'
@@ -238,7 +297,7 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
             className="object-contain object-center h-40 w-40 aspect-square"
           />
         </div>
-        <div className='column__align gap-3 p-4 md:p-6 lg:p-8 z-50 max-w-5xl mx-auto w-full'>
+        <div className='column__align gap-3 p-4 md:p-6 lg:p-8 relative z-20 max-w-5xl mx-auto w-full'>
           {messages.map((message) => (
             <MessageBubble 
               key={message.messageID}
@@ -253,12 +312,14 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
         </div>
       </div>
 
-      {/* File Preview Modal */}
-      {showPreview && selectedFile && (
+      {/* Multi-File Preview Modal */}
+      {showPreview && selectedFiles.length > 0 && (
         <div className='absolute inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'>
-          <div className='bg-white rounded-xl max-w-md w-full p-6 shadow-2xl'>
+          <div className='bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-hidden flex flex-col'>
             <div className='flex items-center justify-between mb-4'>
-              <h3 className='text-lg font-semibold text-customViolet'>Preview File</h3>
+              <h3 className='text-lg font-semibold text-customViolet'>
+                Preview Files ({selectedFiles.length})
+              </h3>
               <button 
                 onClick={cancelFileUpload}
                 className='p-2 hover:bg-zinc-100 rounded-full transition-colors'
@@ -267,28 +328,56 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
               </button>
             </div>
             
-            {/* Preview Content */}
-            <div className='mb-4'>
-              {filePreview ? (
-                <img 
-                  src={filePreview} 
-                  alt="Preview" 
-                  className='w-full h-64 object-contain bg-zinc-100 rounded-lg'
-                />
-              ) : (
-                <div className='w-full h-64 bg-zinc-100 rounded-lg flex flex-col items-center justify-center'>
-                  <HiOutlineDocument className='text-6xl text-customViolet mb-2' />
-                  <p className='text-sm text-zinc-600 font-medium'>{selectedFile.name}</p>
-                  <p className='text-xs text-zinc-400 mt-1'>{formatFileSize(selectedFile.size)}</p>
-                </div>
-              )}
+            {/* Preview Content - Scrollable grid */}
+            <div className='mb-4 overflow-y-auto flex-1 max-h-64'>
+              <div className='grid grid-cols-2 gap-2'>
+                {filePreviews.map((item, index) => (
+                  <div key={index} className='relative bg-zinc-100 rounded-lg overflow-hidden aspect-square'>
+                    {item.preview ? (
+                      item.file.type.startsWith('video/') ? (
+                        <video 
+                          src={item.preview} 
+                          className='w-full h-full object-cover'
+                          muted
+                        />
+                      ) : (
+                        <img 
+                          src={item.preview} 
+                          alt={`Preview ${index + 1}`} 
+                          className='w-full h-full object-cover'
+                        />
+                      )
+                    ) : (
+                      <div className='w-full h-full flex flex-col items-center justify-center p-2'>
+                        <HiOutlineDocument className='text-3xl text-customViolet mb-1' />
+                        <p className='text-xs text-zinc-600 font-medium text-center truncate w-full'>{item.file.name}</p>
+                      </div>
+                    )}
+                    {/* Remove button */}
+                    <button
+                      onClick={() => removeFile(index)}
+                      className='absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors'
+                    >
+                      <AiOutlineClose className='text-xs' />
+                    </button>
+                    {/* File type badge */}
+                    {item.file.type.startsWith('video/') && (
+                      <div className='absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded'>
+                        Video
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* File Info */}
+            {/* File Summary */}
             <div className='bg-zinc-50 rounded-lg p-3 mb-4'>
-              <p className='text-sm font-medium text-zinc-700 truncate'>{selectedFile.name}</p>
+              <p className='text-sm font-medium text-zinc-700'>
+                {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} selected
+              </p>
               <p className='text-xs text-zinc-500 mt-1'>
-                {selectedFile.type || 'Unknown type'} • {formatFileSize(selectedFile.size)}
+                Total size: {formatFileSize(selectedFiles.reduce((acc, f) => acc + f.size, 0))}
               </p>
             </div>
 
@@ -318,12 +407,12 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
                 {uploading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Sending...
+                    Uploading...
                   </>
                 ) : (
                   <>
                     <IoSend />
-                    Send
+                    Send {selectedFiles.length > 1 ? `(${selectedFiles.length})` : ''}
                   </>
                 )}
               </button>
@@ -333,13 +422,14 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
       )}
 
       {/* Input */}
-      <div className='h-24 md:h-28 w-full flex items-start pl-3 pr-2 pt-2 md:px-8 lg:px-10 md:gap-3 shadow-[0px_-5px_10px_#574964] relative z-20'>
+      <div className='h-24 md:h-28 w-full flex items-start pl-3 pr-2 pt-2 md:px-8 lg:px-10 md:gap-3 shadow-[0px_-5px_10px_#574964] relative'>
         <input
           ref={fileInputRef}
           type="file"
           className="hidden"
           onChange={handleFileSelect}
           accept="*/*"
+          multiple
         />
         <input
           ref={imageInputRef}
@@ -347,15 +437,25 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
           className="hidden"
           onChange={handleFileSelect}
           accept="image/*"
+          multiple
+        />
+        <input
+          ref={videoInputRef}
+          type="file"
+          className="hidden"
+          onChange={handleFileSelect}
+          accept="video/*"
+          multiple
         />
         <AnimatePresence mode='wait'>
-          {showMore ?? (
+          {showMore && (
             <motion.div 
-              initial={{y: -300}}
-              animate={{y: 0}}
-              exit={{y: -300}}
+              ref={clickRef}
+              initial={{scale: 0, x: -50}}
+              animate={{scale: 1, x: 0}}
+              exit={{scale: 0, x: -50}}
               transition={{duration: 0.3}}
-              className='absolute top-0 -mt-16 bg-white rounded-xl px-3 py-2 flex gap-1 shadow-xl'>
+              className='absolute top-0 -mt-16 bg-white rounded-xl px-3 py-2 flex gap-1 shadow-xl z-30'>
                 <button 
                   className='flex__center__y click__action h-10 min-w-10 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-11 md:min-w-11'
                   onClick={() => fileInputRef.current?.click()}
@@ -368,11 +468,17 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
                 >
                     <AiFillPicture className='max__size'/>
                 </button>
+                <button 
+                  className='flex__center__y click__action h-10 min-w-10 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-11 md:min-w-11'
+                  onClick={() => videoInputRef.current?.click()}
+                >
+                    <AiFillVideoCamera className='max__size'/>
+                </button>
               </motion.div>
           )}
         </AnimatePresence>
-        <button type='button' className='flex__center__all click__action h-12 min-w-12 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-14 md:min-w-14' onClick={() => setShowMore(!showMore)}>
-          <AiOutlinePlusCircle className='max__size mt-3 md:mt-4'/>
+        <button type='button' className='flex__center__all click__action h-10 min-w-10 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-14 md:min-w-14' onClick={() => setShowMore(!showMore)}>
+          <AiOutlinePlusCircle className='max__size mt-6 md:mt-4'/>
         </button>
         <input 
           type="text" 

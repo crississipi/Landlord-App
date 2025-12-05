@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { PrismaClient } from '@prisma/client';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
 
 const prisma = new PrismaClient();
+
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN!;
+const GITHUB_USERNAME = process.env.GITHUB_USERNAME!;
+const GITHUB_REPO = process.env.GITHUB_REPO!;
+const GITHUB_BRANCH = process.env.GITHUB_BRANCH || "main";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,10 +18,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const receiverID = formData.get('receiverID') as string;
-    const message = formData.get('message') as string | null;
+    const { receiverID, message, file } = await request.json();
 
     if (!file || !receiverID) {
       return NextResponse.json(
@@ -27,41 +27,62 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'messages');
-    try {
-      await mkdir(uploadsDir, { recursive: true });
-    } catch (error) {
-      // Directory might already exist
+    if (!file.name || !file.content) {
+      return NextResponse.json(
+        { error: 'Invalid file data: missing name or content' },
+        { status: 400 }
+      );
     }
 
-    // Generate unique filename
+    // Generate unique filename for GitHub
     const timestamp = Date.now();
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const fileName = `${timestamp}-${originalName}`;
-    const filePath = path.join(uploadsDir, fileName);
+    const fileName = `${timestamp}_${originalName}`;
+    const folderName = `messages/${session.user.id}`;
+    const filePath = `${folderName}/${fileName}`;
+    
+    const githubApiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${filePath}`;
 
-    // Convert file to buffer and save
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(filePath, buffer);
+    // Upload file to GitHub
+    const githubResponse = await fetch(githubApiUrl, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: `Upload message file: ${fileName}`,
+        content: file.content.replace(/\s/g, ""), // must be base64 string
+        branch: GITHUB_BRANCH,
+      }),
+    });
 
-    // Create file URL
-    const fileUrl = `/uploads/messages/${fileName}`;
+    const githubData = await githubResponse.json();
+
+    if (!githubResponse.ok) {
+      console.error("GitHub upload failed:", githubData);
+      return NextResponse.json(
+        { error: githubData?.message || `Failed to upload ${file.name} to GitHub.` },
+        { status: 500 }
+      );
+    }
+
+    // Create the GitHub raw URL
+    const fileUrl = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${GITHUB_BRANCH}/${filePath}`;
 
     // Generate a batch ID for single file (for consistency)
     const batchId = `single_${Date.now()}_${session.user.id}`;
 
-    // Save message with file to database
+    // Save message to database
     const newMessage = await prisma.messages.create({
       data: {
         senderID: parseInt(session.user.id),
         receiverID: parseInt(receiverID),
-        message: message || `Sent a file: ${file.name}`,
+        message: message,
         fileUrl: fileUrl,
         fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size.toString(),
+        fileType: file.type || null,
+        fileSize: file.size?.toString() || null,
         batchId: batchId,
         dateSent: new Date(),
         read: false
@@ -79,6 +100,17 @@ export async function POST(request: NextRequest) {
             lastName: true
           }
         }
+      }
+    });
+
+    // Save file reference to Resource table
+    await prisma.resource.create({
+      data: {
+        referenceId: newMessage.messageID,
+        referenceType: 'Messages',
+        url: fileUrl,
+        fileName: file.name,
+        createdAt: new Date()
       }
     });
 

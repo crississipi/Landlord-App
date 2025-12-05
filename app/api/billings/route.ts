@@ -54,27 +54,38 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform billings for frontend
-    const formattedBillings = billings.map((b) => ({
-      billingID: b.billingID,
-      unit: b.unit,
-      month: b.month,
-      totalRent: b.totalRent,
-      totalWater: b.totalWater,
-      totalElectric: b.totalElectric,
-      totalAmount: b.totalRent + b.totalWater + b.totalElectric,
-      dateIssued: b.dateIssued.toISOString(),
-      tenant: {
-        userID: b.user.userID,
-        name: b.user.firstName && b.user.lastName
-          ? `${b.user.firstName} ${b.user.lastName}`.trim()
-          : b.user.username,
-        email: b.user.email,
-      },
-      property: {
-        name: b.property.name,
-        address: b.property.address,
-      },
-    }));
+    const formattedBillings = billings.map((b) => {
+      // Calculate total based on billing type
+      const totalAmount = (b as { billingType?: string }).billingType === 'rent' 
+        ? b.totalRent 
+        : b.totalRent + b.totalWater + b.totalElectric;
+      
+      return {
+        billingID: b.billingID,
+        unit: b.unit,
+        month: b.month,
+        totalRent: b.totalRent,
+        totalWater: b.totalWater,
+        totalElectric: b.totalElectric,
+        totalAmount,
+        dateIssued: b.dateIssued.toISOString(),
+        billingType: (b as { billingType?: string }).billingType || 'utility',
+        paymentStatus: (b as { paymentStatus?: string }).paymentStatus || 'pending',
+        amountPaid: (b as { amountPaid?: number }).amountPaid || 0,
+        dueDate: (b as { dueDate?: Date | null }).dueDate?.toISOString() || null,
+        tenant: {
+          userID: b.user.userID,
+          name: b.user.firstName && b.user.lastName
+            ? `${b.user.firstName} ${b.user.lastName}`.trim()
+            : b.user.username,
+          email: b.user.email,
+        },
+        property: {
+          name: b.property.name,
+          address: b.property.address,
+        },
+      };
+    });
 
     return NextResponse.json({
       success: true,

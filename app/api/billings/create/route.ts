@@ -24,6 +24,7 @@ interface BillingPayload {
   waterMeterImage?: string; // base64
   electricMeterImage?: string; // base64
   tenantNames?: string;
+  billingType: 'rent' | 'utility';
 }
 
 // Create email transporter
@@ -454,6 +455,7 @@ export async function POST(request: NextRequest) {
       totalElectric,
       waterMeterImage,
       electricMeterImage,
+      billingType,
     } = body;
 
     // Validate required fields
@@ -521,6 +523,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Calculate due date (7 days from now)
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 7);
+
     // Create billing record
     const billing = await prisma.billing.create({
       data: {
@@ -528,9 +534,13 @@ export async function POST(request: NextRequest) {
         propertyId,
         unit,
         month,
-        totalRent: totalRent || 0,
-        totalWater: totalWater || 0,
-        totalElectric: totalElectric || 0,
+        totalRent: billingType === 'rent' ? (totalRent || 0) : 0,
+        totalWater: billingType === 'utility' ? (totalWater || 0) : 0,
+        totalElectric: billingType === 'utility' ? (totalElectric || 0) : 0,
+        billingType: billingType || 'utility',
+        paymentStatus: 'pending',
+        amountPaid: 0,
+        dueDate,
       },
     });
 
