@@ -20,7 +20,13 @@ export async function GET(
     const userId = parseInt(session.user.id);
     const partnerId = parseInt(params.conversationID);
 
-    // Get messages between current user and the partner
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') ?? '0', 10);
+    const limit = parseInt(searchParams.get('limit') ?? '10', 10);
+    const take = Math.max(1, Math.min(limit, 50));
+    const skip = Math.max(0, page) * take;
+
+    // Get messages between current user and the partner, newest first for pagination
     const rawMessages = await prisma.messages.findMany({
       where: {
         OR: [
@@ -44,15 +50,18 @@ export async function GET(
         }
       },
       orderBy: {
-        dateSent: 'asc'
-      }
+        dateSent: 'desc'
+      },
+      skip,
+      take
     });
 
     // Group messages by batchId
     const batchMap = new Map();
     const groupedMessages: any[] = [];
+    const orderedMessages = [...rawMessages].reverse();
 
-    rawMessages.forEach((msg: any) => {
+    orderedMessages.forEach((msg: any) => {
       if (msg.batchId) {
         if (!batchMap.has(msg.batchId)) {
           // First message in batch - create the grouped message
@@ -105,7 +114,12 @@ export async function GET(
       }
     });
 
-    return NextResponse.json(groupedMessages);
+    const hasMore = rawMessages.length === take;
+
+    return NextResponse.json({
+      messages: groupedMessages,
+      hasMore
+    });
   } catch (error) {
     console.error('Error fetching conversation:', error);
     return NextResponse.json(

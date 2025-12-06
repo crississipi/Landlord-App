@@ -36,11 +36,35 @@ const Header: React.FC<HeadProps> = ({ setNav, setPage, page, login }) => {
       fetchUnread();
     }
   }, [login]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  
+  useEffect(() => {
+    const fetchUnreadMessages = async () => {
+      try {
+        const response = await fetch('/api/messages');
+        if (response.ok) {
+          const conversations = await response.json();
+          const totalUnread = conversations.reduce((sum: number, conv: any) => sum + conv.unreadCount, 0);
+          setUnreadCount(totalUnread);
+        }
+      } catch (error) {
+        console.error('Error fetching unread messages:', error);
+      }
+    };
+    
+    fetchUnreadMessages();
+    
+    // Poll for new messages every 30 seconds
+    const interval = setInterval(fetchUnreadMessages, 30000);
+    return () => clearInterval(interval);
+  }, []);
+  
   const changePage = (page: number) => {
     setTimeout(() => {
       setPage(page);
     }, 100);
   }
+  
   return (
     <div className='h-auto w-full flex items-center z-20 px-5 py-3 gap-5 bg-customViolet ease-in-out duration-150 lg:h-14'>
       <Image src={"/loading_logo.svg"} alt='logo image' height={50} width={50} className='h-11 w-auto object-contain md:h-14 lg:h-10'/>
