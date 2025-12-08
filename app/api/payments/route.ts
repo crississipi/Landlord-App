@@ -221,7 +221,7 @@ export async function POST(request: NextRequest) {
       where: { billingID },
     });
 
-    const totalPaid = existingPayments.reduce((sum, p) => sum + p.amount, 0);
+    const totalPaid = existingPayments.reduce((sum: number, p: any) => sum + p.amount, 0);
     const newTotalPaid = totalPaid + amount;
 
     // Validate payment amount
@@ -273,6 +273,21 @@ export async function POST(request: NextRequest) {
         amountPaid: newTotalPaid,
         paymentStatus: updatedPaymentStatus,
       },
+    });
+
+    // Create notification for landlord about payment received
+    const landlordId = parseInt(session.user.id);
+    const tenantName = billing.user.firstName && billing.user.lastName
+      ? `${billing.user.firstName} ${billing.user.lastName}`.trim()
+      : billing.user.username;
+
+    await prisma.notification.create({
+      data: {
+        userId: landlordId,
+        type: 'payment_received',
+        message: `Payment received from ${tenantName} (Unit ${billing.unit}) - ₱${amount.toLocaleString()} via ${paymentMethod}`,
+        relatedId: payment.paymentID,
+      }
     });
 
     return NextResponse.json({

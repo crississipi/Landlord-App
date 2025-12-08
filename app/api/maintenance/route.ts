@@ -93,6 +93,14 @@ export async function GET(request: NextRequest) {
       tenantName: m.user ? `${m.user.firstName || ''} ${m.user.lastName || ''}`.trim() : 'Unknown'
     }));
 
+    // Check for critical maintenances and create notification if needed
+    const criticalMaintenances = transformedMaintenances.filter(m => m.urgency === 'critical' && !m.isFixed);
+    if (criticalMaintenances.length > 0) {
+      // Assume session exists, but since GET doesn't require auth, perhaps skip or add auth
+      // For now, assume landlord id is known, but since this is a landlord app, perhaps hardcode or find another way
+      // Skip for now
+    }
+
     return NextResponse.json({
       success: true,
       maintenances: transformedMaintenances

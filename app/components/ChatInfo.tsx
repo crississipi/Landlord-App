@@ -118,7 +118,7 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
 
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/messages/${chatUserId}`);
+      const response = await fetch(`/api/messages/${chatUserId}?all=true`);
       
       if (response.ok) {
         const data = await response.json();

@@ -292,10 +292,12 @@ function EmptyState({ icon, title, description }: { icon: React.ReactNode; title
 
 export default function BillingPage({
   propertyId,
-  setPage
+  setPage,
+  billingId
 }: {
   propertyId: number;
   setPage: (page: number) => void;
+  billingId?: number;
 }) {
   // Form state
   const [selectedUnit, setSelectedUnit] = useState<string>('');
@@ -306,6 +308,7 @@ export default function BillingPage({
   const [tenantNames, setTenantNames] = useState<string>('');
   const [selectedTenantId, setSelectedTenantId] = useState<number | null>(null);
   const [billingType, setBillingType] = useState<'rent' | 'utility'>('utility');
+  const [viewingSpecificBilling, setViewingSpecificBilling] = useState<BillingRecord | null>(null);
   const [propertyAddress, setPropertyAddress] = useState<string>('');
   const currentDate = new Date();
   const currentMonthYear = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -424,6 +427,24 @@ export default function BillingPage({
     };
     if (propertyId) loadData();
   }, [propertyId, month, fetchUnbilledUnits, fetchRecentBillings, fetchPropertyDetails]);
+
+  // Fetch specific billing if billingId is provided
+  useEffect(() => {
+    if (billingId) {
+      const fetchSpecificBilling = async () => {
+        try {
+          const res = await fetch(`/api/billings/${billingId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setViewingSpecificBilling(data.billing);
+          }
+        } catch (error) {
+          console.error('Error fetching specific billing:', error);
+        }
+      };
+      fetchSpecificBilling();
+    }
+  }, [billingId]);
 
   // Handle unit selection
   const handleUnitSelect = (unitNumber: string) => {

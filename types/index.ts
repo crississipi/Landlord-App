@@ -286,6 +286,8 @@ export interface MessageBubbleProps {
     fileSize?: string | null;
   }[];
   batchId?: string | null;
+  onViewBilling?: (billingId: number) => void;
+  onViewMaintenance?: (maintenanceId: number) => void;
 }
 
 export type UnitBillingRow = {

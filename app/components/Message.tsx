@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { AiFillFolderOpen, AiFillPicture, AiFillVideoCamera, AiOutlineInfoCircle, AiOutlineLeft, AiOutlineClose, AiOutlinePlusCircle } from 'react-icons/ai'
+
+import { AiFillFolderOpen, AiFillPicture, AiOutlineInfoCircle, AiOutlineLeft, AiOutlineClose, AiOutlinePlusCircle, AiFillVideoCamera } from 'react-icons/ai'
 import { IoSend } from "react-icons/io5";
 import { HiOutlineDocument } from 'react-icons/hi'
 import { MessageBubble } from './customcomponents'
@@ -12,19 +13,28 @@ type ChatProps = ChatInfoProps & ChangePageProps & {
   chatUserId?: number;
 };
 
+const MESSAGES_PAGE_SIZE = 10;
+
 const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [partner, setPartner] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [cursor, setCursor] = useState<number | null>(null);
   const [showMore, setShowMore] = useState(false);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [newMessagePreview, setNewMessagePreview] = useState<{ id: number; text: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const isFetchingRef = useRef(false);
+
   const clickRef = useClickOutside<HTMLDivElement>(() => setShowMore(false))
 
-  // File preview states - now supports multiple files
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [filePreviews, setFilePreviews] = useState<{ file: File; preview: string | null }[]>([]);
+  // File preview states
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -34,30 +44,101 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
   useEffect(() => {
     console.log('chatUserId changed:', chatUserId);
     if (chatUserId) {
-      fetchMessages();
+      setMessages([]);
+      setCursor(null);
+      setHasMore(true);
+      fetchMessages({ isInitial: true });
       fetchPartnerInfo();
     } else {
       setLoading(false);
     }
   }, [chatUserId]);
 
-  useEffect(() => {
-    if (!loading && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
-    }
-  }, [messages, loading]);
+  const fetchMessages = async ({
+    cursor: cursorParam,
+    prepend = false,
+    isInitial = false,
+  }: {
+    cursor?: number | null;
+    prepend?: boolean;
+    isInitial?: boolean;
+  } = {}) => {
+    if (!chatUserId) return;
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
 
-  const fetchMessages = async () => {
     try {
-      setLoading(true);
-      console.log('Fetching messages for user:', chatUserId);
-      const response = await fetch(`/api/messages/${chatUserId}`);
+      if (isInitial) {
+        setLoading(true);
+      } else if (prepend) {
+        setLoadingMore(true);
+      }
+
+      if (prepend) {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+      }
+
+      const params = new URLSearchParams();
+      params.set('limit', MESSAGES_PAGE_SIZE.toString());
+      if (cursorParam) {
+        params.set('cursor', String(cursorParam));
+      }
+
+      console.log('Fetching messages for user:', chatUserId, 'params:', params.toString());
+      const response = await fetch(`/api/messages/${chatUserId}?${params.toString()}`);
       console.log('Response status:', response.status);
       
       if (response.ok) {
         const data = await response.json();
         console.log('Fetched messages:', data);
-        setMessages(data);
+
+        setHasMore(data.hasMore);
+        setCursor(data.nextCursor);
+
+        const container = scrollContainerRef.current;
+        const prevScrollHeight = container ? container.scrollHeight : 0;
+
+        setMessages((prev) => {
+          const prevLastId = prev.length ? prev[prev.length - 1].messageID : null;
+          const nextMessages = prepend ? [...data.messages, ...prev] : data.messages;
+
+          if (!prepend && !isInitial && !isAtBottom && nextMessages.length) {
+            const last = nextMessages[nextMessages.length - 1];
+            if (last.messageID !== prevLastId && last.senderID === chatUserId) {
+              let previewText = (last.message || '').trim();
+
+              if (!previewText) {
+                const firstFile = last.files && last.files[0];
+                if (firstFile?.fileType?.startsWith('image/')) {
+                  previewText = 'Sent a photo';
+                } else if (firstFile?.fileType?.startsWith('video/')) {
+                  previewText = 'Sent a video';
+                } else if (firstFile) {
+                  previewText = 'Sent a file';
+                } else {
+                  previewText = 'New message';
+                }
+              }
+
+              const trimmed = previewText.length > 80 ? `${previewText.slice(0, 80)}…` : previewText;
+              setNewMessagePreview({ id: last.messageID, text: trimmed });
+            }
+          }
+
+          return nextMessages;
+        });
+
+        if (isInitial) {
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+          }, 50);
+        } else if (prepend && container) {
+          setTimeout(() => {
+            if (!scrollContainerRef.current) return;
+            const newScrollHeight = scrollContainerRef.current.scrollHeight;
+            scrollContainerRef.current.scrollTop = newScrollHeight - prevScrollHeight;
+          }, 50);
+        }
       } else {
         console.error('Failed to fetch messages:', response.status, response.statusText);
         const errorText = await response.text();
@@ -66,7 +147,30 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
-      setLoading(false);
+      isFetchingRef.current = false;
+      if (isInitial) {
+        setLoading(false);
+      }
+      if (prepend) {
+        setLoadingMore(false);
+      }
+    }
+  };
+
+  const handleScroll = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    const atBottomNow = distanceFromBottom <= 40;
+    setIsAtBottom(atBottomNow);
+    if (atBottomNow) {
+      setNewMessagePreview(null);
+    }
+
+    if (loading || loadingMore || !hasMore || !cursor) return;
+    if (container.scrollTop <= 50) {
+      fetchMessages({ cursor, prepend: true });
     }
   };
 
@@ -93,6 +197,7 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
 
     try {
       console.log('Sending message to:', chatUserId, 'Message:', newMessage);
+
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: {
@@ -108,7 +213,7 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
       
       if (response.ok) {
         setNewMessage('');
-        fetchMessages(); // Refresh messages
+        await fetchMessages({ isInitial: true });
       } else {
         console.error('Failed to send message:', response.status);
       }
@@ -117,118 +222,66 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
     }
   };
 
-  // Handle multiple file selection
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    const fileArray = Array.from(files);
-    setSelectedFiles(prev => [...prev, ...fileArray]);
+    setSelectedFile(file);
     
-    // Create previews for images and videos
-    const newPreviews: { file: File; preview: string | null }[] = [];
-    
-    for (const file of fileArray) {
-      if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-        const preview = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
-        });
-        newPreviews.push({ file, preview });
-      } else {
-        newPreviews.push({ file, preview: null });
-      }
+    // Create preview for images
+    if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreview(reader.result as string);
+        setShowPreview(true);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+      setShowPreview(true);
     }
-    
-    setFilePreviews(prev => [...prev, ...newPreviews]);
-    setShowPreview(true);
-    
-    // Reset input value to allow selecting same files again
-    e.target.value = '';
   };
 
-  // Cancel file selection
   const cancelFileUpload = () => {
-    setSelectedFiles([]);
-    setFilePreviews([]);
+    setSelectedFile(null);
+    setFilePreview(null);
     setShowPreview(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (imageInputRef.current) imageInputRef.current.value = '';
     if (videoInputRef.current) videoInputRef.current.value = '';
   };
 
-  // Remove a specific file from selection
-  const removeFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-    setFilePreviews(prev => prev.filter((_, i) => i !== index));
-    if (selectedFiles.length <= 1) {
-      setShowPreview(false);
-    }
-  };
-
-  // Convert file to base64
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const result = reader.result as string;
-        // Remove the data:mime/type;base64, prefix
-        const base64 = result.split(',')[1];
-        resolve(base64);
-      };
-      reader.onerror = error => reject(error);
-    });
-  };
-
-  // Send multiple files with message
   const sendFileMessage = async () => {
-    if (selectedFiles.length === 0 || !chatUserId) return;
+    if (!selectedFile || !chatUserId) return;
 
     try {
       setUploading(true);
-      
-      // Convert all files to base64
-      const filesData = await Promise.all(
-        selectedFiles.map(async (file) => ({
-          name: file.name,
-          content: await fileToBase64(file),
-          type: file.type,
-          size: file.size
-        }))
-      );
-      
-      // Use batch upload for multiple files, single upload for one file
-      const endpoint = selectedFiles.length > 1 ? '/api/messages/upload-batch' : '/api/messages/upload';
-      const body = selectedFiles.length > 1 
-        ? { receiverID: chatUserId, message: newMessage.trim() || null, files: filesData }
-        : { receiverID: chatUserId, message: newMessage.trim() || null, file: filesData[0] };
-      
-      const response = await fetch(endpoint, {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('receiverID', chatUserId.toString());
+      if (newMessage.trim()) {
+        formData.append('message', newMessage);
+      }
+
+      const response = await fetch('/api/messages/upload', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
+        body: formData,
       });
 
       if (response.ok) {
         setNewMessage('');
         cancelFileUpload();
-        fetchMessages();
+        await fetchMessages({ isInitial: true });
       } else {
-        const errorData = await response.json();
-        console.error('Failed to upload files:', errorData);
+        console.error('Failed to upload file');
       }
     } catch (error) {
-      console.error('Error uploading files:', error);
+      console.error('Error uploading file:', error);
     } finally {
       setUploading(false);
     }
   };
 
-  // Format file size
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -254,8 +307,28 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
     }, 100);
   };
 
+  const onViewBilling = (billingId: number) => {
+    // Assuming billing page is 6, with billingId as second param if needed
+    setPage(6, billingId);
+  };
+
+  const onViewMaintenance = (maintenanceId: number) => {
+    // Maintenance documentation page is 4
+    setPage(4, maintenanceId);
+  };
+
   return (
-    <div className='max__size flex__center__y flex-col text-customViolet justify-start overflow-hidden bg-white rounded-t-2xl'>
+    <div className='max__size flex__center__y flex-col text-customViolet justify-start overflow-hidden bg-white rounded-t-2xl relative'>
+      <div className='pointer-events-none absolute inset-0 flex items-center justify-center bg-gradient-to-tr from-blue-200 via-indigo-50 to-customViolet/30 opacity-30'>
+        <Image
+          src='/logo.png'
+          alt='background'
+          height={4096}
+          width={4096}
+          className="object-cover object-center max-h-60 max-w-60 aspect-square h-full w-full"
+        />
+      </div>
+
       {/* Header */}
       <div className='h-20 md:h-24 w-full bg-white shadow-sm shadow-zinc-100 flex items-center px-5 md:px-8 lg:px-10 gap-3 md:gap-4 sticky top-0 z-10'>
         <button className='focus__action hover__action click__action rounded-sm h-9 w-9 md:h-10 md:w-10 p-1 outline-none' onClick={() => changePage(2)}>
@@ -287,18 +360,30 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
       </div>
 
       {/* Messages */}
-      <div className='h-full w-full overflow-x-hidden relative'>
-        <div className='fixed top-0 h-full w-full flex items-center justify-center bg-gradient-to-tr from-blue-200 via-indigo-50 to-customViolet/30 opacity-30'>
-          <Image
-            src='/logo.png'
-            alt='background'
-            height={4096}
-            width={4096}
-            className="object-contain object-center h-40 w-40 aspect-square"
-          />
-        </div>
-        <div className='column__align gap-3 p-4 md:p-6 lg:p-8 relative z-20 max-w-5xl mx-auto w-full'>
-          {messages.map((message) => (
+      <div
+        className='h-full w-full overflow-x-hidden overflow-y-auto relative'
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+      >
+        <div className='column__align gap-5 p-4 md:p-6 lg:p-8 z-50 max-w-5xl mx-auto w-full'>
+          {!loading && !hasMore && messages.length > 0 && (
+            <div className='w-full flex justify-center py-1'>
+              <span className='text-xs md:text-sm text-zinc-500 bg-white/70 px-3 py-1 rounded-full shadow-sm'>
+                You're all caught up
+              </span>
+            </div>
+          )}
+          {loading && (
+            <div className='w-full flex justify-center py-4'>
+              <div className='w-6 h-6 border-2 border-customViolet border-t-transparent rounded-full animate-spin' />
+            </div>
+          )}
+          {!loading && loadingMore && (
+            <div className='w-full flex justify-center py-2'>
+              <div className='w-5 h-5 border-2 border-customViolet border-t-transparent rounded-full animate-spin' />
+            </div>
+          )}
+          {!loading && messages.map((message) => (
             <MessageBubble 
               key={message.messageID}
               sender={message.senderID !== chatUserId}
@@ -306,20 +391,40 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
               timestamp={message.dateSent}
               files={message.files}
               batchId={message.batchId}
+              onViewBilling={onViewBilling}
+              onViewMaintenance={onViewMaintenance}
             />
           ))}
           <div ref={messagesEndRef} />
         </div>
+
+        {newMessagePreview && !isAtBottom && (
+          <div className='absolute bottom-4 left-0 right-0 flex justify-center pointer-events-none'>
+            <button
+              type='button'
+              className='pointer-events-auto bg-customViolet text-white text-xs md:text-sm px-4 py-2 rounded-full shadow-lg flex items-center gap-2 hover:bg-customViolet/90'
+              onClick={() => {
+                if (messagesEndRef.current) {
+                  messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }
+                setIsAtBottom(true);
+                setNewMessagePreview(null);
+              }}
+            >
+              <span className='w-2 h-2 rounded-full bg-emerald-400 animate-pulse' />
+              <span className='font-medium'>New message</span>
+              <span className='max-w-[180px] truncate'>{newMessagePreview.text}</span>
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Multi-File Preview Modal */}
-      {showPreview && selectedFiles.length > 0 && (
+      {/* File Preview Modal */}
+      {showPreview && selectedFile && (
         <div className='absolute inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'>
-          <div className='bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-hidden flex flex-col'>
+          <div className='bg-white rounded-xl max-w-md w-full p-6 shadow-2xl'>
             <div className='flex items-center justify-between mb-4'>
-              <h3 className='text-lg font-semibold text-customViolet'>
-                Preview Files ({selectedFiles.length})
-              </h3>
+              <h3 className='text-lg font-semibold text-customViolet'>Preview File</h3>
               <button 
                 onClick={cancelFileUpload}
                 className='p-2 hover:bg-zinc-100 rounded-full transition-colors'
@@ -328,56 +433,28 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
               </button>
             </div>
             
-            {/* Preview Content - Scrollable grid */}
-            <div className='mb-4 overflow-y-auto flex-1 max-h-64'>
-              <div className='grid grid-cols-2 gap-2'>
-                {filePreviews.map((item, index) => (
-                  <div key={index} className='relative bg-zinc-100 rounded-lg overflow-hidden aspect-square'>
-                    {item.preview ? (
-                      item.file.type.startsWith('video/') ? (
-                        <video 
-                          src={item.preview} 
-                          className='w-full h-full object-cover'
-                          muted
-                        />
-                      ) : (
-                        <img 
-                          src={item.preview} 
-                          alt={`Preview ${index + 1}`} 
-                          className='w-full h-full object-cover'
-                        />
-                      )
-                    ) : (
-                      <div className='w-full h-full flex flex-col items-center justify-center p-2'>
-                        <HiOutlineDocument className='text-3xl text-customViolet mb-1' />
-                        <p className='text-xs text-zinc-600 font-medium text-center truncate w-full'>{item.file.name}</p>
-                      </div>
-                    )}
-                    {/* Remove button */}
-                    <button
-                      onClick={() => removeFile(index)}
-                      className='absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors'
-                    >
-                      <AiOutlineClose className='text-xs' />
-                    </button>
-                    {/* File type badge */}
-                    {item.file.type.startsWith('video/') && (
-                      <div className='absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded'>
-                        Video
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+            {/* Preview Content */}
+            <div className='mb-4'>
+              {filePreview ? (
+                <img 
+                  src={filePreview} 
+                  alt="Preview" 
+                  className='w-full h-64 object-contain bg-zinc-100 rounded-lg'
+                />
+              ) : (
+                <div className='w-full h-64 bg-zinc-100 rounded-lg flex flex-col items-center justify-center'>
+                  <HiOutlineDocument className='text-6xl text-customViolet mb-2' />
+                  <p className='text-sm text-zinc-600 font-medium'>{selectedFile.name}</p>
+                  <p className='text-xs text-zinc-400 mt-1'>{formatFileSize(selectedFile.size)}</p>
+                </div>
+              )}
             </div>
 
-            {/* File Summary */}
+            {/* File Info */}
             <div className='bg-zinc-50 rounded-lg p-3 mb-4'>
-              <p className='text-sm font-medium text-zinc-700'>
-                {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} selected
-              </p>
+              <p className='text-sm font-medium text-zinc-700 truncate'>{selectedFile.name}</p>
               <p className='text-xs text-zinc-500 mt-1'>
-                Total size: {formatFileSize(selectedFiles.reduce((acc, f) => acc + f.size, 0))}
+                {selectedFile.type || 'Unknown type'} • {formatFileSize(selectedFile.size)}
               </p>
             </div>
 
@@ -407,12 +484,12 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
                 {uploading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Uploading...
+                    Sending...
                   </>
                 ) : (
                   <>
                     <IoSend />
-                    Send {selectedFiles.length > 1 ? `(${selectedFiles.length})` : ''}
+                    Send
                   </>
                 )}
               </button>
@@ -422,14 +499,13 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
       )}
 
       {/* Input */}
-      <div className='h-24 md:h-28 w-full flex items-start pl-3 pr-2 pt-2 md:px-8 lg:px-10 md:gap-3 shadow-[0px_-5px_10px_#574964] relative'>
+      <div className='h-24 md:h-28 w-full flex items-start pl-3 pr-2 pt-2 md:px-8 lg:px-10 md:gap-3 shadow-[0px_-5px_10px_#574964] relative z-20'>
         <input
           ref={fileInputRef}
           type="file"
           className="hidden"
           onChange={handleFileSelect}
           accept="*/*"
-          multiple
         />
         <input
           ref={imageInputRef}
@@ -437,7 +513,6 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
           className="hidden"
           onChange={handleFileSelect}
           accept="image/*"
-          multiple
         />
         <input
           ref={videoInputRef}
@@ -455,7 +530,7 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
               animate={{scale: 1, x: 0}}
               exit={{scale: 0, x: -50}}
               transition={{duration: 0.3}}
-              className='absolute top-0 -mt-16 bg-white rounded-xl px-3 py-2 flex gap-1 shadow-xl z-30'>
+              className='absolute top-0 -mt-16 bg-white rounded-xl px-3 py-2 flex gap-1 shadow-xl z-999'>
                 <button 
                   className='flex__center__y click__action h-10 min-w-10 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-11 md:min-w-11'
                   onClick={() => fileInputRef.current?.click()}
@@ -477,8 +552,8 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
               </motion.div>
           )}
         </AnimatePresence>
-        <button type='button' className='flex__center__all click__action h-10 min-w-10 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-14 md:min-w-14' onClick={() => setShowMore(!showMore)}>
-          <AiOutlinePlusCircle className='max__size mt-6 md:mt-4'/>
+        <button type='button' className='flex__center__all click__action h-12 min-w-12 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-14 md:min-w-14' onClick={() => setShowMore(!showMore)}>
+          <AiOutlinePlusCircle className='max__size mt-3 md:mt-4'/>
         </button>
         <input 
           type="text" 

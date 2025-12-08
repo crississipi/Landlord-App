@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { PrismaClient } from '@prisma/client';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
@@ -78,6 +80,12 @@ export async function GET(request: NextRequest) {
 // POST: Create documentation for a fixed maintenance request
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { 
       maintenanceId, 
@@ -167,6 +175,19 @@ export async function POST(request: NextRequest) {
       });
 
       return doc;
+    });
+
+    // Send message to tenant about the fixed maintenance
+    const messageText = `Maintenance: Your maintenance request '${maintenance.rawRequest}' has been fixed. Remarks: ${remarks}, Total cost: ₱${totalMaterialCost.toLocaleString()}. MaintenanceID: ${maintenanceId}`;
+
+    await prisma.messages.create({
+      data: {
+        senderID: parseInt(session.user.id),
+        receiverID: maintenance.userId,
+        message: messageText,
+        dateSent: new Date(),
+        read: false
+      }
     });
 
     // Fetch complete documentation with relations

@@ -8,7 +8,7 @@ import { HiOutlineDocument } from 'react-icons/hi';
 import MediaPreviewModal from '../MediaPreviewModal';
 import { useClickOutside } from '@/hooks/useClickOutside';
 
-const MessageBubble = ({ sender, message, timestamp, files, batchId }: MessageBubbleProps) => {
+const MessageBubble = ({ sender, message, timestamp, files, batchId, onViewBilling, onViewMaintenance }: MessageBubbleProps) => {
   const [details, setDetails] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
@@ -60,6 +60,23 @@ const MessageBubble = ({ sender, message, timestamp, files, batchId }: MessageBu
   // Include files with no fileType or unknown types as documents
   const documentFiles = files?.filter(f => !f.fileType?.startsWith('image/') && !f.fileType?.startsWith('video/')) || [];
 
+  // Check for special messages
+  const isBillingMessage = message?.startsWith('Billing:');
+  const isMaintenanceMessage = message?.startsWith('Maintenance:');
+
+  let billingId: number | null = null;
+  let maintenanceId: number | null = null;
+
+  if (isBillingMessage && message) {
+    const match = message.match(/BillingID:\s*(\d+)/);
+    billingId = match ? parseInt(match[1]) : null;
+  }
+
+  if (isMaintenanceMessage && message) {
+    const match = message.match(/MaintenanceID:\s*(\d+)/);
+    maintenanceId = match ? parseInt(match[1]) : null;
+  }
+
   return (
     <>
       <div ref={clickRef} className={`column__align outline-none text-customViolet text-sm pl-3 ${!sender ? 'items-start' : 'items-end'} md:text-base lg:text-lg`}>
@@ -70,14 +87,41 @@ const MessageBubble = ({ sender, message, timestamp, files, batchId }: MessageBu
         )}
         
         <div className={`h-auto w-full flex items-end gap-2 md:gap-3 ${sender && 'flex-row-reverse'}`}>
-          <div className={`max-w-[75%] md:max-w-[65%] lg:max-w-[60%] ${!sender ? 'items-start' : 'items-end'} flex flex-col gap-2 md:gap-3`}>
+          <div className={`max-w-[85%] md:max-w-[65%] lg:max-w-[60%] ${!sender ? 'items-start' : 'items-end'} flex flex-col gap-2 md:gap-3`}>
             {/* Text Message */}
             {message && (
               <button
                 onClick={() => setDetails(!details)}
-                className={`pl-4 pr-2 py-2 md:pl-5 md:pr-3 md:py-3 lg:pl-6 lg:pr-4 lg:py-4 ${!sender ? 'rounded-r-xl rounded-tl-xl bg-white text-customViolet': 'rounded-l-3xl rounded-tr-3xl bg-customViolet/90 text-white'} text-left font-light tracking-wide click__action`}
+                className={`py-2.5 px-4 md:pl-5 md:pr-3 md:py-3 lg:pl-6 lg:pr-4 lg:py-4 ${!sender ? 'rounded-r-xl rounded-tl-xl bg-white text-customViolet': 'rounded-l-3xl rounded-tr-3xl bg-customViolet text-white'} text-left font-light tracking-wide leading-5 click__action`}
               >
                 <p>{message}</p>
+              </button>
+            )}
+
+            {/* View Buttons for Special Messages */}
+            {isBillingMessage && billingId && onViewBilling && (
+              <button
+                onClick={() => onViewBilling(billingId)}
+                className={`self-start px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  !sender
+                    ? 'bg-customViolet text-white hover:bg-customViolet/90'
+                    : 'bg-white/90 text-customViolet hover:bg-white'
+                }`}
+              >
+                View Billing
+              </button>
+            )}
+
+            {isMaintenanceMessage && maintenanceId && onViewMaintenance && (
+              <button
+                onClick={() => onViewMaintenance(maintenanceId)}
+                className={`self-start px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  !sender
+                    ? 'bg-customViolet text-white hover:bg-customViolet/90'
+                    : 'bg-white/90 text-customViolet hover:bg-white'
+                }`}
+              >
+                View Documentation
               </button>
             )}
 

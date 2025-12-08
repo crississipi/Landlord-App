@@ -575,6 +575,21 @@ export async function POST(request: NextRequest) {
       emailResult = await sendBillingEmail(tenant, body, property, pdfBytes);
     }
 
+    // Create notification for landlord to remind about billing
+    const landlordId = parseInt(session.user.id);
+    const monthDate = new Date(month + '-01');
+    const monthName = monthDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    const totalAmount = (billing.totalRent || 0) + (billing.totalWater || 0) + (billing.totalElectric || 0);
+
+    await prisma.notification.create({
+      data: {
+        userId: landlordId,
+        type: 'billing_reminder',
+        message: `New billing created for ${tenant.firstName || ''} ${tenant.lastName || ''} (${unit}) - ${monthName}: ₱${totalAmount.toLocaleString()}`,
+        relatedId: billing.billingID,
+      }
+    });
+
     return NextResponse.json({
       success: true,
       message: 'Billing created successfully',
@@ -582,7 +597,7 @@ export async function POST(request: NextRequest) {
         billingID: billing.billingID,
         unit: billing.unit,
         month: billing.month,
-        totalAmount: (billing.totalRent || 0) + (billing.totalWater || 0) + (billing.totalElectric || 0),
+        totalAmount,
       },
       pdfUrl,
       emailSent: emailResult.success,

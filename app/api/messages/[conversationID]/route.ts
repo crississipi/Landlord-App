@@ -21,47 +21,75 @@ export async function GET(
     const partnerId = parseInt(params.conversationID);
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') ?? '0', 10);
-    const limit = parseInt(searchParams.get('limit') ?? '10', 10);
-    const take = Math.max(1, Math.min(limit, 50));
-    const skip = Math.max(0, page) * take;
+    const allParam = searchParams.get('all');
+    const limitParam = searchParams.get('limit');
+    const cursorParam = searchParams.get('cursor');
 
-    // Get messages between current user and the partner, newest first for pagination
-    const rawMessages = await prisma.messages.findMany({
-      where: {
-        OR: [
-          {
-            senderID: userId,
-            receiverID: partnerId
-          },
-          {
-            senderID: partnerId,
-            receiverID: userId
-          }
-        ]
-      },
-      include: {
-        sender: {
-          select: {
-            userID: true,
-            firstName: true,
-            lastName: true
-          }
+    const isAll = allParam === 'true';
+    let limit = Math.min(parseInt(limitParam || '10') || 10, 50);
+    const cursor = cursorParam ? parseInt(cursorParam) : undefined;
+
+    const baseWhere = {
+      OR: [
+        {
+          senderID: userId,
+          receiverID: partnerId
+        },
+        {
+          senderID: partnerId,
+          receiverID: userId
         }
-      },
-      orderBy: {
-        dateSent: 'desc'
-      },
-      skip,
-      take
-    });
+      ]
+    };
+
+    let rawMessages;
+
+    if (isAll) {
+      rawMessages = await prisma.messages.findMany({
+        where: baseWhere,
+        include: {
+          sender: {
+            select: {
+              userID: true,
+              firstName: true,
+              lastName: true
+            }
+          }
+        },
+        orderBy: {
+          dateSent: 'asc'
+        }
+      });
+    } else {
+      rawMessages = await prisma.messages.findMany({
+        where: baseWhere,
+        include: {
+          sender: {
+            select: {
+              userID: true,
+              firstName: true,
+              lastName: true
+            }
+          }
+        },
+        orderBy: {
+          messageID: 'desc'
+        },
+        take: limit,
+        skip: cursor ? 1 : 0,
+        cursor: cursor
+          ? {
+              messageID: cursor
+            }
+          : undefined
+      });
+    }
 
     // Group messages by batchId
     const batchMap = new Map();
     const groupedMessages: any[] = [];
-    const orderedMessages = [...rawMessages].reverse();
 
-    orderedMessages.forEach((msg: any) => {
+    rawMessages.forEach((msg: any) => {
       if (msg.batchId) {
         if (!batchMap.has(msg.batchId)) {
           // First message in batch - create the grouped message
@@ -102,6 +130,13 @@ export async function GET(
       }
     });
 
+    groupedMessages.sort((a, b) => a.messageID - b.messageID);
+
+    const hasMore = !isAll && rawMessages.length === limit;
+    const nextCursor = !isAll && hasMore
+      ? rawMessages[rawMessages.length - 1].messageID
+      : null;
+
     // Mark messages as read
     await prisma.messages.updateMany({
       where: {
@@ -114,10 +149,9 @@ export async function GET(
       }
     });
 
-    const hasMore = rawMessages.length === take;
-
     return NextResponse.json({
       messages: groupedMessages,
+      nextCursor,
       hasMore
     });
   } catch (error) {

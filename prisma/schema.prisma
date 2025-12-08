@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DB_URL")
+  url      = env("DATABASE_URL")
 }
 
 model Users {
@@ -41,6 +41,7 @@ model Users {
   receivedMessages  Messages[]    @relation("ReceivedMessages")
   sentMessages      Messages[]    @relation("SentMessages")
   property          Property?     @relation(fields: [propertyId], references: [propertyId])
+  notifications     Notification[]
 
   @@index([propertyId], map: "Users_propertyId_fkey")
 }
@@ -235,4 +236,18 @@ model RentBillingLog {
   error       String?  @db.Text
 
   @@unique([userID, month])
+}
+
+model Notification {
+  notificationId Int      @id @default(autoincrement())
+  userId         Int      // landlord userID
+  type           String   @db.VarChar(50) // "billing_reminder", "maintenance_request", "payment_received", "urgent_maintenance"
+  message        String   @db.Text
+  relatedId      Int?     // e.g., billingID, maintenanceId, paymentID
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  user           Users    @relation(fields: [userId], references: [userID])
+
+  @@index([userId], map: "Notification_userId_fkey")
+  @@index([createdAt])
 }
