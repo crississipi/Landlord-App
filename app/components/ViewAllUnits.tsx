@@ -52,17 +52,17 @@ const ViewAllUnits = ({ setPage }: ChangePageProps) => {
     );
 
   return (
-    <div className="h-full w-full flex flex-col gap-5">
-      <div className="w-full flex items-center justify-between mt-10 px-5 text-white">
-        <button type="button" className="text-4xl" onClick={() => setPage(99)}>
+    <div className="h-full w-full flex flex-col gap-5 lg:max-w-7xl lg:mx-auto lg:px-8">
+      <div className="w-full flex items-center justify-between mt-10 px-5 text-white lg:mt-12 lg:mb-4">
+        <button type="button" className="text-4xl lg:text-3xl hover:text-white/80 transition-colors" onClick={() => setPage(99)}>
           <HiArrowSmallLeft />
         </button>
-        <h1 className="font-poppins text-xl font-light w-full text-center">
+        <h1 className="font-poppins text-xl font-light w-full text-center lg:text-3xl lg:font-medium">
           All Available Units
         </h1>
         <button
           type="button"
-          className="text-3xl"
+          className="text-3xl lg:text-2xl hover:text-white/80 transition-colors"
           onClick={() => setLayout(!layout)}
         >
           <TbLayoutColumns
@@ -75,8 +75,8 @@ const ViewAllUnits = ({ setPage }: ChangePageProps) => {
 
       <div
         className={`h-auto w-full ${
-          layout ? "grid grid-cols-2" : "flex flex-col"
-        } gap-3 px-3 pb-5 transition-all transform-view ease-out duration-200`}
+          layout ? "grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "flex flex-col lg:grid lg:grid-cols-2"
+        } gap-3 px-3 pb-5 lg:gap-6 lg:px-0 transition-all transform-view ease-out duration-200`}
       >
         {properties.map((property) => (
           <UnitDetails

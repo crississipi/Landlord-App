@@ -6,6 +6,7 @@ import {
   SettleBilling,
   ShowImage,
   SideNav,
+  NavigationSidebar,
   ForgotPass,
   ViewAllUnits,
   Login,
@@ -90,7 +91,10 @@ export default function Home() {
       }
     } else if (status === "unauthenticated") {
       // User is not logged in - show login page
-      setPage(99);
+      // Allow public pages: 98 (Forgot Password), 99 (Login), 100 (View All Units)
+      if (page !== 98 && page !== 100 && page !== 99) {
+        setPage(99);
+      }
     }
   }, [status, session, page]);
 
@@ -151,11 +155,26 @@ export default function Home() {
     );
   }
 
-  // If not authenticated, show login page
+  // If not authenticated, show login page or public pages
   if (!session) {
+    if (page === 98) {
+      return (
+        <div className='h-full w-full flex flex-col bg-customViolet items-center justify-center overflow-y-auto'>
+          <ForgotPass setPage={handleSetPage} />
+        </div>
+      );
+    }
+    if (page === 100) {
+      return (
+        <div className='h-full w-full flex flex-col bg-customViolet items-center justify-center overflow-y-auto'>
+          <ViewAllUnits setPage={handleSetPage} />
+        </div>
+      );
+    }
+
     return (
       <div className='h-full w-full flex flex-col bg-neutral-50 items-center justify-center'>
-        <Login setPage={setPage} />
+        <Login setPage={handleSetPage} />
       </div>
     );
   }
@@ -197,8 +216,13 @@ export default function Home() {
           <h2 className='text-2xl font-semibold text-red-600 mb-2'>Access Denied</h2>
           <p className='text-gray-600 mb-4'>Your account does not have permission to access this application.</p>
           <button 
-            onClick={() => {
-              // Sign out and redirect to login
+            onClick={async () => {
+              // Call logout endpoint and sign out
+              try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+              } catch (error) {
+                console.error('Error during logout:', error);
+              }
               import('next-auth/react').then(({ signOut }) => {
                 signOut({ redirect: false }).then(() => {
                   window.location.reload();
@@ -243,11 +267,23 @@ export default function Home() {
       {contentLoading ? (
         <LoadingPage />
       ) : (
-        <main className="h-full w-full flex flex-col items-center relative bg-customViolet">
-          <Header login={page !== 99} setNav={setNav} setPage={handleSetPage} page={page}/>
-          <div className="h-full w-full flex flex-col relative overflow-x-hidden max-w-[1920px] mx-auto">
-            {pages[page] || null}
+        <main className="h-full w-full flex bg-gray-50 overflow-hidden">
+          {/* Sidebar for desktop (>= 1024px) */}
+          {page !== 99 && (
+            <NavigationSidebar setPage={handleSetPage} currentPage={page} />
+          )}
 
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col h-full relative overflow-hidden">
+            <Header login={page !== 99} setNav={setNav} setPage={handleSetPage} page={page}/>
+            
+            <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50 relative">
+              <div className="min-h-full w-full max-w-[1920px] mx-auto">
+                {pages[page] || null}
+              </div>
+            </div>
+
+            {/* Overlays and Fixed Elements */}
             <ChatInfo
               setPage={handleSetPage}
               setChatInfo={setChatInfo}

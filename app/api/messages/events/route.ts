@@ -1,9 +1,7 @@
 import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { authOptions } from "@/lib/auth";
+import { prisma } from '@/lib/prisma';
 
 // Keep active SSE connections
 const clients = new Map<string, ReadableStreamDefaultController>();

@@ -6,7 +6,7 @@ import { TbCurrencyPeso } from 'react-icons/tb'
 
 const PaymentInfo = ({ unit, price, paymentType, date, withBG }: PaymentProps) => {
   return (
-    <div className={`w-full grid grid-cols-12 items-center py-2 text-sm text-customViolet px-3 ${withBG && 'bg-zinc-100 rounded-sm md:text-base lg:text-sm'}`}>
+    <div className={`w-full grid grid-cols-12 items-center py-2 text-sm text-customViolet px-3 ${withBG && 'bg-zinc-100 rounded-xl md:text-base lg:text-sm'}`}>
       <span className={`col-span-2 font-medium ${status ? 'md:col-span-2' : 'md:col-span-3'} text-sm lg:text-xs`}>Unit {unit}</span>
 
       { price ? (

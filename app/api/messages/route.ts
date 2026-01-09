@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { PrismaClient } from '@prisma/client';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-
-const prisma = new PrismaClient();
+import { authOptions } from '@/lib/auth';
+import { createMessageNotification } from '@/lib/notifications';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/messages - Get all conversations with tenants for the landlord, sorted by most recent
 export async function GET(request: NextRequest) {
@@ -165,17 +164,33 @@ export async function POST(request: NextRequest) {
         sender: {
           select: {
             firstName: true,
-            lastName: true
+            lastName: true,
+            role: true
           }
         },
         receiver: {
           select: {
             firstName: true,
-            lastName: true
+            lastName: true,
+            role: true
           }
         }
       }
     });
+
+    // Create notification for receiver if sender is landlord and receiver is tenant
+    const senderName = newMessage.sender.firstName && newMessage.sender.lastName
+      ? `${newMessage.sender.firstName} ${newMessage.sender.lastName}`.trim()
+      : 'Landlord';
+    
+    if (newMessage.sender.role === 'landlord' && newMessage.receiver.role === 'tenant') {
+      await createMessageNotification({
+        receiverId: parseInt(receiverID),
+        senderName,
+        messagePreview: message,
+        messageId: newMessage.messageID
+      });
+    }
 
     return NextResponse.json(newMessage);
   } catch (error) {

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-
-const prisma = new PrismaClient();
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 interface TenantInfo {
   userID: number;
@@ -22,8 +20,9 @@ interface UnitResponse {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { propertyId: string } }
+  props: { params: Promise<{ propertyId: string }> }
 ) {
+  const params = await props.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session) {

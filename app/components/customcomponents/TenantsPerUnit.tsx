@@ -24,13 +24,18 @@ const TenantsPerUnit: React.FC<TenantPerUnitProps> = ({
   onTenantSelect
 }) => {
   return (
-    <div className="col-span-full flex flex-col text-customViolet gap-2 md:gap-3 lg:gap-4 text-sm md:text-base lg:text-lg pb-2 md:pb-3">
-      <div className="w-full flex__center__y justify-between border-b border-zinc-200 pb-2 md:pb-3">
-        <span className="font-semibold pl-3 md:pl-4 md:text-lg lg:text-xl">UNIT {unit}</span>
-        <span className="pr-3 md:pr-4">{location || "N/A"}</span>
+    <div className="col-span-full lg:col-span-6 xl:col-span-4 flex flex-col text-customViolet gap-2 md:gap-3 lg:gap-4 text-xs md:text-sm lg:text-sm pb-2 md:pb-3 bg-white rounded-[1.5rem] border border-zinc-200 shadow-sm p-4 md:p-5 hover:border-customViolet/30 transition-colors">
+      <div className="w-full flex__center__y justify-between border-b border-zinc-100 pb-3 md:pb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-customViolet/10 flex items-center justify-center text-customViolet font-bold">
+            {unit}
+          </div>
+          <span className="font-semibold md:text-base lg:text-base text-zinc-800">UNIT {unit}</span>
+        </div>
+        <span className="pr-2 text-zinc-500 text-xs">{location || "N/A"}</span>
       </div>
 
-      <div className="column__align gap-x-2 md:gap-x-3">
+      <div className="column__align gap-y-1">
         {tenants.length > 0 ? (
           tenants.map((tenant) => (
             <Tenant
@@ -43,7 +48,7 @@ const TenantsPerUnit: React.FC<TenantPerUnitProps> = ({
             />
           ))
         ) : (
-          <p className="text-gray-400 italic px-3 md:px-4">No tenants found.</p>
+          <p className="text-zinc-400 italic px-3 md:px-4 py-2 text-center bg-zinc-50 rounded-xl">No tenants found.</p>
         )}
       </div>
     </div>

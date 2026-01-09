@@ -62,8 +62,15 @@ const Header: React.FC<HeadProps> = ({ setNav, setPage, page, login }) => {
   }
   
   return (
-    <div className='h-auto w-full flex items-center z-20 px-5 py-3 gap-5 bg-customViolet ease-in-out duration-150 lg:h-14'>
-      <Image src={"/loading_logo.svg"} alt='logo image' height={50} width={50} className='h-11 w-auto object-contain md:h-14 lg:h-10'/>
+    <div className='h-auto w-full flex items-center z-20 px-5 py-3 gap-5 bg-customViolet lg:bg-white lg:border-b lg:border-gray-200 ease-in-out duration-150 lg:h-16 shadow-md lg:shadow-sm'>
+      <button 
+        onClick={() => changePage(0)} 
+        className='outline-none focus:opacity-80 hover:opacity-90 transition-opacity lg:hidden'
+        title="Go to Dashboard"
+      >
+        <Image src={"/loading_logo.svg"} alt='logo image' height={50} width={50} className='h-11 w-auto object-contain md:h-14 lg:h-10'/>
+      </button>
+
       {page !== 99 && (
         <>
           <button className='h-9 w-9 relative group outline-none ml-auto md:h-11 md:w-11 lg:h-8 lg:w-8' onClick={() => changePage(2)}>
@@ -72,7 +79,7 @@ const Header: React.FC<HeadProps> = ({ setNav, setPage, page, login }) => {
               {unreadMessages > 99 ? '99+' : unreadMessages}
             </span>
           )}
-          <RiMessage2Fill className='max__size click__action text-white -scale-x-100 group-focus:-scale-x-105' />
+          <RiMessage2Fill className='max__size click__action text-white lg:text-gray-500 lg:hover:text-customViolet -scale-x-100 group-focus:-scale-x-105' />
         </button>
         <button className='h-9 w-9 relative group outline-none md:h-11 md:w-11 lg:h-8 lg:w-8' onClick={showNav}>
           {unreadNotifications > 0 && (
@@ -80,7 +87,7 @@ const Header: React.FC<HeadProps> = ({ setNav, setPage, page, login }) => {
               {unreadNotifications > 99 ? '99+' : unreadNotifications}
             </span>
           )}
-          <RiBellFill className='max__size click__action text-white group-focus:scale-105' />
+          <RiBellFill className='max__size click__action text-white lg:text-gray-500 lg:hover:text-customViolet group-focus:scale-105' />
         </button>
         </>
       )}

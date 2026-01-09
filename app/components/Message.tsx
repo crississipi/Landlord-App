@@ -130,8 +130,11 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
 
         if (isInitial) {
           setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
-          }, 50);
+            if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+              setIsAtBottom(true);
+            }
+          }, 100);
         } else if (prepend && container) {
           setTimeout(() => {
             if (!scrollContainerRef.current) return;
@@ -211,6 +214,10 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
 
       console.log('Send message response status:', response.status);
       
+        // Ensure scroll to bottom after sending
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 150);
       if (response.ok) {
         setNewMessage('');
         await fetchMessages({ isInitial: true });
@@ -272,6 +279,9 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
         setNewMessage('');
         cancelFileUpload();
         await fetchMessages({ isInitial: true });
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 150);
       } else {
         console.error('Failed to upload file');
       }
@@ -318,8 +328,8 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
   };
 
   return (
-    <div className='max__size flex__center__y flex-col text-customViolet justify-start overflow-hidden bg-white rounded-t-2xl relative'>
-      <div className='pointer-events-none absolute inset-0 flex items-center justify-center bg-gradient-to-tr from-blue-200 via-indigo-50 to-customViolet/30 opacity-30'>
+    <div className='h-screen w-full lg:h-[90vh] flex flex-col text-customViolet bg-white rounded-t-2xl lg:rounded-none relative overflow-hidden'>
+      <div className='pointer-events-none absolute inset-0 flex items-center justify-center bg-linear-to-tr from-blue-200 via-indigo-50 to-customViolet/30 opacity-30 -z-10'>
         <Image
           src='/logo.png'
           alt='background'
@@ -330,12 +340,12 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
       </div>
 
       {/* Header */}
-      <div className='h-20 md:h-24 w-full bg-white shadow-sm shadow-zinc-100 flex items-center px-5 md:px-8 lg:px-10 gap-3 md:gap-4 sticky top-0 z-10'>
-        <button className='focus__action hover__action click__action rounded-sm h-9 w-9 md:h-10 md:w-10 p-1 outline-none' onClick={() => changePage(2)}>
+      <div className='h-20 md:h-24 lg:h-16 w-full bg-white shadow-sm shadow-zinc-100 flex items-center px-5 md:px-8 lg:px-5 lg:gap-0 gap-3 md:gap-4 shrink-0 z-20'>
+        <button className='focus__action hover__action click__action rounded-sm h-9 w-9 p-1 outline-none' onClick={() => changePage(2)}>
          <AiOutlineLeft className='max__size text-emerald-700'/>
         </button>
         <div className='flex__center__y gap-3 md:gap-4'>
-            <div className='h-11 min-w-11 rounded-full bg-customViolet relative md:h-14 md:min-w-14 lg:h-16 lg:min-w-16 font-bold text-white text-base md:text-lg lg:text-xl flex items-center justify-center overflow-hidden'>
+            <div className='h-11 min-w-11 rounded-full bg-customViolet relative md:h-14 md:min-w-14 lg:h-12 lg:min-w-12 font-bold text-white text-base md:text-lg flex items-center justify-center overflow-hidden'>
               {partner?.profileImage ? (
                 <Image 
                   src={partner.profileImage} 
@@ -347,25 +357,25 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
                 partner?.name.substring(0, 2)
               )}
             </div>
-            <p className='column__align text-base font-medium md:text-lg lg:text-xl'>
+            <p className='column__align text-base font-medium lg:text-sm'>
             {partner ? `${partner.firstName} ${partner.lastName}` : 'Loading...'}
-            <span className='text-xs font-normal md:text-sm lg:text-base'>
+            <span className='text-xs font-normal md:text-sm lg:text-xs'>
               {partner?.isOnline ? 'Active Now' : 'Offline'}
             </span>
             </p>
         </div>
-        <button className='focus__action hover__action click__action ml-auto h-7 min-w-7 text-emerald-700 rounded-full outline-none md:h-10 md:w-10 lg:h-11 lg:w-11' onClick={showChatInfo}>
+        <button className='focus__action hover__action click__action ml-auto h-7 min-w-7 text-emerald-700 rounded-full outline-none z-50' onClick={showChatInfo}>
             <AiOutlineInfoCircle className='max__size'/>
         </button>
       </div>
 
-      {/* Messages */}
+      {/* Messages - Scrollable area */}
       <div
-        className='h-full w-full overflow-x-hidden overflow-y-auto relative'
+        className='flex-1 w-full overflow-x-hidden overflow-y-auto relative'
         ref={scrollContainerRef}
         onScroll={handleScroll}
       >
-        <div className='column__align gap-5 p-4 md:p-6 lg:p-8 z-50 max-w-5xl mx-auto w-full'>
+        <div className='column__align gap-5 p-4 md:p-6 lg:p-5 z-50 w-full max-w-4xl lg:max-w-full mx-auto'>
           {!loading && !hasMore && messages.length > 0 && (
             <div className='w-full flex justify-center py-1'>
               <span className='text-xs md:text-sm text-zinc-500 bg-white/70 px-3 py-1 rounded-full shadow-sm'>
@@ -498,77 +508,98 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
         </div>
       )}
 
-      {/* Input */}
-      <div className='h-24 md:h-28 w-full flex items-start pl-3 pr-2 pt-2 md:px-8 lg:px-10 md:gap-3 shadow-[0px_-5px_10px_#574964] relative z-20'>
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          onChange={handleFileSelect}
-          accept="*/*"
-        />
-        <input
-          ref={imageInputRef}
-          type="file"
-          className="hidden"
-          onChange={handleFileSelect}
-          accept="image/*"
-        />
-        <input
-          ref={videoInputRef}
-          type="file"
-          className="hidden"
-          onChange={handleFileSelect}
-          accept="video/*"
-          multiple
-        />
-        <AnimatePresence mode='wait'>
-          {showMore && (
-            <motion.div 
-              ref={clickRef}
-              initial={{scale: 0, x: -50}}
-              animate={{scale: 1, x: 0}}
-              exit={{scale: 0, x: -50}}
-              transition={{duration: 0.3}}
-              className='absolute top-0 -mt-16 bg-white rounded-xl px-3 py-2 flex gap-1 shadow-xl z-999'>
-                <button 
-                  className='flex__center__y click__action h-10 min-w-10 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-11 md:min-w-11'
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                    <AiFillFolderOpen className='max__size'/>
-                </button>
-                <button 
-                  className='flex__center__y click__action h-10 min-w-10 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-11 md:min-w-11'
-                  onClick={() => imageInputRef.current?.click()}
-                >
-                    <AiFillPicture className='max__size'/>
-                </button>
-                <button 
-                  className='flex__center__y click__action h-10 min-w-10 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-11 md:min-w-11'
-                  onClick={() => videoInputRef.current?.click()}
-                >
-                    <AiFillVideoCamera className='max__size'/>
-                </button>
-              </motion.div>
-          )}
-        </AnimatePresence>
-        <button type='button' className='flex__center__all click__action h-12 min-w-12 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-14 md:min-w-14' onClick={() => setShowMore(!showMore)}>
-          <AiOutlinePlusCircle className='max__size mt-3 md:mt-4'/>
-        </button>
-        <input 
-          type="text" 
-          placeholder='Write a Message...' 
-          className='input__text h-14 md:h-16 w-full rounded-xl bg-zinc-100 px-3 md:px-4 py-2 mx-1 text-sm md:text-base lg:text-lg'
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
-        />
-        <button 
-          className='flex__center__y click__action h-10 min-w-10 p-1 ml-1 text-customViolet rounded-sm outline-none mt-2 focus:bg-zinc-100 focus:scale-105 md:h-14 md:min-w-14 md:mt-3'
-          onClick={sendMessage}
-        >
-            <IoSend className='max__size'/>
-        </button>
+      {/* Input - Fixed at bottom */}
+      <div className='h-24 md:h-28 lg:h-20 w-full flex items-start lg:items-center pl-3 pr-2 pt-2 md:px-8 lg:px-5 md:gap-3 shadow-[0px_-5px_10px_#574964] relative z-20 shrink-0 bg-white'>
+        <div className='w-full max-w-4xl lg:max-w-full mx-auto lg:mx-0 flex items-start lg:items-center gap-0 md:gap-3'>
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            onChange={handleFileSelect}
+            accept="*/*"
+          />
+          <input
+            ref={imageInputRef}
+            type="file"
+            className="hidden"
+            onChange={handleFileSelect}
+            accept="image/*"
+          />
+          <input
+            ref={videoInputRef}
+            type="file"
+            className="hidden"
+            onChange={handleFileSelect}
+            accept="video/*"
+          />
+          <AnimatePresence mode='wait'>
+            {showMore && (
+              <motion.div 
+                ref={clickRef}
+                initial={{scale: 0, x: -50}}
+                animate={{scale: 1, x: 0}}
+                exit={{scale: 0, x: -50}}
+                transition={{duration: 0.3}}
+                className='absolute lg:hidden top-0 -mt-16 bg-white rounded-xl px-3 py-2 flex gap-1 shadow-xl z-999'>
+                  <button 
+                    className='flex__center__y click__action h-10 min-w-10 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-11 md:min-w-11'
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                      <AiFillFolderOpen className='max__size'/>
+                  </button>
+                  <button 
+                    className='flex__center__y click__action h-10 min-w-10 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-11 md:min-w-11'
+                    onClick={() => imageInputRef.current?.click()}
+                  >
+                      <AiFillPicture className='max__size'/>
+                  </button>
+                  <button 
+                    className='flex__center__y click__action h-10 min-w-10 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-11 md:min-w-11'
+                    onClick={() => videoInputRef.current?.click()}
+                  >
+                      <AiFillVideoCamera className='max__size'/>
+                  </button>
+                </motion.div>
+            )}
+          </AnimatePresence>
+          <div className='w-max flex items-center'>
+            <button 
+                    className='flex__center__y click__action h-10 min-w-10 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-11 md:min-w-11 lg:h-9 lg:min-w-9'
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                      <AiFillFolderOpen className='max__size'/>
+                  </button>
+                  <button 
+                    className='flex__center__y click__action h-10 min-w-10 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-11 md:min-w-11 lg:h-9 lg:min-w-9'
+                    onClick={() => imageInputRef.current?.click()}
+                  >
+                      <AiFillPicture className='max__size'/>
+                  </button>
+                  <button 
+                    className='flex__center__y click__action h-10 min-w-10 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-11 md:min-w-11 lg:h-9 lg:min-w-9'
+                    onClick={() => videoInputRef.current?.click()}
+                  >
+                      <AiFillVideoCamera className='max__size'/>
+                  </button>
+          </div>
+          <button type='button' className='flex__center__all lg:hidden click__action h-12 min-w-12 p-1 text-customViolet rounded-sm outline-none focus:bg-zinc-100 focus:scale-105 md:h-14 md:min-w-14' onClick={() => setShowMore(!showMore)}>
+            <AiOutlinePlusCircle className='max__size mt-3 md:mt-4'/>
+          </button>
+          <input 
+            type="text" 
+            placeholder='Write a Message...' 
+            className='input__text h-14 md:h-16 lg:h-14 w-full rounded-xl bg-zinc-100 px-3 md:px-4 py-2 mx-1 text-sm md:text-base lg:text-sm lg:rounded-sm'
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+          />
+          <button 
+            className='flex__center__y click__action h-10 min-w-10 p-1 ml-1 text-customViolet rounded-sm outline-none mt-2 focus:bg-zinc-100 focus:scale-105 md:h-14 md:min-w-14 lg:min-w-9 lg:h-9 lg:mt-0 md:mt-3'
+            onClick={sendMessage}
+          >
+              <IoSend className='max__size'/>
+          </button>
+        </div>
       </div>
     </div>
   )

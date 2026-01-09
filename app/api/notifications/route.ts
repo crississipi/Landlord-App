@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { PrismaClient } from '@prisma/client';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-
-const prisma = new PrismaClient();
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,12 +12,18 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = parseInt(session.user.id);
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const unreadOnly = searchParams.get('unreadOnly') === 'true';
 
-    // Fetch notifications for the landlord, ordered by createdAt desc, limit to 20
+    // Fetch notifications for the landlord, ordered by createdAt desc
     const notifications = await prisma.notification.findMany({
-      where: { userId },
+      where: { 
+        userId,
+        ...(unreadOnly ? { isRead: false } : {})
+      },
       orderBy: { createdAt: 'desc' },
-      take: 20
+      take: limit
     });
 
     // Format notifications for frontend
@@ -41,19 +45,29 @@ export async function GET(request: NextRequest) {
       })
     }));
 
+    // Get unread count
+    const unreadCount = await prisma.notification.count({
+      where: { 
+        userId,
+        isRead: false 
+      }
+    });
+
     return NextResponse.json({
-      notifications: formattedNotifications
+      success: true,
+      notifications: formattedNotifications,
+      unreadCount
     });
   } catch (error) {
     console.error('Error fetching notifications:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
-// POST: Mark notification as read
+// POST: Mark notification(s) as read
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -62,12 +76,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { notificationId } = await request.json();
+    const userId = parseInt(session.user.id);
+    const body = await request.json();
+    const { notificationId, markAllAsRead } = body;
+
+    if (markAllAsRead) {
+      // Mark all notifications as read for this user
+      await prisma.notification.updateMany({
+        where: { 
+          userId,
+          isRead: false 
+        },
+        data: { isRead: true }
+      });
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'All notifications marked as read' 
+      });
+    }
 
     if (!notificationId) {
       return NextResponse.json(
-        { error: 'Notification ID is required' },
+        { success: false, error: 'Notification ID is required' },
         { status: 400 }
+      );
+    }
+
+    // Mark specific notification as read (ensure it belongs to the user)
+    const notification = await prisma.notification.findFirst({
+      where: { 
+        notificationId: parseInt(notificationId),
+        userId 
+      }
+    });
+
+    if (!notification) {
+      return NextResponse.json(
+        { success: false, error: 'Notification not found' },
+        { status: 404 }
       );
     }
 
@@ -76,11 +123,82 @@ export async function POST(request: NextRequest) {
       data: { isRead: true }
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Notification marked as read' 
+    });
   } catch (error) {
     console.error('Error marking notification as read:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE: Delete a notification or clear all read notifications
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userId = parseInt(session.user.id);
+    const { searchParams } = new URL(request.url);
+    const notificationId = searchParams.get('notificationId');
+    const clearRead = searchParams.get('clearRead') === 'true';
+
+    if (clearRead) {
+      // Delete all read notifications for this user
+      await prisma.notification.deleteMany({
+        where: { 
+          userId,
+          isRead: true 
+        }
+      });
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Read notifications cleared' 
+      });
+    }
+
+    if (!notificationId) {
+      return NextResponse.json(
+        { success: false, error: 'Notification ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Delete specific notification (ensure it belongs to the user)
+    const notification = await prisma.notification.findFirst({
+      where: { 
+        notificationId: parseInt(notificationId),
+        userId 
+      }
+    });
+
+    if (!notification) {
+      return NextResponse.json(
+        { success: false, error: 'Notification not found' },
+        { status: 404 }
+      );
+    }
+
+    await prisma.notification.delete({
+      where: { notificationId: parseInt(notificationId) }
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Notification deleted' 
+    });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }

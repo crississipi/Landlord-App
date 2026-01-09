@@ -42,7 +42,7 @@ const UnitDetails = ({ property, layout }: UnitDetailsProps) => {
     <div className="col-span-1 h-auto flex flex-col bg-white rounded-xl p-3 ease-out duration-200">
       {/* 🖼️ Property Image Slider */}
       <div
-        className={`rounded-md overflow-hidden ${
+        className={`rounded-xl overflow-hidden ${
           layout ? "h-44" : "h-64"
         } w-full flex items-end justify-center`}
       >
@@ -54,7 +54,7 @@ const UnitDetails = ({ property, layout }: UnitDetailsProps) => {
         <div
           className={`w-full bg-white flex ${
             layout ? "flex-col items-start" : "flex-row items-center gap-5"
-          } rounded-lg justify-between`}
+          } rounded-xl justify-between`}
         >
           <span className={`font-medium ${!layout && "text-xl"}`}>
             {property.name}
@@ -125,7 +125,7 @@ const UnitDetails = ({ property, layout }: UnitDetailsProps) => {
               {Array.from({ length: 3 }).map((_, i) => (
                 <div
                   key={i}
-                  className="rounded-md bg-neutral-100 shadow-md px-3 py-2 flex flex-col gap-3"
+                  className="rounded-xl bg-neutral-100 shadow-md px-3 py-2 flex flex-col gap-3"
                 >
                   <span className="flex gap-2 items-center">
                     <RiUser5Fill className="text-2xl" />
@@ -153,13 +153,13 @@ const UnitDetails = ({ property, layout }: UnitDetailsProps) => {
 
             <div className="flex flex-col gap-5 h-86 overflow-x-hidden">
               {Array.from({ length: 3 }).map((_, h) => (
-                <div key={h} className="flex flex-col rounded-md gap-3">
+                <div key={h} className="flex flex-col rounded-xl gap-3">
                   <div className="flex gap-2 items-center">
                     {Array.from({ length: 3 }).map((_, i) => (
-                      <span key={i} className="h-16 w-16 rounded-md bg-neutral-100"></span>
+                      <span key={i} className="h-16 w-16 rounded-xl bg-neutral-100"></span>
                     ))}
                   </div>
-                  <div className="px-3 py-2 rounded-md bg-slate-100 shadow-md">
+                  <div className="px-3 py-2 rounded-xl bg-slate-100 shadow-md">
                     <span className="w-full flex justify-between">
                       <h3 className="font-medium w-full overflow-ellipsis">
                         Fixing Door

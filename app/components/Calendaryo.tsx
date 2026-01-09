@@ -125,7 +125,7 @@ const Calendaryo = ({ setPage }: ChangePageProps) => {
             <div className='w-full flex flex-col gap-3 rounded-md'>
               <h2 className="font-medium text-lg">Pending</h2>
               {Array.from({length: 3}).map((_,i) => (
-                <div key={i} className="w-full flex flex-col items-center rounded-2xl border border-customViolet/50 overflow-hidden relative">
+                <div key={i} className="w-full flex flex-col items-center rounded-xl border border-customViolet/50 overflow-hidden relative">
                   <div className="w-full flex items-center">
                     <button type="button" className="h-14 p-1 w-full text-left flex items-center gap-3">
                       <span className="h-full w-auto p-2 rounded-xl bg-emerald-300 flex items-center">

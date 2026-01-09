@@ -1,10 +1,8 @@
 // app/api/dashboard/route.ts
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-
-const prisma = new PrismaClient();
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 // Helper function to map urgency to color
 function getUrgencyColor(urgency: string): string {

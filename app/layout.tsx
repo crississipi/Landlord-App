@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import Providers from "./api/providers";
+import OnlineStatusTracker from "./components/OnlineStatusTracker";
 
 const poppins = Poppins ({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -9,7 +10,7 @@ const poppins = Poppins ({
 });
 
 export const metadata: Metadata = {
-  title: "Co-Living",
+  title: "Coliving - Landlord App",
   description: "Tenant-Landlord App",
 };
 
@@ -21,9 +22,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${poppins} antialiased h-[100vh] w-[100vw] flex select-none`}
+        className={`${poppins} antialiased h-screen w-screen flex select-none`}
       >
         <Providers>
+          <OnlineStatusTracker />
           {children}
         </Providers>
       </body>

@@ -23,14 +23,16 @@ import ViewAllUnits from "./ViewAllUnits";
 import ManageProperty from "./ManageProperty";
 import EditProperty from "./EditProperty";
 import ImageSlider from "./ImageSlider";
+import NavigationSidebar from "./NavigationSidebar";
 
 export { 
     Header, 
     Login, 
     ForgotPass, 
-    ChangePass, 
-    MainPage, 
-    SideNav, 
+    ChangePass,
+    MainPage,
+    SideNav,
+    NavigationSidebar,
     DashboardPage,
     MaintenancePage,
     TenantListPage,

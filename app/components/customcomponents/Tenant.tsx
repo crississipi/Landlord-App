@@ -50,24 +50,26 @@ const Tenant: React.FC<TenantComponentProps> = ({
 
   return (
     <button
-      className="flex__center__y gap-3 md:gap-4 w-full text-sm md:text-base lg:text-lg outline-none py-2 md:py-3 px-3 md:px-5 lg:px-6 focus:bg-white group hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex items-center gap-3 md:gap-4 w-full text-xs md:text-sm lg:text-base outline-none py-3 px-3 md:px-4 rounded-xl hover:bg-zinc-50 focus:bg-zinc-50 focus:ring-2 focus:ring-customViolet/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed group border border-transparent hover:border-zinc-200"
       onClick={handleClick}
       disabled={loading}
     >
-      <div className="flex__center__all h-9 w-9 md:h-11 md:w-11 lg:h-12 lg:w-12 rounded-full bg-sky-500 overflow-hidden text-white">
+      <div className="flex-shrink-0 h-10 w-10 md:h-10 md:w-10 rounded-full bg-zinc-200 overflow-hidden border-2 border-white shadow-sm group-hover:border-customViolet/20 transition-colors">
         <Image
           alt="Profile Picture"
           src={profile}
-          height={48}
-          width={48}
+          height={40}
+          width={40}
           className="h-full w-full object-cover object-center"
         />
       </div>
-      <span className="text__overflow w-full text-left">
+      <span className="flex-1 text-left font-medium text-zinc-700 group-hover:text-zinc-900 truncate">
         {name}
-        {loading && " (Loading...)"}
+        {loading && <span className="text-zinc-400 font-normal text-xs ml-2">(Loading...)</span>}
       </span>
-      <AiOutlineRight className="text-2xl md:text-3xl p-1 rounded-full text-emerald-700 group-hover:bg-customViolet group-hover:text-white transition-colors" />
+      <div className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 group-hover:bg-customViolet group-hover:text-white transition-all">
+        <AiOutlineRight className="text-base" />
+      </div>
     </button>
   );
 };

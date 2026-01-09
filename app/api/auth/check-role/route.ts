@@ -1,9 +1,7 @@
 // app/api/auth/check-role/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 // Tenant web app URL - update this with your actual tenant app URL
 const TENANT_APP_URL = process.env.NEXT_PUBLIC_TENANT_APP_URL || "http://localhost:3000";

@@ -1,10 +1,8 @@
 // app/api/billings/unit-tenants/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-
-const prisma = new PrismaClient();
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 // GET: Fetch tenants for a specific unit based on billing history
 export async function GET(request: NextRequest) {

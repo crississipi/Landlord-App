@@ -143,7 +143,7 @@ const MediaPreviewModal: React.FC<MediaPreviewModalProps> = ({ files, initialInd
         )}
 
         {isDocument && (
-          <div className="bg-white rounded-xl md:rounded-2xl p-8 md:p-10 lg:p-12 max-w-2xl w-full shadow-2xl">
+          <div className="bg-white rounded-[1.5rem] p-8 md:p-10 lg:p-12 max-w-2xl w-full shadow-2xl">
             <div className="flex flex-col items-center gap-6 md:gap-8">
               <div className={`text-lg font-bold p-1 px-4 border rounded-lg 
                 ${currentFile.fileType?.includes('pdf') ? 'bg-rose-50 text-rose-600' : 

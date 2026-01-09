@@ -176,6 +176,8 @@ const SettingsPage = ({ setPage }: ChangePageProps) => {
   const handleLogout = async () => {
     try {
       setLoggingOut(true);
+      // Call logout endpoint to update isOnline status
+      await fetch('/api/auth/logout', { method: 'POST' });
       await signOut({ callbackUrl: '/' });
     } catch (err) {
       console.error('Error logging out:', err);
@@ -194,9 +196,12 @@ const SettingsPage = ({ setPage }: ChangePageProps) => {
 
   if (loading) {
     return (
-      <div className='column__align gap-3 md:gap-5 py-3 md:py-5 text-customViolet overflow-hidden bg-white rounded-t-2xl'>
+      <div className='column__align gap-3 md:gap-5 py-3 md:py-5 text-customViolet lg:text-gray-800 overflow-hidden bg-white lg:bg-gray-50 rounded-t-2xl lg:rounded-none'>
         <div className='px-5 md:px-8 lg:px-12'>
-          <TitleButton setPage={setPage} title="Settings"/>
+          <div className="lg:hidden">
+            <TitleButton setPage={setPage} title="Settings"/>
+          </div>
+          <h1 className="hidden lg:block text-2xl font-semibold text-gray-800 mb-4">Settings</h1>
         </div>
         <div className='w-full flex justify-center py-12 md:py-16'>
           <div className="flex flex-col items-center gap-3">
@@ -209,9 +214,12 @@ const SettingsPage = ({ setPage }: ChangePageProps) => {
   }
 
   return (
-    <div className='column__align gap-3 md:gap-5 py-3 md:py-5 text-customViolet overflow-hidden bg-white rounded-t-2xl'>
+    <div className='column__align gap-3 md:gap-5 py-3 md:py-5 text-customViolet lg:text-gray-800 overflow-hidden bg-white lg:bg-gray-50 rounded-t-2xl lg:rounded-none'>
       <div className='px-5 md:px-8 lg:px-12'>
-        <TitleButton setPage={setPage} title="Settings"/>
+        <div className="lg:hidden">
+          <TitleButton setPage={setPage} title="Settings"/>
+        </div>
+        <h1 className="hidden lg:block text-2xl font-semibold text-gray-800 mb-4">Settings</h1>
       </div>
       <div className='max__size overflow-x-hidden flex md:mt-5 max-w-5xl mx-auto'>
         <div className='column__align gap-5 md:gap-6 lg:gap-8 px-5 md:px-8 lg:px-12'>
@@ -233,7 +241,7 @@ const SettingsPage = ({ setPage }: ChangePageProps) => {
               <AiOutlineUser className='max__size mt-2'/>
             </button>
           </div>
-          <div className='primary__btn__holder text-sm md:text-base lg:text-lg'>
+          <div className='primary__btn__holder text-sm md:text-base lg:text-base'>
             <input 
               type="text" 
               placeholder='Last Name' 
@@ -288,8 +296,8 @@ const SettingsPage = ({ setPage }: ChangePageProps) => {
           </div>
 
           <h2 className='h2__style mr-auto md:mt-5'>Security</h2>
-          <div className='text-sm column__align md:text-base gap-3 lg:flex-row'>
-            <div className='primary__btn__holder lg:max-h-22'>
+          <div className='text-sm column__align md:text-base gap-3 lg:flex-row lg:gap-6 w-full'>
+            <div className='primary__btn__holder flex-1 h-fit'>
               <h3 className='col-span-6 font-medium mb-1 text-base'>Change Username</h3>
               <div className='flex gap-2 col-span-6 justify-end items-center'>
                 <input 
@@ -309,7 +317,7 @@ const SettingsPage = ({ setPage }: ChangePageProps) => {
                 className={`col-span-full text__overflow input__text main__input md:max-h-12 ${useEmailAsUsername ? 'bg-zinc-100 cursor-not-allowed' : ''}`}
               />
             </div>
-            <div className='primary__btn__holder gap-3'>
+            <div className='primary__btn__holder gap-3 flex-1 h-fit'>
               <h3 className='col-span-full font-medium mt-5 mb-1 text-base lg:mt-0'>Change Password</h3>
               <input 
                 type="password" 
@@ -342,7 +350,7 @@ const SettingsPage = ({ setPage }: ChangePageProps) => {
 
           <button 
             type="button" 
-            className='w-full py-3 rounded-md border border-rose-500 text-rose-500 hover:bg-rose-500/70 focus:bg-rose-500 focus:text-white ease-out duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+            className='w-full py-3 rounded-md border border-rose-500 text-rose-500 hover:bg-rose-500/70 focus:bg-rose-500 focus:text-white ease-out duration-200 disabled:opacity-50 disabled:cursor-not-allowed lg:hidden'
             onClick={handleLogout}
             disabled={loggingOut}
           >
@@ -354,7 +362,7 @@ const SettingsPage = ({ setPage }: ChangePageProps) => {
               type="button"
               onClick={handleCancel}
               disabled={saving}
-              className='click__action hover__action focus__action flex__center__y border border-zinc-400 rounded-sm gap-3 text-zinc-400 justify-between px-5 md:gap-5 disabled:opacity-50'
+              className='p-3.5 font-semibold rounded-xl click__action hover__action focus__action flex__center__y justify-between px-5 md:gap-5 border border-zinc-400 gap-3 text-zinc-400 disabled:opacity-50'
             >
               <HiOutlineArrowNarrowLeft className='text-2xl'/> Cancel
             </button>

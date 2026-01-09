@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { PrismaClient } from '@prisma/client';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-
-const prisma = new PrismaClient();
+import { authOptions } from '@/lib/auth';
+import { createMaintenanceFixedNotification } from '@/lib/notifications';
+import { prisma } from '@/lib/prisma';
 
 // GET: Fetch documentation for a maintenance request
 export async function GET(request: NextRequest) {
@@ -177,8 +176,19 @@ export async function POST(request: NextRequest) {
       return doc;
     });
 
+    // Calculate total cost for notification
+    const totalCost = totalMaterialCost + (inChargePayment ? parseFloat(inChargePayment) : 0);
+
+    // Create notification for tenant about the fixed maintenance
+    await createMaintenanceFixedNotification({
+      tenantId: maintenance.userId,
+      maintenanceId: parseInt(maintenanceId),
+      requestDescription: maintenance.rawRequest,
+      totalCost
+    });
+
     // Send message to tenant about the fixed maintenance
-    const messageText = `Maintenance: Your maintenance request '${maintenance.rawRequest}' has been fixed. Remarks: ${remarks}, Total cost: ₱${totalMaterialCost.toLocaleString()}. MaintenanceID: ${maintenanceId}`;
+    const messageText = `Maintenance: Your maintenance request '${maintenance.rawRequest}' has been fixed. Remarks: ${remarks}, Total cost: ₱${totalCost.toLocaleString()}. MaintenanceID: ${maintenanceId}`;
 
     await prisma.messages.create({
       data: {

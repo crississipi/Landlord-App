@@ -145,38 +145,38 @@ const MainPage = ({ setPage }: ChangePageProps) => {
   };
 
   return (
-    <div className='h-auto w-full flex flex-col justify-start bg-customViolet text-customViolet relative scroll-smooth'>
-      <div className='h-1/6 w-full bg-customViolet sticky top-0 z-10 grid grid-cols-6 px-3 gap-y-3 items-start text-white'>
-        <span className='col-span-full text-left text-sm md:text-base lg:text-lg font-light mb-auto'>{today.toDateString()}</span>
-        <div className='col-span-3 w-full flex flex-col md:my-4'>
-          <h2 className='col-span-full text-base md:text-lg lg:text-xl font-medium'>This Month&apos;s Revenue</h2>
-          <h3 className='col-span-full font-semibold text-3xl md:text-4xl lg:text-5xl flex items-center'>
-            <TbCurrencyPeso className='text-2xl md:text-3xl lg:text-4xl stroke-2'/>
+    <div className='h-auto w-full flex flex-col justify-start bg-customViolet lg:bg-gray-50 text-customViolet relative scroll-smooth'>
+      <div className='h-auto min-h-[16.66%] w-full bg-customViolet lg:bg-white sticky top-0 z-10 grid grid-cols-2 md:grid-cols-6 px-4 gap-4 md:gap-y-3 items-start text-white lg:text-gray-800 py-6 md:py-4 shadow-md md:shadow-none lg:border-b lg:border-gray-200'>
+        <span className='col-span-full text-left text-sm md:text-base lg:text-sm font-light mb-2 md:mb-auto opacity-80 lg:text-gray-500'>{today.toDateString()}</span>
+        <div className='col-span-2 md:col-span-3 w-full flex flex-col md:my-4 p-4 md:p-0 bg-white/10 md:bg-transparent lg:bg-transparent rounded-2xl md:rounded-none backdrop-blur-sm md:backdrop-blur-none'>
+          <h2 className='col-span-full text-sm md:text-lg lg:text-base font-medium opacity-90 lg:text-gray-600'>This Month&apos;s Revenue</h2>
+          <h3 className='col-span-full font-semibold text-3xl md:text-4xl lg:text-4xl flex items-center mt-1 lg:text-gray-900'>
+            <TbCurrencyPeso className='text-2xl md:text-3xl lg:text-3xl stroke-2'/>
             {dashboardData ? formatCurrency(dashboardData.stats.totalRevenue) : '0.00'}
           </h3>
         </div>
-        <div className='col-span-3 w-full flex flex-col items-end justify-center'>
-          <h2 className='col-span-2 font-light text-sm md:text-base'>Delayed Payments</h2>
-          <h2 className='col-span-2 font-medium text-lg md:text-xl lg:text-2xl'>{dashboardData?.stats.pendingMaintenance || 0} / <strong className="text-sm ml-1">{dashboardData?.stats.totalProperties || 0}</strong></h2>
+        <div className='col-span-2 md:col-span-3 w-full flex flex-col items-start md:items-end justify-center p-4 md:p-0 bg-white/10 md:bg-transparent lg:bg-transparent rounded-2xl md:rounded-none backdrop-blur-sm md:backdrop-blur-none'>
+          <h2 className='col-span-2 font-light text-sm md:text-base lg:text-sm opacity-90 lg:text-gray-500'>Delayed Payments</h2>
+          <h2 className='col-span-2 font-medium text-2xl md:text-xl lg:text-xl mt-1 lg:text-gray-900'>{dashboardData?.stats.pendingMaintenance || 0} / <strong className="text-sm ml-1 opacity-70">{dashboardData?.stats.totalProperties || 0}</strong></h2>
         </div>
-        <div className='col-span-2 w-full flex flex-col items-center justify-center'>
-          <h2 className='col-span-2 font-light text-sm md:text-base'>Paid Tenants</h2>
-          <h3 className='col-span-2 font-medium text-lg md:text-xl lg:text-2xl tracking-wider'>{dashboardData?.stats.billedUnits || 0}/
-            <strong className="text-sm ml-1">{dashboardData?.stats.totalTenants || 0}</strong>
+        <div className='col-span-1 md:col-span-2 w-full flex flex-col items-center justify-center p-3 md:p-0 bg-white/5 md:bg-transparent lg:bg-transparent rounded-xl md:rounded-none'>
+          <h2 className='col-span-2 font-light text-xs md:text-base lg:text-sm opacity-80 lg:text-gray-500'>Paid Tenants</h2>
+          <h3 className='col-span-2 font-medium text-lg md:text-xl lg:text-xl tracking-wider mt-1 lg:text-gray-900'>{dashboardData?.stats.billedUnits || 0}/
+            <strong className="text-sm ml-1 opacity-70">{dashboardData?.stats.totalTenants || 0}</strong>
           </h3>
         </div>
-        <div className='col-span-2 w-full flex flex-col items-center justify-center'>
-          <h2 className='col-span-2 font-light text-sm md:text-base'>Rented Units</h2>
-          <h2 className='col-span-2 font-medium text-lg md:text-xl lg:text-2xl'>{dashboardData?.stats.billedUnits || 0} / <strong className="text-sm ml-1">{dashboardData?.stats.totalProperties || 0}</strong></h2>
+        <div className='col-span-1 md:col-span-2 w-full flex flex-col items-center justify-center p-3 md:p-0 bg-white/5 md:bg-transparent lg:bg-transparent rounded-xl md:rounded-none'>
+          <h2 className='col-span-2 font-light text-xs md:text-base lg:text-sm opacity-80 lg:text-gray-500'>Rented Units</h2>
+          <h2 className='col-span-2 font-medium text-lg md:text-xl lg:text-xl mt-1 lg:text-gray-900'>{dashboardData?.stats.billedUnits || 0} / <strong className="text-sm ml-1 opacity-70">{dashboardData?.stats.totalProperties || 0}</strong></h2>
         </div>
-        <div className='col-span-2 w-full flex flex-col items-center justify-center'>
-          <h2 className='col-span-2 font-light text-sm md:text-base'>Maintenance Cost</h2>
-          <h2 className='col-span-2 font-medium text-lg md:text-xl lg:text-2xl flex items-center'><TbCurrencyPeso className='text-base md:text-lg lg:text-xl stroke-2'/>1,500</h2>
+        <div className='col-span-2 md:col-span-2 w-full flex flex-col items-center justify-center p-3 md:p-0 bg-white/5 md:bg-transparent lg:bg-transparent rounded-xl md:rounded-none'>
+          <h2 className='col-span-2 font-light text-xs md:text-base lg:text-sm opacity-80 lg:text-gray-500'>Maintenance Cost</h2>
+          <h2 className='col-span-2 font-medium text-lg md:text-xl lg:text-xl flex items-center mt-1 lg:text-gray-900'><TbCurrencyPeso className='text-base md:text-lg lg:text-lg stroke-2'/>1,500</h2>
         </div>
       </div>
-      <div className={`h-[93vh] border border-black w-full flex flex-col gap-3 md:gap-4 lg:gap-5 rounded-t-2xl bg-white z-30 overflow-x-hidden sticky top-full p-2 md:p-4 lg:p-6`}>
+      <div className={`min-h-[93vh] border border-black/5 w-full flex flex-col gap-3 md:gap-4 lg:gap-5 rounded-t-[2rem] lg:rounded-none bg-white lg:bg-gray-50 z-30 overflow-x-hidden sticky top-[25vh] md:top-full p-2 md:p-4 lg:p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] lg:shadow-none lg:border-none`}>
         {/* DO NOT CHANGE THIS */}
-        <div className='min-h-16 md:min-h-20 w-full bg-zinc-100 grid grid-cols-5 items-center rounded-lg'>
+        <div className='min-h-16 md:min-h-20 w-full bg-zinc-50 grid grid-cols-5 items-center rounded-2xl p-1 md:p-2 gap-1 overflow-x-auto md:overflow-visible no-scrollbar lg:hidden'>
           <CustomNavBtn 
             btnName='Home' 
             mainPage={true} 
@@ -222,7 +222,7 @@ const MainPage = ({ setPage }: ChangePageProps) => {
                 {/* Section 1: Billing Status */}
                 <div className='w-full flex flex-col p-2 px-3'>
                   <div className='w-full flex items-center justify-between mb-3'>
-                    <h2 className='font-semibold text-lg md:text-xl'>Billing Status</h2>
+                    <h2 className='font-semibold text-lg md:text-xl lg:text-lg'>Billing Status</h2>
                     <button 
                       type="button" 
                       className='flex items-center gap-1 text-sm text-customViolet hover:underline'
@@ -233,7 +233,7 @@ const MainPage = ({ setPage }: ChangePageProps) => {
                   </div>
                   
                   {dashboardData.recentBillings.length === 0 ? (
-                    <div className="w-full bg-zinc-50 rounded-xl p-6 text-center">
+                    <div className="w-full bg-zinc-50 rounded-[1.5rem] p-6 text-center">
                       <TbCheck className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
                       <p className="text-zinc-600">No recent billings</p>
                     </div>
@@ -242,11 +242,11 @@ const MainPage = ({ setPage }: ChangePageProps) => {
                       {dashboardData.recentBillings.slice(0, 5).map((billing) => (
                         <div 
                           key={billing.billingID} 
-                          className="w-full border border-zinc-200 rounded-xl p-3 hover:border-customViolet/30 transition-colors"
+                          className="w-full border border-zinc-200 rounded-[1.5rem] p-4 hover:border-customViolet/30 transition-colors bg-white shadow-sm"
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-customViolet flex items-center justify-center">
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-customViolet flex items-center justify-center shadow-md shadow-customViolet/20">
                                 <MdHome className="text-white text-lg" />
                               </div>
                               <div>
@@ -265,21 +265,21 @@ const MainPage = ({ setPage }: ChangePageProps) => {
                           
                           {/* Billing breakdown */}
                           <div className="grid grid-cols-3 gap-2 mt-3">
-                            <div className="bg-blue-50 p-2 rounded-lg">
+                            <div className="bg-blue-50 p-2 rounded-xl border border-blue-100">
                               <div className="flex items-center gap-1 text-xs text-blue-600">
                                 <MdOutlineElectricBolt className="text-sm" />
                                 Electric
                               </div>
                               <div className="font-medium text-sm text-zinc-800">₱{formatCurrency(billing.totalElectric)}</div>
                             </div>
-                            <div className="bg-cyan-50 p-2 rounded-lg">
+                            <div className="bg-cyan-50 p-2 rounded-xl border border-cyan-100">
                               <div className="flex items-center gap-1 text-xs text-cyan-600">
                                 <MdWaterDrop className="text-sm" />
                                 Water
                               </div>
                               <div className="font-medium text-sm text-zinc-800">₱{formatCurrency(billing.totalWater)}</div>
                             </div>
-                            <div className="bg-violet-50 p-2 rounded-lg">
+                            <div className="bg-violet-50 p-2 rounded-xl border border-violet-100">
                               <div className="text-xs text-violet-600">Rent</div>
                               <div className="font-medium text-sm text-zinc-800">₱{formatCurrency(billing.totalRent)}</div>
                             </div>
@@ -293,7 +293,7 @@ const MainPage = ({ setPage }: ChangePageProps) => {
                 {/* Section 2: Maintenance Requests */}
                 <div className='w-full flex flex-col p-2 px-3'>
                   <div className='w-full flex items-center justify-between mb-3'>
-                    <h2 className='font-semibold text-lg md:text-xl'>Maintenance Requests</h2>
+                    <h2 className='font-semibold text-lg md:text-xl lg:text-lg'>Maintenance Requests</h2>
                     <button 
                       type="button" 
                       className='flex items-center gap-1 text-sm text-customViolet hover:underline'
@@ -310,7 +310,7 @@ const MainPage = ({ setPage }: ChangePageProps) => {
                       return (
                         <div 
                           key={key}
-                          className={`p-3 rounded-xl border ${colors.border} ${colors.bgLight} flex flex-col items-center`}
+                          className={`p-3 rounded-[1.5rem] border ${colors.border} ${colors.bgLight} flex flex-col items-center shadow-sm`}
                         >
                           <span className={`text-2xl font-bold ${colors.text}`}>{urgency.count}</span>
                           <span className={`text-xs ${colors.text} font-medium`}>{urgency.label}</span>
@@ -336,7 +336,7 @@ const MainPage = ({ setPage }: ChangePageProps) => {
                         return (
                           <div 
                             key={request.maintenanceId}
-                            className="w-full border border-zinc-200 rounded-xl p-3 flex items-center gap-3"
+                            className="w-full border border-zinc-200 rounded-[1.5rem] p-4 flex items-center gap-3 bg-white shadow-sm"
                           >
                             <span className={`w-1 h-12 rounded-full ${colors.bg}`}></span>
                             <div className="flex-1 min-w-0">
@@ -359,10 +359,10 @@ const MainPage = ({ setPage }: ChangePageProps) => {
                 {/* Section 3: Properties & Feedbacks */}
                 <div className='w-full flex flex-col p-2 px-3'>
                   <div className='w-full flex items-center justify-between mb-3'>
-                    <h2 className='font-semibold text-lg md:text-xl'>Properties & Feedbacks</h2>
+                    <h2 className='font-semibold text-lg md:text-xl lg:text-lg'>Properties & Feedbacks</h2>
                     <button 
                       type="button" 
-                      className='px-3 py-1.5 rounded-md text-sm border border-customViolet bg-customViolet/10 hover:bg-customViolet/50 focus:bg-customViolet focus:text-white ease-out duration-200'
+                      className='px-3 py-1.5 rounded-full text-sm border border-customViolet bg-customViolet/10 hover:bg-customViolet/50 focus:bg-customViolet focus:text-white ease-out duration-200'
                       onClick={() => newPage(14)}
                     >
                       Manage
@@ -370,7 +370,7 @@ const MainPage = ({ setPage }: ChangePageProps) => {
                   </div>
 
                   {dashboardData.properties.length === 0 ? (
-                    <div className="w-full bg-zinc-50 rounded-xl p-6 text-center">
+                    <div className="w-full bg-zinc-50 rounded-[1.5rem] p-6 text-center">
                       <TbHome className="w-10 h-10 text-zinc-400 mx-auto mb-2" />
                       <p className="text-zinc-600">No properties found</p>
                     </div>
@@ -379,11 +379,11 @@ const MainPage = ({ setPage }: ChangePageProps) => {
                       {dashboardData.properties.map((property) => (
                         <div 
                           key={property.propertyId}
-                          className="min-w-[200px] border border-zinc-200 rounded-xl p-4 flex flex-col hover:border-customViolet/30 hover:shadow-sm transition-all"
+                          className="min-w-[200px] border border-zinc-200 rounded-[1.5rem] p-4 flex flex-col hover:border-customViolet/30 hover:shadow-sm transition-all bg-white"
                         >
                           {/* Property Header */}
                           <div className="flex items-center gap-2 mb-3">
-                            <div className="w-10 h-10 rounded-lg bg-customViolet/10 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-xl bg-customViolet/10 flex items-center justify-center">
                               <TbHome className="text-customViolet text-xl" />
                             </div>
                             <div>
@@ -396,7 +396,7 @@ const MainPage = ({ setPage }: ChangePageProps) => {
                           </div>
 
                           {/* Feedback Stats */}
-                          <div className="bg-zinc-50 rounded-lg p-3 mt-auto">
+                          <div className="bg-zinc-50 rounded-xl p-3 mt-auto border border-zinc-100">
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-sm text-zinc-600">Feedbacks</span>
                               <span className="font-semibold text-customViolet">{property.totalFeedbacks}</span>

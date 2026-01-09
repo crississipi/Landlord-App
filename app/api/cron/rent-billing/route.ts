@@ -1,11 +1,10 @@
 // app/api/cron/rent-billing/route.ts
 // Automatic rent billing cron job - sends rent bills on tenant's move-in anniversary date
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import nodemailer from 'nodemailer';
-
-const prisma = new PrismaClient();
+import { createBillingNotification } from '@/lib/notifications';
+import { prisma } from '@/lib/prisma';
 
 // Verify cron secret for security
 const CRON_SECRET = process.env.CRON_SECRET;
@@ -359,6 +358,20 @@ export async function GET(request: NextRequest) {
           emailSent: emailResult.success,
           error: emailResult.error,
         },
+      });
+
+      // Create notification for tenant about the rent billing
+      const tenantName = tenant.firstName && tenant.lastName
+        ? `${tenant.firstName} ${tenant.lastName}`.trim()
+        : tenant.username;
+      
+      await createBillingNotification({
+        tenantId: tenant.userID,
+        billingId: billing.billingID,
+        unit: tenant.unitNumber || '1',
+        month: currentMonth,
+        totalAmount: rentAmount,
+        tenantName
       });
 
       results.push({

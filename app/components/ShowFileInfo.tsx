@@ -182,8 +182,8 @@ const ShowFileInfo = ({ showFileInfo, file, onDownload, allFiles, currentIndex =
               </video>
             </div>
           ) : (
-            <div className='bg-white rounded-2xl p-8 md:p-12 max-w-lg w-full shadow-2xl text-center'>
-              <div className={`inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-2xl ${getFileTypeBadgeColor(file.type)} mb-6`}>
+            <div className='bg-white rounded-[1.5rem] p-8 md:p-12 max-w-lg w-full shadow-2xl text-center'>
+              <div className={`inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-xl ${getFileTypeBadgeColor(file.type)} mb-6`}>
                 <RiFileLine className='text-4xl md:text-5xl text-white' />
               </div>
               <h3 className='text-xl md:text-2xl font-bold text-gray-800 mb-2 break-words'>{file.name}</h3>
@@ -223,7 +223,7 @@ const ShowFileInfo = ({ showFileInfo, file, onDownload, allFiles, currentIndex =
 
         {/* Bottom Info Bar */}
         <div className='w-full max-w-4xl mt-4 md:mt-6'>
-          <div className='bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-5'>
+          <div className='bg-white/10 backdrop-blur-md rounded-xl p-4 md:p-5'>
             <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-3'>
               {/* File Name & Type */}
               <div className='flex items-center gap-3 min-w-0 flex-1'>

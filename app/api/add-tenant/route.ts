@@ -1,16 +1,8 @@
 // app/api/add-tenant/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { PrismaClient } from "@prisma/client";
 import { sendTenantCredentials } from "@/lib/email";
-
-declare global {
-  // avoid multiple PrismaClients in dev
-  // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined;
-}
-const prisma = globalThis.prisma ?? new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma;
+import { prisma } from '@/lib/prisma';
 
 type Body = {
   username: string; // email

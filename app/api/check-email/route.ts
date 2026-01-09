@@ -1,9 +1,6 @@
 // app/api/check-email/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = global.prisma ?? new PrismaClient();
-if (process.env.NODE_ENV !== "production") global.prisma = prisma;
+import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   const { email } = await req.json();

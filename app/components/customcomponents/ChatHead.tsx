@@ -22,27 +22,31 @@ const ChatHead: React.FC<SetProps> = ({ name, setPage, userId, isOnline, profile
   
   return (
     <button 
-      className='flex__center__all click__action h-24 md:h-28 lg:h-32 min-w-20 md:min-w-28 md:max-w-28 lg:min-w-32 lg:max-w-32 rounded-md flex-col gap-1 md:gap-2 text-xs md:text-sm lg:text-base overflow-hidden outline-none group focus:bg-zinc-100 hover:bg-zinc-50 transition-colors' 
+      className='flex flex-col items-center justify-center gap-2 p-2 outline-none group transition-all duration-300' 
       onClick={() => changePage(9, userId)}
     >
-      <div className='h-max w-max relative'>
-        <div className='click__action h-18 w-18 md:h-20 md:w-20 lg:h-24 lg:w-24 aspect-square rounded-full bg-gradient-to-br from-indigo-500 to-customViolet shadow-sm shadow-zinc-100 relative group-focus:ring-4 group-focus:ring-customViolet/50 group-focus:scale-90 group-hover:scale-105 transition-transform flex items-center justify-center text-white font-bold text-xl md:text-2xl lg:text-3xl overflow-hidden'>
+      <div className='relative'>
+        <div className='h-16 w-16 md:h-20 md:w-20 lg:h-16 lg:w-16 rounded-full p-[2px] bg-gradient-to-tr from-customViolet to-secondary group-hover:scale-105 transition-transform duration-300'>
+          <div className='h-full w-full rounded-full bg-white p-[2px] overflow-hidden relative'>
             {profileImage ? (
               <Image 
                 src={profileImage} 
                 alt={name}
                 fill
-                className="object-cover h-full w-full"
+                className="object-cover h-full w-full rounded-full"
               />
             ) : (
-              getInitials(name)
+              <div className='h-full w-full bg-zinc-100 flex items-center justify-center text-customViolet font-bold text-lg'>
+                {getInitials(name)}
+              </div>
             )}
+          </div>
         </div>
         {isOnline && (
-          <span className='h-3 w-3 md:h-4 md:w-4 rounded-full bg-emerald-500 absolute bottom-1 right-1 ring-4 ring-white z-10'></span>
+          <span className='h-4 w-4 rounded-full bg-emerald-500 absolute bottom-1 right-1 ring-2 ring-white z-10'></span>
         )}
       </div>
-      <p className='text__overflow w-11/12 font-medium'>{name}</p>
+      <p className='text-xs md:text-sm lg:text-xs font-medium text-customViolet w-20 truncate text-center'>{name}</p>
     </button>
   )
 }

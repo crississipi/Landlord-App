@@ -12,12 +12,12 @@ const AllMedia: React.FC<allmedia> = ({ setPage, setImage }) => {
     }, 100);
   }
   return (
-    <div className='max__size flex flex-col gap-5 md:gap-6 text-customViolet bg-slate-50 overflow-hidden'>
-      <div className='flex__center__y h-auto w-full gap-3 md:gap-4 bg-white px-5 md:px-8 lg:px-12 py-2 md:py-3'>
-        <button className='focus__action click__action hover__action rounded-sm h-11 w-11 md:h-12 md:w-12 p-1 outline-none' onClick={() => changePage(10)}>
+    <div className='max__size flex flex-col gap-5 md:gap-6 text-customViolet lg:text-gray-800 bg-slate-50 lg:bg-gray-50 overflow-hidden'>
+      <div className='flex__center__y h-auto w-full gap-3 md:gap-4 bg-white lg:bg-transparent px-5 md:px-8 lg:px-12 py-2 md:py-3 lg:py-6 lg:border-b lg:border-gray-200 lg:mb-4'>
+        <button className='focus__action click__action hover__action rounded-sm h-11 w-11 md:h-12 md:w-12 p-1 outline-none lg:hidden' onClick={() => changePage(10)}>
           <AiOutlineLeft className='max__size text-emerald-700'/>
         </button>
-        <h1 className='h1__style text-xl md:text-2xl lg:text-3xl'>All Images</h1>
+        <h1 className='h1__style text-xl md:text-2xl lg:text-3xl lg:font-semibold lg:text-gray-800'>All Images</h1>
       </div>
       <div className='h-5/6 w-full flex px-5 md:px-8 lg:px-12 overflow-x-hidden'>
         <div className='h-auto w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 lg:gap-5'>

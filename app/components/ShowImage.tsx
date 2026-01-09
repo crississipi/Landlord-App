@@ -12,7 +12,7 @@ const ShowImage = ({ setImage }: ImageProps) => {
                 <AiOutlineClose className='max__size'/>
             </button>
         </div>
-        <div className='flex__center__all h-2/3 aspect-[3/4] rounded-3xl shadow-lg shadow-customViolet/30 bg-slate-50/50 '>
+        <div className='flex__center__all h-2/3 aspect-[3/4] rounded-[1.5rem] shadow-lg shadow-customViolet/30 bg-slate-50/50 '>
             <AiOutlinePicture className='text-6xl'/>
         </div>
     </div>

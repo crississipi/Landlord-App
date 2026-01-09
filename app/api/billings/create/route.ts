@@ -1,12 +1,11 @@
 // app/api/billings/create/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import nodemailer from 'nodemailer';
-
-const prisma = new PrismaClient();
+import { createBillingNotification } from '@/lib/notifications';
+import { prisma } from '@/lib/prisma';
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN!;
 const GITHUB_USERNAME = process.env.GITHUB_USERNAME!;
@@ -575,17 +574,30 @@ export async function POST(request: NextRequest) {
       emailResult = await sendBillingEmail(tenant, body, property, pdfBytes);
     }
 
+    // Create notification for tenant about the new billing
+    const tenantName = tenant.firstName && tenant.lastName
+      ? `${tenant.firstName} ${tenant.lastName}`.trim()
+      : tenant.username;
+    
+    await createBillingNotification({
+      tenantId: userID,
+      billingId: billing.billingID,
+      unit,
+      month,
+      totalAmount,
+      tenantName
+    });
+
     // Create notification for landlord to remind about billing
     const landlordId = parseInt(session.user.id);
     const monthDate = new Date(month + '-01');
     const monthName = monthDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-    const totalAmount = (billing.totalRent || 0) + (billing.totalWater || 0) + (billing.totalElectric || 0);
 
     await prisma.notification.create({
       data: {
         userId: landlordId,
         type: 'billing_reminder',
-        message: `New billing created for ${tenant.firstName || ''} ${tenant.lastName || ''} (${unit}) - ${monthName}: ₱${totalAmount.toLocaleString()}`,
+        message: `New billing created for ${tenantName} (${unit}) - ${monthName}: ₱${totalAmount.toLocaleString()}`,
         relatedId: billing.billingID,
       }
     });

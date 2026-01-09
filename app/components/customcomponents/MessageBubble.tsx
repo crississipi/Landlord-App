@@ -79,15 +79,15 @@ const MessageBubble = ({ sender, message, timestamp, files, batchId, onViewBilli
 
   return (
     <>
-      <div ref={clickRef} className={`column__align outline-none text-customViolet text-sm pl-3 ${!sender ? 'items-start' : 'items-end'} md:text-base lg:text-lg`}>
+      <div ref={clickRef} className={`column__align outline-none text-customViolet text-sm pl-3 ${!sender ? 'items-start' : 'items-end'} md:text-base lg:text-sm`}>
         {details && (
-          <span className='text-xs font-semibold py-1 px-3 w-full text-center md:text-sm lg:text-base'>
+          <span className='text-xs font-semibold py-1 px-3 w-full text-center uppercase'>
             {formatDate(timestamp)}
           </span>
         )}
         
         <div className={`h-auto w-full flex items-end gap-2 md:gap-3 ${sender && 'flex-row-reverse'}`}>
-          <div className={`max-w-[85%] md:max-w-[65%] lg:max-w-[60%] ${!sender ? 'items-start' : 'items-end'} flex flex-col gap-2 md:gap-3`}>
+          <div className={`max-w-[85%] md:max-w-[65%] lg:max-w-[70%] ${!sender ? 'items-start' : 'items-end'} flex flex-col gap-2 md:gap-3`}>
             {/* Text Message */}
             {message && (
               <button
@@ -199,7 +199,7 @@ const MessageBubble = ({ sender, message, timestamp, files, batchId, onViewBilli
         </div>
 
         {details && (
-          <span className={`text-xs py-1 ${sender ? 'ml-auto' : 'mr-auto'} md:text-sm md:font-light`}>
+          <span className={`text-xs py-1 ${sender ? 'ml-auto' : 'mr-auto'}`}>
             Sent {formatTime(timestamp)}
           </span>
         )}

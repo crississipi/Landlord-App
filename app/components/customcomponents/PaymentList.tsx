@@ -12,7 +12,7 @@ const PaymentList = ({ month, unit, price, paymentType, date }:PaymentListProps)
   }
   return (
     <div className='click__action h-max max-h-52 flex flex-col overflow-hidden text-sm md:text-base'>
-      <button className='flex__center__y h-11 w-full py-1 px-3 rounded-xs text-customViolet font-medium outline-none justify-between border-b border-zinc-200 md:font-normal' onClick={toggleShowHide}>
+      <button className='flex__center__y h-11 w-full py-1 px-3 rounded-xl text-customViolet font-medium outline-none justify-between border-b border-zinc-200 md:font-normal' onClick={toggleShowHide}>
         <h5 className='py-2'>{month}</h5>
         <AiOutlineCaretDown className={`h-4 w-4 ${ showHide ? 'rotate-90' : 'rotate-0 text-emerald-700 scale-110'} click__action`}/>
       </button>
