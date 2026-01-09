@@ -543,6 +543,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Calculate total amount
+    const totalAmount = (totalRent || 0) + (totalWater || 0) + (totalElectric || 0);
+
     // Generate PDF
     const pdfBytes = await generateBillingPDF(
       { ...body, totalRent: totalRent || 0, totalWater: totalWater || 0, totalElectric: totalElectric || 0 },
@@ -553,11 +556,11 @@ export async function POST(request: NextRequest) {
     );
 
     // Upload PDF to GitHub
-    const tenantName = tenant.firstName && tenant.lastName
+    const pdfFileName = tenant.firstName && tenant.lastName
       ? `${tenant.firstName}_${tenant.lastName}`.replace(/\s+/g, '_')
       : tenant.username;
     
-    const folderPath = `billing-statements/${tenantName}`;
+    const folderPath = `billing-statements/${pdfFileName}`;
     const fileName = `Billing_${unit}_${month}.pdf`;
     
     let pdfUrl = '';
@@ -575,7 +578,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create notification for tenant about the new billing
-    const tenantName = tenant.firstName && tenant.lastName
+    const tenantDisplayName = tenant.firstName && tenant.lastName
       ? `${tenant.firstName} ${tenant.lastName}`.trim()
       : tenant.username;
     
@@ -585,7 +588,7 @@ export async function POST(request: NextRequest) {
       unit,
       month,
       totalAmount,
-      tenantName
+      tenantName: tenantDisplayName
     });
 
     // Create notification for landlord to remind about billing
@@ -597,7 +600,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: landlordId,
         type: 'billing_reminder',
-        message: `New billing created for ${tenantName} (${unit}) - ${monthName}: ₱${totalAmount.toLocaleString()}`,
+        message: `New billing created for ${tenantDisplayName} (${unit}) - ${monthName}: ₱${totalAmount.toLocaleString()}`,
         relatedId: billing.billingID,
       }
     });
