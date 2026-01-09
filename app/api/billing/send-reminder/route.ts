@@ -45,6 +45,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Billing not found' }, { status: 404 });
     }
 
+    // Validate tenant email
+    if (!billing.user.email) {
+      return NextResponse.json({ error: 'Tenant email not found' }, { status: 400 });
+    }
+
+    // Validate billing month
+    if (!billing.month) {
+      return NextResponse.json({ error: 'Billing month not found' }, { status: 400 });
+    }
+
     // Calculate totals
     const totalRent = billing.totalRent;
     const totalElectric = billing.totalElectric;
@@ -52,7 +62,7 @@ export async function POST(request: NextRequest) {
     const totalAmount = totalRent + totalElectric + totalWater;
 
     // Send email reminder
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || '587'),
       secure: false,
@@ -62,15 +72,18 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    const tenantEmail = billing.user.email;
+    const billingMonth = billing.month;
+
     const mailOptions = {
       from: process.env.SMTP_FROM,
-      to: billing.user.email,
-      subject: `Billing Reminder - ${billing.month} ${billing.dueDate?.getFullYear()}`,
+      to: tenantEmail,
+      subject: `Billing Reminder - ${billingMonth} ${billing.dueDate?.getFullYear()}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Billing Reminder</h2>
           <p>Dear ${billing.user.firstName} ${billing.user.lastName},</p>
-          <p>Your billing for ${billing.month} is now available.</p>
+          <p>Your billing for ${billingMonth} is now available.</p>
           
           <table style="border-collapse: collapse; width: 100%; margin: 20px 0;">
             <thead>
@@ -116,13 +129,13 @@ export async function POST(request: NextRequest) {
         userID: billing.user.userID,
         propertyId: billing.propertyId,
         billingID: billing.billingID,
-        month: billing.month,
+        month: billingMonth,
         emailSent: true
       }
     });
 
     // Send message to tenant
-    const messageText = `Billing: Your billing for ${billing.month} is ready. Rent: ₱${totalRent.toLocaleString()}, Electric: ₱${totalElectric.toLocaleString()}, Water: ₱${totalWater.toLocaleString()}, Total: ₱${totalAmount.toLocaleString()}. Due: ${billing.dueDate ? billing.dueDate.toLocaleDateString() : 'N/A'}. BillingID: ${billingID}`;
+    const messageText = `Billing: Your billing for ${billingMonth} is ready. Rent: ₱${totalRent.toLocaleString()}, Electric: ₱${totalElectric.toLocaleString()}, Water: ₱${totalWater.toLocaleString()}, Total: ₱${totalAmount.toLocaleString()}. Due: ${billing.dueDate ? billing.dueDate.toLocaleDateString() : 'N/A'}. BillingID: ${billingID}`;
 
     await prisma.messages.create({
       data: {
