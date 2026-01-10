@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 
 import { AiFillFolderOpen, AiFillPicture, AiOutlineInfoCircle, AiOutlineLeft, AiOutlineClose, AiOutlinePlusCircle, AiFillVideoCamera } from 'react-icons/ai'
 import { IoSend } from "react-icons/io5";
@@ -54,7 +54,7 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
     }
   }, [chatUserId, fetchMessages, fetchPartnerInfo]);
 
-  const fetchMessages = async ({
+  const fetchMessages = useCallback(async ({
     cursor: cursorParam,
     prepend = false,
     isInitial = false,
@@ -158,7 +158,7 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
         setLoadingMore(false);
       }
     }
-  };
+  }, [chatUserId, isAtBottom]);
 
   const handleScroll = () => {
     const container = scrollContainerRef.current;
@@ -177,7 +177,7 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
     }
   };
 
-  const fetchPartnerInfo = async () => {
+  const fetchPartnerInfo = useCallback(async () => {
     try {
       console.log('Fetching partner info for user:', chatUserId);
       const response = await fetch(`/api/users/${chatUserId}`);
@@ -193,7 +193,7 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
     } catch (error) {
       console.error('Error fetching partner info:', error);
     }
-  };
+  }, [chatUserId]);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !chatUserId) return;

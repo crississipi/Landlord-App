@@ -1,7 +1,7 @@
 'use client';
 
 import { ChangePageProps, ChatInfoProps } from '@/types'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { AiOutlineLeft, AiOutlineSearch } from 'react-icons/ai'
 import { RiImageFill, RiFile3Line, RiVideoLine } from 'react-icons/ri'
 import { CustomNavBtn } from './customcomponents'
@@ -79,7 +79,7 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
     }
   }, [chatUserId, chatInfo, fetchTenantProfile, fetchAllFiles]);
 
-  const fetchTenantProfile = async () => {
+  const fetchTenantProfile = useCallback(async () => {
     if (!chatUserId) return;
     
     try {
@@ -94,7 +94,7 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
     } finally {
       setLoading(false);
     }
-  };
+  }, [chatUserId]);
 
   const closeChatInfo = () => {
     setChatInfo("-right-[9999px]");
@@ -113,7 +113,7 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
   };
 
   // Fetch all files from messages
-  const fetchAllFiles = async () => {
+  const fetchAllFiles = useCallback(async () => {
     if (!chatUserId) return;
 
     try {
@@ -164,7 +164,7 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [chatUserId]);
 
   const handleFileClick = (file: UploadedFile, index: number) => {
     setSelectedFile(file);

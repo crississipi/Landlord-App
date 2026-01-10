@@ -1,5 +1,5 @@
 import { ChangePageProps, ImageProps, MaintenanceRequest, DocumentationMaterial } from '@/types'
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { AiOutlineLeft, AiOutlinePlus } from 'react-icons/ai';
 import { HiOutlineArrowNarrowLeft, HiOutlineArrowNarrowRight } from 'react-icons/hi';
 import { ImageButton } from './customcomponents';
@@ -46,7 +46,7 @@ const Documentation: React.FC<DocuProps> = ({ setPage, setImage, maintenanceId }
     }
   }, [maintenanceId, fetchMaintenanceDetails]);
 
-  const fetchMaintenanceDetails = async () => {
+  const fetchMaintenanceDetails = useCallback(async () => {
     if (!maintenanceId) return;
     
     setLoading(true);
@@ -61,7 +61,7 @@ const Documentation: React.FC<DocuProps> = ({ setPage, setImage, maintenanceId }
     } finally {
       setLoading(false);
     }
-  };
+  }, [maintenanceId]);
 
   const accessFile = () => { inputRef.current?.click(); }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { HiDocumentText, HiMiniArrowRightStartOnRectangle } from 'react-icons/hi2'
 import { RiFile3Line, RiImageFill, RiVideoLine } from 'react-icons/ri'
 import ShowFileInfo from './ShowFileInfo';
@@ -66,7 +66,7 @@ const MessageInfo = ({ showMessageInfo, currentConversation, currentUser }: Mess
     }
   }, [currentConversation, currentUser, fetchAllFiles]);
 
-  const fetchAllFiles = async () => {
+  const fetchAllFiles = useCallback(async () => {
     if (!currentConversation) return;
 
     try {
@@ -108,7 +108,7 @@ const MessageInfo = ({ showMessageInfo, currentConversation, currentUser }: Mess
     } finally {
         setIsLoading(false);
     }
-  };
+  }, [currentConversation]);
 
   const handleFileClick = (file: UploadedFile) => {
     setSelectedFile(file);
