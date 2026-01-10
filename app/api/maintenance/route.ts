@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     const transformedMaintenances = maintenances.map(m => ({
       ...m,
       urgencyColor: getUrgencyColor(m.urgency),
-      isFixed: m.status === 'fixed' || (m.documentations?.length ?? 0) > 0,
+      isFixed: m.status === 'fixed' || m.documentations !== null,
       tenantName: m.user ? `${m.user.firstName || ''} ${m.user.lastName || ''}`.trim() : 'Unknown'
     }));
 
