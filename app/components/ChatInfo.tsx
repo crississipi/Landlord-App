@@ -72,13 +72,6 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
   const [allFiles, setAllFiles] = useState<UploadedFile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (chatUserId && chatInfo === "right-0") {
-      fetchTenantProfile();
-      fetchAllFiles();
-    }
-  }, [chatUserId, chatInfo, fetchTenantProfile, fetchAllFiles]);
-
   const fetchTenantProfile = useCallback(async () => {
     if (!chatUserId) return;
     
@@ -95,22 +88,6 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
       setLoading(false);
     }
   }, [chatUserId]);
-
-  const closeChatInfo = () => {
-    setChatInfo("-right-[9999px]");
-  }
-  
-  const changePage = (page: number, userId?: number) => {
-    setTimeout(() => {
-      setPage(page, userId || chatUserId);
-      setChatInfo("-right-[9999px]");
-    }, 100);
-  }
-
-  // Get initials from name
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
-  };
 
   // Fetch all files from messages
   const fetchAllFiles = useCallback(async () => {
@@ -165,6 +142,29 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
       setIsLoading(false);
     }
   }, [chatUserId]);
+
+  useEffect(() => {
+    if (chatUserId && chatInfo === "right-0") {
+      fetchTenantProfile();
+      fetchAllFiles();
+    }
+  }, [chatUserId, chatInfo, fetchTenantProfile, fetchAllFiles]);
+
+  const closeChatInfo = () => {
+    setChatInfo("-right-[9999px]");
+  }
+  
+  const changePage = (page: number, userId?: number) => {
+    setTimeout(() => {
+      setPage(page, userId || chatUserId);
+      setChatInfo("-right-[9999px]");
+    }, 100);
+  }
+
+  // Get initials from name
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
+  };
 
   const handleFileClick = (file: UploadedFile, index: number) => {
     setSelectedFile(file);
