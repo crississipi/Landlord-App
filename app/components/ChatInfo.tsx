@@ -77,7 +77,7 @@ const ChatInfo: React.FC<ChatProps> = ({ setPage, chatInfo, setChatInfo, chatUse
       fetchTenantProfile();
       fetchAllFiles();
     }
-  }, [chatUserId, chatInfo]);
+  }, [chatUserId, chatInfo, fetchTenantProfile, fetchAllFiles]);
 
   const fetchTenantProfile = async () => {
     if (!chatUserId) return;

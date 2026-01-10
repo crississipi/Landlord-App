@@ -44,7 +44,7 @@ const Documentation: React.FC<DocuProps> = ({ setPage, setImage, maintenanceId }
     if (maintenanceId) {
       fetchMaintenanceDetails();
     }
-  }, [maintenanceId]);
+  }, [maintenanceId, fetchMaintenanceDetails]);
 
   const fetchMaintenanceDetails = async () => {
     if (!maintenanceId) return;

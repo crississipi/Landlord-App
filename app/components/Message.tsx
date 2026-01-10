@@ -52,7 +52,7 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
     } else {
       setLoading(false);
     }
-  }, [chatUserId]);
+  }, [chatUserId, fetchMessages, fetchPartnerInfo]);
 
   const fetchMessages = async ({
     cursor: cursorParam,

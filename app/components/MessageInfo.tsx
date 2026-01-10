@@ -64,7 +64,7 @@ const MessageInfo = ({ showMessageInfo, currentConversation, currentUser }: Mess
     if (currentConversation && currentUser) {
       fetchAllFiles();
     }
-  }, [currentConversation, currentUser]);
+  }, [currentConversation, currentUser, fetchAllFiles]);
 
   const fetchAllFiles = async () => {
     if (!currentConversation) return;
