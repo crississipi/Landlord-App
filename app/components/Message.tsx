@@ -41,19 +41,6 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    console.log('chatUserId changed:', chatUserId);
-    if (chatUserId) {
-      setMessages([]);
-      setCursor(null);
-      setHasMore(true);
-      fetchMessages({ isInitial: true });
-      fetchPartnerInfo();
-    } else {
-      setLoading(false);
-    }
-  }, [chatUserId, fetchMessages, fetchPartnerInfo]);
-
   const fetchMessages = useCallback(async ({
     cursor: cursorParam,
     prepend = false,
@@ -160,23 +147,6 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
     }
   }, [chatUserId, isAtBottom]);
 
-  const handleScroll = () => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-    const atBottomNow = distanceFromBottom <= 40;
-    setIsAtBottom(atBottomNow);
-    if (atBottomNow) {
-      setNewMessagePreview(null);
-    }
-
-    if (loading || loadingMore || !hasMore || !cursor) return;
-    if (container.scrollTop <= 50) {
-      fetchMessages({ cursor, prepend: true });
-    }
-  };
-
   const fetchPartnerInfo = useCallback(async () => {
     try {
       console.log('Fetching partner info for user:', chatUserId);
@@ -194,6 +164,36 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
       console.error('Error fetching partner info:', error);
     }
   }, [chatUserId]);
+
+  useEffect(() => {
+    console.log('chatUserId changed:', chatUserId);
+    if (chatUserId) {
+      setMessages([]);
+      setCursor(null);
+      setHasMore(true);
+      fetchMessages({ isInitial: true });
+      fetchPartnerInfo();
+    } else {
+      setLoading(false);
+    }
+  }, [chatUserId, fetchMessages, fetchPartnerInfo]);
+
+  const handleScroll = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    const atBottomNow = distanceFromBottom <= 40;
+    setIsAtBottom(atBottomNow);
+    if (atBottomNow) {
+      setNewMessagePreview(null);
+    }
+
+    if (loading || loadingMore || !hasMore || !cursor) return;
+    if (container.scrollTop <= 50) {
+      fetchMessages({ cursor, prepend: true });
+    }
+  };
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !chatUserId) return;
@@ -214,13 +214,13 @@ const Message: React.FC<ChatProps> = ({ setPage, setChatInfo, chatUserId }) => {
 
       console.log('Send message response status:', response.status);
       
+      if (response.ok) {
+        setNewMessage('');
+        await fetchMessages({ isInitial: true });
         // Ensure scroll to bottom after sending
         setTimeout(() => {
           messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }, 150);
-      if (response.ok) {
-        setNewMessage('');
-        await fetchMessages({ isInitial: true });
       } else {
         console.error('Failed to send message:', response.status);
       }
