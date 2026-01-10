@@ -200,11 +200,6 @@ export interface SettlePaymentProps {
     billType: boolean;
 }
 
-export interface BillingSlipProps {
-    billName: string;
-    billAmount: number;
-}
-
 export interface NotifSlipProps{
     icon:string;
     message:string; 
