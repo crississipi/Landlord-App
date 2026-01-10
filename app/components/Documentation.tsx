@@ -39,13 +39,6 @@ const Documentation: React.FC<DocuProps> = ({ setPage, setImage, maintenanceId }
   // Maintenance details
   const [maintenance, setMaintenance] = useState<MaintenanceRequest | null>(null);
 
-  // Fetch maintenance details if maintenanceId is provided
-  useEffect(() => {
-    if (maintenanceId) {
-      fetchMaintenanceDetails();
-    }
-  }, [maintenanceId, fetchMaintenanceDetails]);
-
   const fetchMaintenanceDetails = useCallback(async () => {
     if (!maintenanceId) return;
     
@@ -62,6 +55,13 @@ const Documentation: React.FC<DocuProps> = ({ setPage, setImage, maintenanceId }
       setLoading(false);
     }
   }, [maintenanceId]);
+
+  // Fetch maintenance details if maintenanceId is provided
+  useEffect(() => {
+    if (maintenanceId) {
+      fetchMaintenanceDetails();
+    }
+  }, [maintenanceId, fetchMaintenanceDetails]);
 
   const accessFile = () => { inputRef.current?.click(); }
 
