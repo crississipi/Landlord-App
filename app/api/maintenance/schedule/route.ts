@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
         groupedByDate[dateKey].push({
           ...m,
           urgencyColor: getUrgencyColor(m.urgency),
-          isFixed: m.status === 'fixed' || m.documentations.length > 0
+          isFixed: m.status === 'fixed' || m.documentations !== null
         });
       }
     });
