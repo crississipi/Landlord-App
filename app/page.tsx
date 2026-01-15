@@ -267,11 +267,6 @@ export default function Home() {
         <LoadingPage />
       ) : (
         <main className="h-full w-full flex bg-gray-50 overflow-hidden">
-          {/* Sidebar for desktop (>= 1024px) */}
-          {page !== 99 && (
-            <NavigationSidebar setPage={handleSetPage} currentPage={page} />
-          )}
-
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col h-full relative overflow-hidden">
             <Header login={page !== 99} setNav={setNav} setPage={handleSetPage} page={page}/>
