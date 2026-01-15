@@ -141,7 +141,7 @@ export default function Home() {
   };
 
   // Tenant web app URL for redirect
-  const TENANT_APP_URL = process.env.NEXT_PUBLIC_TENANT_APP_URL || "https://your-tenant-app.vercel.app";
+  const TENANT_APP_URL = process.env.NEXT_PUBLIC_TENANT_APP_URL || "https://coliving-for-tenant.vercel.app";
 
   // Show loading state while checking authentication or page not initialized
   if (status === "loading" || page === -1) {

@@ -135,6 +135,8 @@ model Documentation {
   inChargePayment   Float?
   remarks           String                  @db.Text
   totalMaterialCost Float?                  @default(0)
+  aiDescription     String?                 @db.Text
+  aiDescriptionTl   String?                 @db.Text
   maintenance       Maintenance             @relation(fields: [maintenanceID], references: [maintenanceId])
   images            DocumentationImage[]
   materials         DocumentationMaterial[]

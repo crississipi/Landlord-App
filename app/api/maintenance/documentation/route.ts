@@ -92,6 +92,8 @@ export async function POST(request: NextRequest) {
       inChargeName, 
       inChargeNumber, 
       inChargePayment,
+      aiDescription,
+      aiDescriptionTl,
       materials, // Array of { material: string, cost: number }
       images // Array of { url: string, fileName: string }
     } = body;
@@ -141,6 +143,8 @@ export async function POST(request: NextRequest) {
           inChargeNumber: inChargeNumber || null,
           inChargePayment: inChargePayment ? parseFloat(inChargePayment) : null,
           totalMaterialCost,
+          aiDescription: aiDescription || null,
+          aiDescriptionTl: aiDescriptionTl || null,
           dateFixed: new Date()
         }
       });

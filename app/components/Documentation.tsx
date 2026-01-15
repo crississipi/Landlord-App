@@ -4,6 +4,7 @@ import { AiOutlineLeft, AiOutlinePlus } from 'react-icons/ai';
 import { HiOutlineArrowNarrowLeft, HiOutlineArrowNarrowRight } from 'react-icons/hi';
 import { ImageButton } from './customcomponents';
 import { HiMiniMinus } from 'react-icons/hi2';
+import { FaRobot } from 'react-icons/fa';
 
 interface DocuProps extends ChangePageProps, ImageProps {
   maintenanceId?: number;
@@ -12,6 +13,14 @@ interface DocuProps extends ChangePageProps, ImageProps {
 interface ImageFile {
   file: File;
   preview: string;
+}
+
+interface AIAnalysisResult {
+  description: string;
+  description_tl: string;
+  work_done: string;
+  work_done_tl: string;
+  confidence_score: number;
 }
 
 const Documentation: React.FC<DocuProps> = ({ setPage, setImage, maintenanceId }) => {
@@ -29,6 +38,13 @@ const Documentation: React.FC<DocuProps> = ({ setPage, setImage, maintenanceId }
   const [inChargeName, setInChargeName] = useState('');
   const [inChargeNumber, setInChargeNumber] = useState('');
   const [inChargePayment, setInChargePayment] = useState('');
+  
+  // AI Generation states
+  const [enableAI, setEnableAI] = useState(false);
+  const [aiDescription, setAiDescription] = useState('');
+  const [aiDescriptionTl, setAiDescriptionTl] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   
   // Loading and error states
   const [loading, setLoading] = useState(false);
@@ -62,6 +78,58 @@ const Documentation: React.FC<DocuProps> = ({ setPage, setImage, maintenanceId }
       fetchMaintenanceDetails();
     }
   }, [maintenanceId, fetchMaintenanceDetails]);
+
+  // Generate AI description when images are added and AI is enabled
+  const generateAIDescription = useCallback(async () => {
+    if (!enableAI || imageFiles.length < 2) {
+      return;
+    }
+
+    setAiLoading(true);
+    setAiError(null);
+
+    try {
+      const formData = new FormData();
+      imageFiles.forEach(imgFile => formData.append('files', imgFile.file));
+      
+      // Add maintenance context if available
+      if (maintenance) {
+        formData.append('maintenanceContext', maintenance.processedRequest || maintenance.rawRequest);
+      }
+
+      const response = await fetch('/api/analyze-documentation', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.result) {
+        const result: AIAnalysisResult = data.result;
+        setAiDescription(result.description);
+        setAiDescriptionTl(result.description_tl);
+        
+        // Auto-populate remarks if empty
+        if (!remarks.trim()) {
+          setRemarks(result.work_done);
+        }
+      } else {
+        setAiError(data.error || 'Failed to generate AI description');
+      }
+    } catch (err) {
+      console.error('AI analysis error:', err);
+      setAiError('Failed to connect to AI service');
+    } finally {
+      setAiLoading(false);
+    }
+  }, [enableAI, imageFiles, maintenance, remarks]);
+
+  // Trigger AI generation when enabled and images change
+  useEffect(() => {
+    if (enableAI && imageFiles.length >= 2) {
+      generateAIDescription();
+    }
+  }, [enableAI, imageFiles.length, generateAIDescription]);
 
   const accessFile = () => { inputRef.current?.click(); }
 
@@ -188,6 +256,8 @@ const Documentation: React.FC<DocuProps> = ({ setPage, setImage, maintenanceId }
           inChargeName: inChargeName || null,
           inChargeNumber: inChargeNumber || null,
           inChargePayment: inChargePayment || null,
+          aiDescription: enableAI && aiDescription ? aiDescription : null,
+          aiDescriptionTl: enableAI && aiDescriptionTl ? aiDescriptionTl : null,
           materials: validMaterials.map(m => ({
             material: m.material,
             cost: parseFloat(m.cost) || 0
@@ -286,6 +356,73 @@ const Documentation: React.FC<DocuProps> = ({ setPage, setImage, maintenanceId }
             />
           ))}
         </div>
+
+        {/* AI Description Toggle */}
+        <div className='w-full mt-5 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200'>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-3'>
+              <FaRobot className='text-2xl text-blue-600' />
+              <div>
+                <h3 className='font-medium text-blue-800'>AI-Generated Description</h3>
+                <p className='text-sm text-blue-600'>Automatically generate detailed descriptions from your images</p>
+              </div>
+            </div>
+            <label className='relative inline-flex items-center cursor-pointer'>
+              <input 
+                type='checkbox' 
+                className='sr-only peer' 
+                checked={enableAI}
+                onChange={(e) => setEnableAI(e.target.checked)}
+                disabled={imageFiles.length < 2}
+              />
+              <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50"></div>
+            </label>
+          </div>
+          
+          {imageFiles.length < 2 && (
+            <p className='text-sm text-amber-600 mt-2'>⚠️ Upload at least 2 images to enable AI description</p>
+          )}
+
+          {enableAI && aiLoading && (
+            <div className='mt-4 flex items-center gap-2 text-blue-600'>
+              <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600'></div>
+              <span>Analyzing images with AI...</span>
+            </div>
+          )}
+
+          {enableAI && aiError && (
+            <div className='mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm'>
+              {aiError}
+              <button 
+                onClick={generateAIDescription}
+                className='ml-2 underline hover:no-underline'
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {enableAI && aiDescription && !aiLoading && (
+            <div className='mt-4 space-y-3'>
+              <div className='p-3 bg-white rounded-lg border border-blue-200'>
+                <h4 className='font-medium text-blue-800 mb-1'>🇺🇸 English Description</h4>
+                <p className='text-sm text-gray-700'>{aiDescription}</p>
+              </div>
+              <div className='p-3 bg-white rounded-lg border border-blue-200'>
+                <h4 className='font-medium text-blue-800 mb-1'>🇵🇭 Tagalog Description</h4>
+                <p className='text-sm text-gray-700'>{aiDescriptionTl}</p>
+              </div>
+              <button 
+                onClick={generateAIDescription}
+                className='text-sm text-blue-600 hover:underline flex items-center gap-1'
+                disabled={aiLoading}
+              >
+                🔄 Regenerate Description
+              </button>
+            </div>
+          )}
+        </div>
+
         <h2 className='h2__style mt-5'>Remarks <span className='text-red-500'>*</span></h2>
         <textarea 
           name="noticeInfo" 

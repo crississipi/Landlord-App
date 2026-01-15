@@ -158,7 +158,7 @@ function BillingCard({
       <div className="p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-105 ${billing.billingType === 'rent' ? 'bg-gradient-to-br from-customViolet to-purple-600' : 'bg-gradient-to-br from-blue-500 to-cyan-500'}`}>
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-105 ${billing.billingType === 'rent' ? 'bg-linear-to-br from-customViolet to-purple-600' : 'bg-linear-to-br from-blue-500 to-cyan-500'}`}>
               <MdHome className="text-white text-xl" />
             </div>
             <div>
@@ -726,7 +726,7 @@ export default function BillingPage({
           {/* Create Billing Card */}
           {currentMonthYear === monthDisplay && (
             <div className="bg-white rounded-[1.5rem] border border-zinc-200 shadow-sm overflow-hidden">
-              <div className="border-b border-zinc-100 p-3 bg-gradient-to-r from-indigo-50 to-violet-50">
+              <div className="border-b border-zinc-100 p-3 bg-linear-to-r from-indigo-50 to-violet-50">
                 <h3 className="text-lg font-semibold text-zinc-900 flex items-center gap-2">
                   Create New Billing
                 </h3>
