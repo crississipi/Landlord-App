@@ -1,0 +1,1 @@
+ALTER TABLE Property MODIFY COLUMN description TEXT;

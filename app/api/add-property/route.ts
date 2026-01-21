@@ -35,14 +35,19 @@ export async function POST(req: Request) {
 
     // 📸 Create separate resource entries
     if (imageUrls && imageUrls.length > 0) {
-      await prisma.resource.createMany({
-        data: imageUrls.map((url: string) => ({
-          referenceId: newProperty.propertyId,
-          referenceType: 'property',
-          url,
-          fileName: url.split("/").pop() || "unknown",
-        })),
-      });
+      try {
+        await prisma.resource.createMany({
+          data: imageUrls.map((url: string) => ({
+            referenceId: newProperty.propertyId,
+            referenceType: 'property',
+            url,
+            fileName: url.split("/").pop() || "unknown",
+          })),
+        });
+      } catch (resourceError) {
+        console.error("Error creating resources:", resourceError);
+        // Continue even if resource creation fails
+      }
     }
 
     return NextResponse.json({ success: true, propertyId: newProperty.propertyId });

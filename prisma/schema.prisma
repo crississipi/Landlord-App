@@ -54,7 +54,7 @@ model Property {
   yearBuilt    Int
   renovated    Boolean
   address      String
-  description  String
+  description  String        @db.Text
   createdAt    DateTime      @default(now())
   billings     Billing[]
   feedbacks    Feedback[]
