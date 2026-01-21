@@ -23,6 +23,7 @@ import ViewAllUnits from "./ViewAllUnits";
 import ManageProperty from "./ManageProperty";
 import EditProperty from "./EditProperty";
 import ImageSlider from "./ImageSlider";
+import MaintenanceHistory from "./MaintenanceHistory";
 
 export { 
     Header, 
@@ -49,5 +50,6 @@ export {
     ViewAllUnits,
     ManageProperty,
     EditProperty,
-    ImageSlider
+    ImageSlider,
+    MaintenanceHistory
 }

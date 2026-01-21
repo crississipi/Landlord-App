@@ -111,6 +111,9 @@ const sendTenantCredentials = async (credentials: EmailCredentials): Promise<{ s
         .value { font-family: monospace; background: #f3f4f6; padding: 8px 12px; border-radius: 4px; display: inline-block; }
         .warning { background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 6px; margin: 20px 0; }
         .documents { background: #e0f2fe; border: 1px solid #0ea5e9; padding: 15px; border-radius: 6px; margin: 20px 0; }
+        .button-container { text-align: center; margin: 30px 0; }
+        .access-button { background: #574964; color: white !important; padding: 15px 40px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; font-size: 16px; transition: background 0.3s; }
+        .access-button:hover { background: #6d5a7b; }
         .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
     </style>
 </head>
@@ -155,7 +158,11 @@ const sendTenantCredentials = async (credentials: EmailCredentials): Promise<{ s
                 <p>For your security, please change your password immediately after logging in for the first time.</p>
             </div>
 
-            <p>You can access your account through our Rodriguez Properties application.</p>
+            <div class="button-container">
+                <a href="https://coliving-for-tenant" class="access-button">Access Tenant Portal</a>
+            </div>
+
+            <p style="text-align: center; color: #6b7280;">Click the button above to log in to your tenant account</p>
             
             <div class="footer">
                 <p>If you have any questions, please contact the property management.</p>

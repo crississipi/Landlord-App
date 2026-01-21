@@ -12,7 +12,7 @@ import {
 } from "react-icons/md";
 import { RiUser5Fill } from "react-icons/ri";
 import { RxDimensions } from "react-icons/rx";
-import { ImageSlider } from ".";
+import { ImageSlider, MaintenanceHistory } from ".";
 
 export type PropertyWithResources = {
   propertyId: number
@@ -151,29 +151,10 @@ const UnitDetails = ({ property, layout }: UnitDetailsProps) => {
               Maintenance History
             </span>
 
-            <div className="flex flex-col gap-5 h-86 overflow-x-hidden">
-              {Array.from({ length: 3 }).map((_, h) => (
-                <div key={h} className="flex flex-col rounded-xl gap-3">
-                  <div className="flex gap-2 items-center">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <span key={i} className="h-16 w-16 rounded-xl bg-neutral-100"></span>
-                    ))}
-                  </div>
-                  <div className="px-3 py-2 rounded-xl bg-slate-100 shadow-md">
-                    <span className="w-full flex justify-between">
-                      <h3 className="font-medium w-full overflow-ellipsis">
-                        Fixing Door
-                      </h3>
-                      <p className="font-light text-nowrap">09-29-25</p>
-                    </span>
-                    <p>
-                      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                      do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <MaintenanceHistory 
+              propertyId={property.propertyId} 
+              propertyName={property.name}
+            />
           </div>
         )}
       </div>
