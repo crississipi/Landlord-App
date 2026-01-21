@@ -48,7 +48,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, propertyId: newProperty.propertyId });
   } catch (error) {
     console.error("Error creating property:", error);
-    return NextResponse.json({ success: false, message: "Server error." }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    console.error("Detailed error:", errorMessage);
+    return NextResponse.json({ 
+      success: false, 
+      message: "Server error.", 
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined
+    }, { status: 500 });
   }
 }
 
