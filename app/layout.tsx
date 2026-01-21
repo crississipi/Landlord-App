@@ -10,8 +10,8 @@ const poppins = Poppins ({
 });
 
 export const metadata: Metadata = {
-  title: "Coliving - Landlord App",
-  description: "Tenant-Landlord App",
+  title: "Co-Living for Landlord",
+  description: "Web App for Landlord",
 };
 
 export default function RootLayout({

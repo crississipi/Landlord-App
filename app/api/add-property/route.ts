@@ -37,7 +37,8 @@ export async function POST(req: Request) {
     if (imageUrls && imageUrls.length > 0) {
       await prisma.resource.createMany({
         data: imageUrls.map((url: string) => ({
-          propertyId: newProperty.propertyId,
+          referenceId: newProperty.propertyId,
+          referenceType: 'property',
           url,
           fileName: url.split("/").pop() || "unknown",
         })),
