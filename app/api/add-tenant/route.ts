@@ -1,7 +1,6 @@
 // app/api/add-tenant/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { sendTenantCredentials } from "@/lib/email";
 import { prisma } from '@/lib/prisma';
 
 type Body = {
@@ -106,17 +105,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Send email with CLEANED PLAIN TEXT password (without "Unit" word)
-    const emailResult = await sendTenantCredentials({
-      to: body.email ?? username,
-      firstName: body.firstName ?? '',
-      lastName: body.lastName ?? '',
-      unitNumber: body.unitNumber!,
-      username: body.email ?? username,
-      password: cleanedPassword, // Use the cleaned plain text password (no "Unit" word)
-      rulesDocumentUrl: body.signedRulesUrl, // Pass document URLs to email function
-      contractDocumentUrl: body.signedContractUrl
-    });
+    // Email is sent separately via /api/send-credentials from AddTenant.tsx
+    // to avoid duplicate emails
 
     // If imageUrls provided, create Resource rows referencing this user
     const imageUrls = Array.isArray(body.imageUrls) ? body.imageUrls : [];
