@@ -305,220 +305,278 @@ const Documentation: React.FC<DocuProps> = ({ setPage, setImage, maintenanceId }
   }
 
   return (
-    <div className='max__size flex flex-col px-5 gap-5 text-customViolet py-3 text-sm bg-white rounded-t-2xl md:text-base'>
-      <div className='h-auto w-full flex__center__y gap-3'>
-        <button className='rounded-sm h-9 w-9 p-1 focus__action hover__action click__action outline-none' onClick={() => changePage(4)}>
-          <AiOutlineLeft className='max__size text-emerald-700'/>
-        </button>
-        <h1 className='h1__style'>Documentation</h1>
+    <div className='max__size flex flex-col px-5 gap-5 text-customViolet py-5 text-sm bg-white rounded-t-2xl md:text-base lg:flex-row lg:gap-8 lg:px-8 lg:h-full lg:overflow-hidden'>
+      
+      {/* HEADER & INFO SECTION (Left on Large Screens) */}
+      <div className='w-full lg:w-1/3 flex flex-col gap-4 lg:h-full lg:overflow-y-auto no__scrollbar shrink-0'>
+        <div className='h-auto w-full flex__center__y gap-3'>
+          <button className='rounded-xl h-10 w-10 flex__center__all hover:bg-gray-100 transition-colors' onClick={() => changePage(4)}>
+            <AiOutlineLeft className='text-xl text-emerald-700'/>
+          </button>
+          <h1 className='h1__style'>Documentation</h1>
+        </div>
+
+        {/* Maintenance Info Header */}
+        {maintenance && (
+          <div className='w-full bg-white border border-gray-100 shadow-sm rounded-2xl p-5 flex flex-col gap-2'>
+            <div className='flex items-center justify-between'>
+              <span className='px-3 py-1 bg-emerald-50 text-emerald-600 text-xs font-semibold rounded-full w-fit'>
+                {maintenance.urgency || 'Normal'} Priority
+              </span>
+              <span className='text-xs text-gray-400'>#{maintenance.maintenanceId}</span>
+            </div>
+            <h3 className='font-semibold text-lg text-gray-800 leading-tight'>
+              {maintenance.processedRequest || maintenance.rawRequest}
+            </h3>
+            <div className='flex items-center gap-2 text-sm text-gray-500 mt-1'>
+              <span className='font-medium text-gray-700'>{maintenance.tenantName}</span>
+              <span>•</span>
+              <span>{maintenance.property?.name}</span>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className='w-full bg-red-50 border border-red-200 text-red-600 rounded-xl p-4 text-sm'>
+            {error}
+          </div>
+        )}
+
+        {/* Desktop-only explanation or extra info could go here */}
+        <div className='hidden lg:block p-5 bg-blue-50/50 rounded-2xl border border-blue-100 text-sm text-blue-800'>
+          <p className='font-medium mb-1'>Documentation Guide</p>
+          <ul className='list-disc list-inside space-y-1 opacity-80'>
+            <li>Upload clear before & after photos</li>
+            <li>Use AI to generate detailed descriptions</li>
+            <li>Record all material costs</li>
+            <li>Include labor details if applicable</li>
+          </ul>
+        </div>
       </div>
 
-      {/* Maintenance Info Header */}
-      {maintenance && (
-        <div className='w-full bg-neutral-100 rounded-lg p-3'>
-          <h3 className='font-medium'>{maintenance.processedRequest || maintenance.rawRequest}</h3>
-          <p className='text-sm text-neutral-600'>
-            {maintenance.property?.name} • {maintenance.tenantName}
-          </p>
-        </div>
-      )}
-
-      {error && (
-        <div className='w-full bg-red-50 border border-red-200 text-red-600 rounded-lg p-3'>
-          {error}
-        </div>
-      )}
-
-      <div className='h-full w-full flex flex-col overflow-x-hidden'>
-        <h2 className='h2__style mt-3'>Insert Images</h2>
-        <div className='h-auto w-full grid grid-cols-4 gap-3 rounded-sm'>
-          <div className='col-span-full w-full flex__center__y gap-3 px-1'>
-            <button className='focus__action hover__action click__action flex__center__all h-20 min-w-20 outline-none rounded-sm bg-zinc-50 border border-zinc-200 text-emerald-700 md:h-36 md:w-42' onClick={accessFile}>
-              <AiOutlinePlus className='text-4xl md:text-5xl'/>
-              <input 
-                type="file" 
-                ref={inputRef} 
-                accept='image/*' 
-                multiple 
-                className='hidden' 
-                onChange={fileChange}
-              />
-            </button>
-            <span className='text-zinc-400'>Include images of before and after repairing the broken item. Attach at least 2 images. Maximum of 8 images only.</span>
-          </div>
-          {selectedImg.map((url, i) => (
-            <ImageButton 
-              key={i} 
-              setImage={setImage} 
-              removable={true} 
-              imageURL={url}
-              setSelectedImg={setSelectedImg}
+      {/* FORM SECTION (Right on Large Screens) */}
+      <div className='h-full w-full flex flex-col overflow-y-auto overflow-x-hidden no__scrollbar lg:w-2/3 lg:pr-2 pb-20'>
+        <h2 className='h2__style mb-4'>Evidence & Details</h2>
+        
+        {/* Image Grid */}
+        <div className='w-full grid grid-cols-2 md:grid-cols-4 gap-3 mb-6'>
+          <button className='aspect-square flex flex-col items-center justify-center gap-2 rounded-xl bg-gray-50 border-2 border-dashed border-gray-300 text-gray-400 hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all group' onClick={accessFile}>
+            <AiOutlinePlus className='text-3xl group-hover:scale-110 transition-transform'/>
+            <span className='text-xs font-medium'>Add Photo</span>
+            <input 
+              type="file" 
+              ref={inputRef} 
+              accept='image/*' 
+              multiple 
+              className='hidden' 
+              onChange={fileChange}
             />
+          </button>
+          
+          {selectedImg.map((url, i) => (
+            <div key={i} className='aspect-square relative rounded-xl overflow-hidden border border-gray-100 shadow-sm group'>
+              <ImageButton 
+                setImage={setImage} 
+                removable={true} 
+                imageURL={url}
+                setSelectedImg={setSelectedImg}
+              />
+            </div>
           ))}
         </div>
 
         {/* AI Description Toggle */}
-        <div className='w-full mt-5 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200'>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-3'>
-              <FaRobot className='text-2xl text-blue-600' />
-              <div>
-                <h3 className='font-medium text-blue-800'>AI-Generated Description</h3>
-                <p className='text-sm text-blue-600'>Automatically generate detailed descriptions from your images</p>
-              </div>
+        <div className='w-full mb-6 p-1 bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden'>
+             <div className='w-full p-4 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border-b border-blue-100'>
+                <div className='flex items-center justify-between'>
+                    <div className='flex items-center gap-3'>
+                    <FaRobot className='text-2xl text-blue-600' />
+                    <div>
+                        <h3 className='font-medium text-blue-900'>AI Analysis</h3>
+                        <p className='text-xs text-blue-700'>Auto-generate report from images</p>
+                    </div>
+                    </div>
+                    <label className='relative inline-flex items-center cursor-pointer'>
+                    <input 
+                        type='checkbox' 
+                        className='sr-only peer' 
+                        checked={enableAI}
+                        onChange={(e) => setEnableAI(e.target.checked)}
+                        disabled={imageFiles.length < 2}
+                    />
+                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50"></div>
+                    </label>
+                </div>
             </div>
-            <label className='relative inline-flex items-center cursor-pointer'>
-              <input 
-                type='checkbox' 
-                className='sr-only peer' 
-                checked={enableAI}
-                onChange={(e) => setEnableAI(e.target.checked)}
-                disabled={imageFiles.length < 2}
-              />
-              <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50"></div>
-            </label>
-          </div>
           
-          {imageFiles.length < 2 && (
-            <p className='text-sm text-amber-600 mt-2'>⚠️ Upload at least 2 images to enable AI description</p>
-          )}
+          <div className='p-4'>
+            {imageFiles.length < 2 && (
+                <p className='text-sm text-amber-600 flex items-center gap-2'>
+                    <span className='text-lg'>⚠️</span> Requires min. 2 images
+                </p>
+            )}
 
-          {enableAI && aiLoading && (
-            <div className='mt-4 flex items-center gap-2 text-blue-600'>
-              <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600'></div>
-              <span>Analyzing images with AI...</span>
-            </div>
-          )}
+            {enableAI && aiLoading && (
+                <div className='flex items-center gap-2 text-blue-600 py-2'>
+                <div className='animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent'></div>
+                <span className='text-sm font-medium'>Analyzing content...</span>
+                </div>
+            )}
 
-          {enableAI && aiError && (
-            <div className='mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm'>
-              {aiError}
-              <button 
-                onClick={generateAIDescription}
-                className='ml-2 underline hover:no-underline'
-              >
-                Retry
-              </button>
-            </div>
-          )}
-
-          {enableAI && aiDescription && !aiLoading && (
-            <div className='mt-4 space-y-3'>
-              <div className='p-3 bg-white rounded-lg border border-blue-200'>
-                <h4 className='font-medium text-blue-800 mb-1'>🇺🇸 English Description</h4>
-                <p className='text-sm text-gray-700'>{aiDescription}</p>
-              </div>
-              <div className='p-3 bg-white rounded-lg border border-blue-200'>
-                <h4 className='font-medium text-blue-800 mb-1'>🇵🇭 Tagalog Description</h4>
-                <p className='text-sm text-gray-700'>{aiDescriptionTl}</p>
-              </div>
-              <button 
-                onClick={generateAIDescription}
-                className='text-sm text-blue-600 hover:underline flex items-center gap-1'
-                disabled={aiLoading}
-              >
-                🔄 Regenerate Description
-              </button>
-            </div>
-          )}
-        </div>
-
-        <h2 className='h2__style mt-5'>Remarks <span className='text-red-500'>*</span></h2>
-        <textarea 
-          name="noticeInfo" 
-          id="noticeInfo" 
-          placeholder='Describe what was done to fix the issue...'  
-          className='min-h-40 w-full input__text text-base border border-zinc-400 rounded-sm px-3 py-2 hover:border-customViolet/50 focus:border-customViolet ease-out duration-200'
-          value={remarks}
-          onChange={(e) => setRemarks(e.target.value)}
-        />
-        <h2 className='h2__style mt-5'>Additional</h2>
-        <div className='w-full flex flex-col gap-3 items-start'>
-          <h3 className='text-base'>Maintenance in-charge</h3>
-          <div className='w-full flex gap-3'>
-            <div className='w-full grid grid-cols-3 gap-2'>
-              <input 
-                type="text" 
-                placeholder='Full Name' 
-                className='col-span-full p-3 border border-zinc-400 rounded-md hover:border-customViolet/50 focus:border-customViolet ease-out duration-200'
-                value={inChargeName}
-                onChange={(e) => setInChargeName(e.target.value)}
-              />
-              <input 
-                type="text" 
-                placeholder='Number' 
-                className='col-span-2 p-3 border border-zinc-400 rounded-md hover:border-customViolet/50 focus:border-customViolet ease-out duration-200'
-                value={inChargeNumber}
-                onChange={(e) => setInChargeNumber(e.target.value)}
-              />
-              <input 
-                type="text" 
-                placeholder='Payment' 
-                className='col-span-1 p-3 border border-zinc-400 rounded-md hover:border-customViolet/50 focus:border-customViolet ease-out duration-200'
-                value={inChargePayment}
-                onChange={(e) => setInChargePayment(e.target.value)}
-              />
-            </div>
-          </div>
-          <h3 className='text-base'>Material Cost</h3>
-          <div className='w-full flex flex-col gap-3'>
-            {materials.map((item, index) => (
-              <div key={index} className="w-full grid grid-cols-10 gap-2">
-                <input
-                  type="text"
-                  placeholder="Material"
-                  value={item.material}
-                  onChange={(e) => handleChange(index, "material", e.target.value)}
-                  className="col-span-6 p-3 border border-zinc-400 rounded-md hover:border-customViolet/50 focus:border-customViolet ease-out duration-200"
-                />
-                <input
-                  type="text"
-                  placeholder="Cost"
-                  value={item.cost}
-                  onChange={(e) => handleChange(index, "cost", e.target.value)}
-                  className="col-span-3 p-3 border border-zinc-400 rounded-md hover:border-customViolet/50 focus:border-customViolet ease-out duration-200"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemove(index)}
-                  className="col-span-1 bg-neutral-200 flex items-center justify-center rounded-md text-xl hover:bg-rose-500/30 focus:bg-rose-500 focus:text-white ease-out duration-200"
+            {enableAI && aiError && (
+                <div className='p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-center justify-between'>
+                <span>{aiError}</span>
+                <button 
+                    onClick={generateAIDescription}
+                    className='text-xs font-semibold uppercase tracking-wider hover:text-red-800'
                 >
-                  <HiMiniMinus />
+                    Retry
                 </button>
-              </div>
-            ))}
-            <button 
-              type="button" 
-              className='flex gap-1 items-center px-3 py-1.5 rounded-md border border-customViolet/50 hover:border-customViolet focus:bg-customViolet focus:text-white ease-out duration-200 ml-auto'
-              onClick={handleAdd}
-            >
-              add <AiOutlinePlus />
-            </button>
-          </div>
-          {totalMaterialCost > 0 && (
-            <div className='w-full flex justify-end mt-2'>
-              <span className='font-medium'>Total: ₱{totalMaterialCost.toFixed(2)}</span>
+                </div>
+            )}
+
+            {enableAI && aiDescription && !aiLoading && (
+                <div className='space-y-3 pt-2'>
+                <div className='p-3 bg-white rounded-lg border border-gray-100 shadow-sm'>
+                    <h4 className='text-xs font-bold text-gray-400 uppercase tracking-wider mb-2'>English Report</h4>
+                    <p className='text-sm text-gray-700 leading-relaxed'>{aiDescription}</p>
+                </div>
+                <div className='p-3 bg-white rounded-lg border border-gray-100 shadow-sm'>
+                    <h4 className='text-xs font-bold text-gray-400 uppercase tracking-wider mb-2'>Tagalog Report</h4>
+                    <p className='text-sm text-gray-700 leading-relaxed'>{aiDescriptionTl}</p>
+                </div>
+                <button 
+                    onClick={generateAIDescription}
+                    className='text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 mt-2'
+                    disabled={aiLoading}
+                >
+                    🔄 Regenerate Analysis
+                </button>
+                </div>
+            )}
             </div>
-          )}
         </div>
-      </div>
-      <div className='w-full flex justify-end gap-2 sticky top-full md:items-center md:justify-center md:mt-10'>
-        <button 
-          className='click__action hover__action focus__action flex__center__y border border-zinc-400 rounded-sm gap-3 text-zinc-400 justify-between px-5 md:gap-5'
-          onClick={() => changePage(4)}
-          disabled={submitting}
-        >
-          <HiOutlineArrowNarrowLeft className='text-2xl'/> 
-          Cancel
-        </button>
-        <button 
-          className='primary__btn click__action hover__action focus__action flex__center__y justify-between px-5 md:gap-5 disabled:opacity-50'
-          onClick={handleSubmit}
-          disabled={submitting || !remarks.trim() || imageFiles.length < 2}
-        >
-          {submitting ? 'Saving...' : 'Confirm'}
-          <HiOutlineArrowNarrowRight className='text-2xl'/>
-        </button>
+
+        <div className='space-y-6'>
+            {/* Remarks Section */}
+            <div>
+                <h2 className='h2__style mb-3'>Remarks <span className='text-red-500'>*</span></h2>
+                <textarea 
+                    name="noticeInfo" 
+                    id="noticeInfo" 
+                    placeholder='Describe the repair work done, observations, and recommendations...'  
+                    className='w-full min-h-[120px] bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-customViolet/20 focus:border-customViolet transition-all resize-y'
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                />
+            </div>
+
+            {/* Additional Info Section */}
+            <div>
+                <h2 className='h2__style mb-4'>Cost & Labor Breakdown</h2>
+                <div className='bg-white border border-gray-100 rounded-xl p-4 shadow-sm space-y-5'>
+                    
+                    {/* Personnel */}
+                    <div>
+                        <h3 className='text-sm font-semibold text-gray-700 mb-3'>Personnel In-Charge</h3>
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                            <input 
+                                type="text" 
+                                placeholder='Name of technician/worker' 
+                                className='main__input'
+                                value={inChargeName}
+                                onChange={(e) => setInChargeName(e.target.value)}
+                            />
+                            <div className='grid grid-cols-2 gap-3'>
+                                <input 
+                                    type="text" 
+                                    placeholder='Contact #' 
+                                    className='main__input'
+                                    value={inChargeNumber}
+                                    onChange={(e) => setInChargeNumber(e.target.value)}
+                                />
+                                <input 
+                                    type="number" 
+                                    placeholder='Labor Fee' 
+                                    className='main__input'
+                                    value={inChargePayment}
+                                    onChange={(e) => setInChargePayment(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className='border-t border-gray-100'></div>
+
+                    {/* Material Costs */}
+                    <div>
+                        <div className='flex items-center justify-between mb-3'>
+                            <h3 className='text-sm font-semibold text-gray-700'>Material Expenses</h3>
+                            {totalMaterialCost > 0 && (
+                                <span className='text-sm font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md'>
+                                    Total: ₱{totalMaterialCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                </span>
+                            )}
+                        </div>
+                        
+                        <div className='space-y-2'>
+                            {materials.map((item, index) => (
+                            <div key={index} className="flex gap-2">
+                                <input
+                                type="text"
+                                placeholder="Item name"
+                                value={item.material}
+                                onChange={(e) => handleChange(index, "material", e.target.value)}
+                                className="main__input flex-1"
+                                />
+                                <input
+                                type="number"
+                                placeholder="Cost"
+                                value={item.cost}
+                                onChange={(e) => handleChange(index, "cost", e.target.value)}
+                                className="main__input w-24 md:w-32"
+                                />
+                                <button
+                                type="button"
+                                onClick={() => handleRemove(index)}
+                                className="w-12 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+                                >
+                                <HiMiniMinus className="text-xl" />
+                                </button>
+                            </div>
+                            ))}
+                            <button 
+                            type="button" 
+                            className='w-full py-2 border border-dashed border-gray-300 text-gray-400 rounded-xl hover:text-customViolet hover:border-customViolet transition-colors text-sm font-medium flex items-center justify-center gap-2'
+                            onClick={handleAdd}
+                            >
+                            <AiOutlinePlus /> Add Item
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className='mt-8 flex justify-end gap-3'>
+           <button 
+            className='px-6 py-3 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 font-medium transition-colors'
+            onClick={() => changePage(4)}
+            disabled={submitting}
+          >
+            Cancel
+          </button>
+          <button 
+            className='primary__btn flex items-center gap-2 px-8'
+            onClick={handleSubmit}
+            disabled={submitting || !remarks.trim() || imageFiles.length < 2}
+          >
+            {submitting ? 'Saving...' : 'Submit Documentation'}
+            <HiOutlineArrowNarrowRight className='text-xl'/>
+          </button>
+        </div>
+
       </div>
     </div>
   )

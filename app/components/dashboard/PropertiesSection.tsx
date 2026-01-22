@@ -14,9 +14,10 @@ interface PropertyWithFeedback {
 
 interface PropertiesSectionProps {
   onManage: () => void;
+  onPropertyClick?: (property: PropertyWithFeedback) => void;
 }
 
-const PropertiesSection = ({ onManage }: PropertiesSectionProps) => {
+const PropertiesSection = ({ onManage, onPropertyClick }: PropertiesSectionProps) => {
   const [properties, setProperties] = useState<PropertyWithFeedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -132,17 +133,19 @@ const PropertiesSection = ({ onManage }: PropertiesSectionProps) => {
       ) : (
         <div className='w-full flex gap-3 overflow-x-auto pb-2'>
           {properties.map((property) => (
-            <div 
+            <button 
               key={property.propertyId}
-              className="min-w-[200px] border border-zinc-200 rounded-[1.5rem] p-4 flex flex-col hover:border-customViolet/30 hover:shadow-sm transition-all bg-white"
+              type="button"
+              onClick={() => onPropertyClick?.(property)}
+              className="min-w-[200px] border border-zinc-200 rounded-[1.5rem] p-4 flex flex-col hover:border-customViolet/40 hover:shadow-md transition-all duration-200 bg-white cursor-pointer group text-left"
             >
               {/* Property Header */}
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-customViolet/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-customViolet/10 flex items-center justify-center group-hover:bg-customViolet/20 transition-colors">
                   <TbHome className="text-customViolet text-xl" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-zinc-900">{property.name}</h4>
+                  <h4 className="font-semibold text-zinc-900 group-hover:text-customViolet transition-colors">{property.name}</h4>
                   <p className="text-xs text-zinc-500 flex items-center gap-1">
                     <TbUsers className="text-sm" />
                     {property.currentTenants} tenant{property.currentTenants !== 1 ? 's' : ''}
@@ -151,7 +154,7 @@ const PropertiesSection = ({ onManage }: PropertiesSectionProps) => {
               </div>
 
               {/* Feedback Stats */}
-              <div className="bg-zinc-50 rounded-xl p-3 mt-auto border border-zinc-100">
+              <div className="bg-zinc-50 rounded-xl p-3 mt-auto border border-zinc-100 group-hover:border-customViolet/20 transition-colors">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-zinc-600">Feedbacks</span>
                   <span className="font-semibold text-customViolet">{property.totalFeedbacks}</span>
@@ -170,7 +173,7 @@ const PropertiesSection = ({ onManage }: PropertiesSectionProps) => {
                   )}
                 </div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}

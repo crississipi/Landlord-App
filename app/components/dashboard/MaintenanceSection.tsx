@@ -28,6 +28,8 @@ interface MaintenanceSummary {
 
 interface MaintenanceSectionProps {
   onViewAll: () => void;
+  onUrgencyClick?: (urgency: string) => void;
+  onRequestClick?: (maintenanceId: number) => void;
 }
 
 // Urgency color mapping
@@ -38,7 +40,7 @@ const urgencyColors: Record<string, { bg: string; bgLight: string; text: string;
   red: { bg: 'bg-red-500', bgLight: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
 };
 
-const MaintenanceSection = ({ onViewAll }: MaintenanceSectionProps) => {
+const MaintenanceSection = ({ onViewAll, onUrgencyClick, onRequestClick }: MaintenanceSectionProps) => {
   const [maintenanceData, setMaintenanceData] = useState<MaintenanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -187,19 +189,27 @@ const MaintenanceSection = ({ onViewAll }: MaintenanceSectionProps) => {
         </button>
       </div>
 
-      {/* Urgency Summary Cards */}
+      {/* Urgency Summary Cards - Clickable */}
       <div className='grid grid-cols-4 gap-2 mb-4'>
         {Object.entries(maintenanceData.byUrgency).map(([key, urgency]) => {
           const colors = urgencyColors[urgency.color] || urgencyColors.blue;
+          const hasItems = urgency.count > 0;
           return (
-            <div 
+            <button 
               key={key}
-              className={`p-3 rounded-[1.5rem] border ${colors.border} ${colors.bgLight} flex flex-col items-center shadow-sm`}
+              type="button"
+              onClick={() => onUrgencyClick?.(key)}
+              disabled={!hasItems}
+              className={`p-3 rounded-[1.5rem] border ${colors.border} ${colors.bgLight} flex flex-col items-center shadow-sm transition-all duration-200 ${
+                hasItems 
+                  ? 'cursor-pointer hover:scale-105 hover:shadow-md active:scale-95' 
+                  : 'cursor-default opacity-60'
+              }`}
             >
               <span className={`text-2xl font-bold ${colors.text}`}>{urgency.count}</span>
               <span className={`text-xs ${colors.text} font-medium`}>{urgency.label}</span>
               <span className={`w-full h-1 rounded-full mt-2 ${colors.bg}`}></span>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -218,13 +228,15 @@ const MaintenanceSection = ({ onViewAll }: MaintenanceSectionProps) => {
           {maintenanceData.recentRequests.map((request) => {
             const colors = urgencyColors[request.urgencyColor] || urgencyColors.blue;
             return (
-              <div 
+              <button 
                 key={request.maintenanceId}
-                className="w-full border border-zinc-200 rounded-[1.5rem] p-4 flex items-center gap-3 bg-white shadow-sm"
+                type="button"
+                onClick={() => onRequestClick?.(request.maintenanceId)}
+                className="w-full border border-zinc-200 rounded-[1.5rem] p-4 flex items-center gap-3 bg-white shadow-sm hover:border-customViolet/40 hover:shadow-md transition-all duration-200 cursor-pointer group text-left"
               >
-                <span className={`w-1 h-12 rounded-full ${colors.bg}`}></span>
+                <span className={`w-1 h-12 rounded-full ${colors.bg} group-hover:w-1.5 transition-all`}></span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-zinc-900 truncate">{request.request}</p>
+                  <p className="font-medium text-zinc-900 truncate group-hover:text-customViolet transition-colors">{request.request}</p>
                   <p className="text-sm text-zinc-500">{request.property} • {request.tenant}</p>
                 </div>
                 <div className="text-right">
@@ -233,7 +245,7 @@ const MaintenanceSection = ({ onViewAll }: MaintenanceSectionProps) => {
                   </span>
                   <p className="text-xs text-zinc-400 mt-1">{getTimeAgo(request.dateIssued)}</p>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  url      = env("DB_URL")
 }
 
 model Users {
@@ -91,6 +91,7 @@ model Maintenance {
   maintenanceId    Int            @id @default(autoincrement())
   userId           Int
   propertyId       Int
+  title            String?        @db.VarChar(255)
   rawRequest       String         @db.Text
   processedRequest String         @db.Text
   urgency          String
@@ -130,8 +131,8 @@ model Documentation {
   inChargePayment   Float?
   remarks           String                  @db.Text
   totalMaterialCost Float?                  @default(0)
-  aiDescription     String?                 @db.Text
-  aiDescriptionTl   String?                 @db.Text
+  aiDescription     String?                 @db.LongText
+  aiDescriptionTl   String?                 @db.LongText
   maintenance       Maintenance             @relation(fields: [maintenanceID], references: [maintenanceId])
   images            Resource[]
   materials         DocumentationMaterial[]

@@ -4,6 +4,7 @@ import { ChangePageProps, MaintenanceRequest, ScheduledByDate } from "@/types";
 import { format, addDays, startOfWeek } from "date-fns";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { HiMiniCheck, HiOutlineArrowSmallLeft, HiOutlineArrowSmallRight, HiPlus, HiXMark } from "react-icons/hi2";
+import { RiImageLine } from "react-icons/ri";
 
 const Months = [
   "January", "February", "March", "April", "May", "June",
@@ -11,18 +12,19 @@ const Months = [
 ];
 
 // Urgency color mapping
-const urgencyColors: Record<string, { bg: string; bgDark: string; border: string }> = {
-  emerald: { bg: 'bg-emerald-400', bgDark: 'bg-emerald-600', border: 'border-emerald-400' },
-  blue: { bg: 'bg-blue-400', bgDark: 'bg-blue-600', border: 'border-blue-400' },
-  orange: { bg: 'bg-orange-400', bgDark: 'bg-orange-600', border: 'border-orange-400' },
-  red: { bg: 'bg-red-400', bgDark: 'bg-red-600', border: 'border-red-400' },
+const urgencyColors: Record<string, { bg: string; bgDark: string; bgLight: string; text: string; border: string }> = {
+  emerald: { bg: 'bg-emerald-400', bgDark: 'bg-emerald-600', bgLight: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-400' },
+  blue: { bg: 'bg-blue-400', bgDark: 'bg-blue-600', bgLight: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-400' },
+  orange: { bg: 'bg-orange-400', bgDark: 'bg-orange-600', bgLight: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-400' },
+  red: { bg: 'bg-red-400', bgDark: 'bg-red-600', bgLight: 'bg-red-50', text: 'text-red-700', border: 'border-red-400' },
 };
 
 interface CalendaryoProps extends ChangePageProps {
   onSelectMaintenance?: (maintenance: MaintenanceRequest) => void;
+  urgencyFilter?: string | null;
 }
 
-const Calendaryo = ({ setPage, onSelectMaintenance }: CalendaryoProps) => {
+const Calendaryo = ({ setPage, onSelectMaintenance, urgencyFilter }: CalendaryoProps) => {
   const [date, setDate] = useState(new Date());
   const currMonth = Months[date.getMonth()];
   const [selectedDay, setSelectedDay] = useState<Date | null>(new Date());
@@ -34,6 +36,16 @@ const Calendaryo = ({ setPage, onSelectMaintenance }: CalendaryoProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Filter state - initialize from prop
+  const [activeUrgencyFilter, setActiveUrgencyFilter] = useState<string | null>(urgencyFilter || null);
+  
+  // Update filter when prop changes
+  React.useEffect(() => {
+    if (urgencyFilter) {
+      setActiveUrgencyFilter(urgencyFilter);
+    }
+  }, [urgencyFilter]);
+  
   // Scheduling states
   const [schedHours, setSchedHours] = useState<number | null>(null);
   const [startAt, setStartsAt] = useState<{ hour: string; mins: string }>({ hour: '08', mins: '00' });
@@ -43,6 +55,8 @@ const Calendaryo = ({ setPage, onSelectMaintenance }: CalendaryoProps) => {
   // Modal states
   const [schedulingMaintenance, setSchedulingMaintenance] = useState<MaintenanceRequest | null>(null);
   const [scheduleDate, setScheduleDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [selectedMaintenance, setSelectedMaintenance] = useState<MaintenanceRequest | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
 
   // Calendar navigation
   const handlePrevMonth = () => {
@@ -136,6 +150,16 @@ const Calendaryo = ({ setPage, onSelectMaintenance }: CalendaryoProps) => {
 
   const closeScheduleModal = () => {
     setSchedulingMaintenance(null);
+  };
+
+  const openMaintenanceDetail = (maintenance: MaintenanceRequest) => {
+    setSelectedMaintenance(maintenance);
+    setSelectedImageIndex(0);
+  };
+
+  const closeMaintenanceDetail = () => {
+    setSelectedMaintenance(null);
+    setSelectedImageIndex(0);
   };
 
   // Schedule a maintenance
@@ -309,7 +333,11 @@ const Calendaryo = ({ setPage, onSelectMaintenance }: CalendaryoProps) => {
                     key={maintenance.maintenanceId} 
                     className="w-full border border-zinc-200 rounded-[1.5rem] overflow-hidden flex items-center bg-white shadow-sm hover:border-customViolet/30 transition-colors"
                   >
-                    <button type="button" className="w-full flex h-full p-1">
+                    <button 
+                      type="button" 
+                      className="w-full flex h-full p-1"
+                      onClick={() => openMaintenanceDetail(maintenance)}
+                    >
                       <span className={`h-full w-2 rounded-full my-1 ml-1 ${
                         maintenance.isFixed 
                           ? urgencyColors[maintenance.urgencyColor]?.bgDark 
@@ -317,8 +345,14 @@ const Calendaryo = ({ setPage, onSelectMaintenance }: CalendaryoProps) => {
                       }`}></span>
                       <div className="w-full p-3 text-left font-medium text-zinc-900 leading-5">
                         <h4 className="text-lg">{maintenance.processedRequest || maintenance.rawRequest}</h4>
-                        <h5 className="font-semibold text-zinc-500 text-sm mt-1">
+                        <h5 className="font-semibold text-zinc-500 text-sm mt-1 flex items-center gap-2">
                           {maintenance.property?.name || `Unit ${maintenance.propertyId}`}
+                          {maintenance.images && maintenance.images.length > 0 && (
+                            <span className="flex items-center gap-1 text-customViolet">
+                              <RiImageLine className="text-sm" />
+                              <span className="text-xs">{maintenance.images.length}</span>
+                            </span>
+                          )}
                         </h5>
                       </div>
                       <div className="h-full flex flex-col items-end justify-center font-semibold text-sm px-4 py-2 leading-4">
@@ -350,20 +384,82 @@ const Calendaryo = ({ setPage, onSelectMaintenance }: CalendaryoProps) => {
             {/* Pending Maintenances (to be scheduled) */}
             {hasPending && (
               <div className='w-full flex flex-col gap-3 rounded-md mt-4'>
-                <h2 className="font-medium text-lg text-zinc-800">Pending ({pendingMaintenances.length})</h2>
-                {pendingMaintenances.map((maintenance) => (
+                <div className="flex items-center justify-between">
+                  <h2 className="font-medium text-lg text-zinc-800">
+                    Pending ({activeUrgencyFilter 
+                      ? pendingMaintenances.filter(m => m.urgency?.toLowerCase() === activeUrgencyFilter).length
+                      : pendingMaintenances.length
+                    })
+                  </h2>
+                  
+                  {/* Urgency Filter Buttons */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setActiveUrgencyFilter(null)}
+                      className={`px-2 py-1 text-xs rounded-lg transition-all ${
+                        !activeUrgencyFilter 
+                          ? 'bg-zinc-800 text-white' 
+                          : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {[
+                      { key: 'critical', label: 'Critical', color: 'red' },
+                      { key: 'high', label: 'High', color: 'orange' },
+                      { key: 'medium', label: 'Medium', color: 'blue' },
+                      { key: 'low', label: 'Low', color: 'emerald' },
+                    ].map(({ key, label, color }) => {
+                      const isActive = activeUrgencyFilter === key;
+                      const count = pendingMaintenances.filter(m => m.urgency?.toLowerCase() === key).length;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setActiveUrgencyFilter(isActive ? null : key)}
+                          className={`px-2 py-1 text-xs rounded-lg transition-all flex items-center gap-1 ${
+                            isActive 
+                              ? `${urgencyColors[color]?.bg} text-white` 
+                              : `${urgencyColors[color]?.bgLight} ${urgencyColors[color]?.text} hover:opacity-80`
+                          }`}
+                        >
+                          {label}
+                          {count > 0 && <span className="font-bold">({count})</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                
+                {/* Filtered Pending List */}
+                {pendingMaintenances
+                  .filter(m => !activeUrgencyFilter || m.urgency?.toLowerCase() === activeUrgencyFilter)
+                  .map((maintenance) => (
                   <div 
                     key={maintenance.maintenanceId} 
                     className="w-full flex flex-col items-center rounded-[1.5rem] border border-zinc-200 bg-white shadow-sm overflow-hidden relative hover:border-customViolet/30 transition-colors"
                   >
                     <div className="w-full flex items-center p-2">
-                      <button type="button" className="flex-1 p-2 text-left flex items-center gap-3">
+                      <button 
+                        type="button" 
+                        className="flex-1 p-2 text-left flex items-center gap-3"
+                        onClick={() => openMaintenanceDetail(maintenance)}
+                      >
                         <span className={`h-10 px-3 rounded-xl ${urgencyColors[maintenance.urgencyColor]?.bg} flex items-center justify-center shadow-sm`}>
                           <p className="text-white text-xs font-bold">
                             {maintenance.property?.name || maintenance.propertyId}
                           </p>
                         </span>
-                        <span className="font-medium text-zinc-900">{maintenance.processedRequest || maintenance.rawRequest}</span>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-zinc-900">{maintenance.processedRequest || maintenance.rawRequest}</span>
+                          {maintenance.images && maintenance.images.length > 0 && (
+                            <span className="flex items-center gap-1 text-customViolet text-xs mt-0.5">
+                              <RiImageLine className="text-sm" />
+                              <span>{maintenance.images.length} image{maintenance.images.length > 1 ? 's' : ''}</span>
+                            </span>
+                          )}
+                        </div>
                       </button>
                       <button 
                         type="button" 
@@ -501,6 +597,162 @@ const Calendaryo = ({ setPage, onSelectMaintenance }: CalendaryoProps) => {
                >
                  {scheduling ? 'Saving...' : 'Save Schedule'}
                </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Maintenance Detail Modal with Images */}
+      {selectedMaintenance && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className={`w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border-2 ${urgencyColors[selectedMaintenance.urgencyColor]?.border || 'border-zinc-200'} animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col`}>
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-zinc-100 flex justify-between items-center bg-zinc-50 shrink-0">
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1 rounded-lg text-xs font-bold text-white ${urgencyColors[selectedMaintenance.urgencyColor]?.bg}`}>
+                  {selectedMaintenance.urgency?.toUpperCase()}
+                </span>
+                <h3 className="font-semibold text-lg text-zinc-800">Maintenance Request</h3>
+              </div>
+              <button onClick={closeMaintenanceDetail} className="text-zinc-400 hover:text-zinc-600 transition-colors">
+                <HiXMark className="text-2xl" />
+              </button>
+            </div>
+            
+            {/* Body */}
+            <div className="p-6 flex flex-col gap-5 overflow-y-auto">
+              {/* Request Info */}
+              <div>
+                <h4 className="font-medium text-zinc-900 text-lg">{selectedMaintenance.processedRequest || selectedMaintenance.rawRequest}</h4>
+                <p className="text-zinc-500 text-sm mt-1">{selectedMaintenance.rawRequest}</p>
+                <div className="flex items-center gap-2 mt-3 text-xs text-zinc-400">
+                  <span className="px-2 py-1 bg-zinc-100 rounded-lg">{selectedMaintenance.property?.name || `Unit ${selectedMaintenance.propertyId}`}</span>
+                  <span>•</span>
+                  <span>Requested by: {selectedMaintenance.tenantName}</span>
+                  <span>•</span>
+                  <span>{format(new Date(selectedMaintenance.dateIssued), 'MMM d, yyyy')}</span>
+                </div>
+              </div>
+
+              {/* Images Gallery */}
+              {selectedMaintenance.images && selectedMaintenance.images.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                  <h5 className="font-medium text-zinc-700 flex items-center gap-2">
+                    <RiImageLine />
+                    Submitted Images ({selectedMaintenance.images.length})
+                  </h5>
+                  
+                  {/* Main Image */}
+                  <div className="w-full aspect-video bg-zinc-100 rounded-xl overflow-hidden relative">
+                    <img 
+                      src={selectedMaintenance.images[selectedImageIndex]?.url} 
+                      alt={`Maintenance image ${selectedImageIndex + 1}`}
+                      className="w-full h-full object-contain"
+                    />
+                    
+                    {/* Navigation arrows */}
+                    {selectedMaintenance.images.length > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedImageIndex(prev => prev > 0 ? prev - 1 : selectedMaintenance.images!.length - 1)}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white flex items-center justify-center text-zinc-600 shadow-md transition-all"
+                        >
+                          <HiOutlineArrowSmallLeft className="text-xl" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedImageIndex(prev => prev < selectedMaintenance.images!.length - 1 ? prev + 1 : 0)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white flex items-center justify-center text-zinc-600 shadow-md transition-all"
+                        >
+                          <HiOutlineArrowSmallRight className="text-xl" />
+                        </button>
+                      </>
+                    )}
+                    
+                    {/* Image counter */}
+                    <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/50 text-white text-xs rounded-lg">
+                      {selectedImageIndex + 1} / {selectedMaintenance.images.length}
+                    </div>
+                  </div>
+                  
+                  {/* Thumbnail strip */}
+                  {selectedMaintenance.images.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {selectedMaintenance.images.map((img, idx) => (
+                        <button
+                          key={img.resourceId}
+                          type="button"
+                          onClick={() => setSelectedImageIndex(idx)}
+                          className={`w-16 h-16 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
+                            idx === selectedImageIndex 
+                              ? 'border-customViolet shadow-md' 
+                              : 'border-transparent hover:border-zinc-300'
+                          }`}
+                        >
+                          <img 
+                            src={img.url} 
+                            alt={`Thumbnail ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="w-full py-8 bg-zinc-50 rounded-xl flex flex-col items-center justify-center gap-2 text-zinc-400">
+                  <RiImageLine className="text-4xl" />
+                  <p className="text-sm">No images submitted</p>
+                </div>
+              )}
+
+              {/* Schedule info if scheduled */}
+              {selectedMaintenance.schedule && (
+                <div className="flex items-center gap-3 p-3 bg-customViolet/10 rounded-xl border border-customViolet/20">
+                  <div className="w-10 h-10 rounded-full bg-customViolet/20 flex items-center justify-center text-customViolet">
+                    📅
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-customViolet">Scheduled</p>
+                    <p className="text-xs text-zinc-600">{format(new Date(selectedMaintenance.schedule), 'EEEE, MMMM d, yyyy \'at\' HH:mm')}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex justify-end gap-3 shrink-0">
+              <button 
+                onClick={closeMaintenanceDetail} 
+                className="px-4 py-2 rounded-xl border border-zinc-300 text-zinc-600 hover:bg-zinc-100 transition-colors"
+              >
+                Close
+              </button>
+              {!selectedMaintenance.isFixed && (
+                <>
+                  {!selectedMaintenance.schedule && (
+                    <button 
+                      onClick={() => {
+                        closeMaintenanceDetail();
+                        openScheduleModal(selectedMaintenance);
+                      }}
+                      className="px-4 py-2 rounded-xl bg-zinc-800 text-white hover:bg-zinc-700 transition-colors"
+                    >
+                      Schedule
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => {
+                      handleMarkAsFixed(selectedMaintenance);
+                      closeMaintenanceDetail();
+                    }}
+                    className="px-4 py-2 rounded-xl bg-customViolet text-white hover:bg-customViolet/90 shadow-lg shadow-customViolet/20 transition-all"
+                  >
+                    Mark as Fixed
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

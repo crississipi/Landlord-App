@@ -78,6 +78,8 @@ export default function Home() {
   const [selectedChatUserId, setSelectedChatUserId] = useState<number | undefined>(); // 
   const [selectedMaintenanceId, setSelectedMaintenanceId] = useState<number | undefined>(); // For documentation
   const [editingProperty, setEditingProperty] = useState<any>(null); // For property editing
+  const [urgencyFilter, setUrgencyFilter] = useState<string | null>(null); // For maintenance urgency filter
+  const [highlightPropertyId, setHighlightPropertyId] = useState<number | undefined>(); // For highlighting property in ManageProperty
   const comRef = useRef<HTMLDivElement | null>(null);
 
   const { data: session, status } = useSession();
@@ -135,11 +137,34 @@ export default function Home() {
         setSelectedChatUserId(contextId);
       } else if (page === 12) {
         setSelectedMaintenanceId(contextId);
+      } else if (page === 4 && contextId < 0) {
+        // Negative contextId indicates urgency filter for maintenance page
+        // -1 = critical, -2 = high, -3 = medium, -4 = low
+        const urgencyMap: Record<number, string> = {
+          [-1]: 'critical',
+          [-2]: 'high', 
+          [-3]: 'medium',
+          [-4]: 'low',
+        };
+        setUrgencyFilter(urgencyMap[contextId] || null);
+      } else if (page === 14 && contextId > 0) {
+        // Highlight property in ManageProperty
+        setHighlightPropertyId(contextId);
+      } else if (page === 4) {
+        // Clear urgency filter when navigating to maintenance without filter
+        setUrgencyFilter(null);
       }
+    } else if (page === 4) {
+      // Clear urgency filter when navigating to maintenance without contextId
+      setUrgencyFilter(null);
     }
     // Clear editingProperty when navigating away from EditProperty page
     if (page !== 15) {
       setEditingProperty(null);
+    }
+    // Clear highlightPropertyId when navigating away from ManageProperty
+    if (page !== 14) {
+      setHighlightPropertyId(undefined);
     }
     setPage(page);
   };
@@ -253,7 +278,7 @@ export default function Home() {
     0: <Mainpage setPage={handleSetPage} />,
     1: <Dashboard setPage={handleSetPage} />,
     2: <Messages setPage={handleSetPage} />, // 
-    4: <Maintenance setPage={handleSetPage} setImage={setImage} />,
+    4: <Maintenance setPage={handleSetPage} setImage={setImage} urgencyFilter={urgencyFilter} />,
     5: <Tenants setPage={handleSetPage} onTenantSelect={setSelectedTenant} />,
     6: <Settings setPage={handleSetPage} />,
 
@@ -265,7 +290,7 @@ export default function Home() {
     11: <AllMedia setPage={handleSetPage} setImage={setImage} />,
     12: <Docu setPage={handleSetPage} setImage={setImage} />,
     13: <Billing propertyId={1} setPage={setPage} />,
-    14: <ManageProperty setPage={handleSetPage} onEditProperty={handleEditProperty} />,
+    14: <ManageProperty setPage={handleSetPage} onEditProperty={handleEditProperty} highlightPropertyId={highlightPropertyId} />,
     15: <EditProperty setPage={handleSetPage} editingProperty={editingProperty} />,
     98: <ForgotPass setPage={handleSetPage} />,
     99: <Login setPage={handleSetPage} />,

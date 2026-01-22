@@ -29,8 +29,8 @@ const Header: React.FC<HeadProps> = ({ setNav, setPage, page, login }) => {
     
     fetchUnreadMessages();
     
-    // Poll for new messages every 30 seconds
-    const interval = setInterval(fetchUnreadMessages, 30000);
+    // Poll for new messages every 5 seconds
+    const interval = setInterval(fetchUnreadMessages, 5000);
     return () => clearInterval(interval);
   }, []);
   
@@ -50,8 +50,8 @@ const Header: React.FC<HeadProps> = ({ setNav, setPage, page, login }) => {
     
     fetchUnreadNotifications();
     
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchUnreadNotifications, 30000);
+    // Poll for new notifications every 5 seconds
+    const interval = setInterval(fetchUnreadNotifications, 5000);
     return () => clearInterval(interval);
   }, []);
   

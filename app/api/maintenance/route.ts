@@ -83,12 +83,39 @@ export async function GET(request: NextRequest) {
       ]
     });
 
-    // Transform data to include urgency color mapping
+    // Fetch images for each maintenance from Resource table
+    const maintenanceIds = maintenances.map(m => m.maintenanceId);
+    const images = await prisma.resource.findMany({
+      where: {
+        referenceId: { in: maintenanceIds },
+        referenceType: 'Maintenance'
+      },
+      select: {
+        resourceId: true,
+        referenceId: true,
+        url: true,
+        fileName: true
+      }
+    });
+
+    // Group images by maintenance ID
+    const imagesByMaintenance = images.reduce((acc, img) => {
+      if (!acc[img.referenceId]) acc[img.referenceId] = [];
+      acc[img.referenceId].push({
+        resourceId: img.resourceId,
+        url: img.url,
+        fileName: img.fileName
+      });
+      return acc;
+    }, {} as Record<number, { resourceId: number; url: string; fileName: string }[]>);
+
+    // Transform data to include urgency color mapping and images
     const transformedMaintenances = maintenances.map(m => ({
       ...m,
       urgencyColor: getUrgencyColor(m.urgency),
       isFixed: m.status === 'fixed' || m.documentations !== null,
-      tenantName: m.user ? `${m.user.firstName || ''} ${m.user.lastName || ''}`.trim() : 'Unknown'
+      tenantName: m.user ? `${m.user.firstName || ''} ${m.user.lastName || ''}`.trim() : 'Unknown',
+      images: imagesByMaintenance[m.maintenanceId] || []
     }));
 
     // Check for critical maintenances and create notification if needed

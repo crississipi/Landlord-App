@@ -628,49 +628,29 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
           <ul className="list-disc list-inside ml-2 space-y-1">
             <li>Ang kontrata ng pag-upa (Contract of Lease) ay ang pangunahing gabay ng ugnayan ng partido</li>
             <li>Ang anumang probisyon dito ang susundin hangga't hindi ito labag sa umiiral na batas</li>
-            <li>Sundin ang mga probisyon ng Batas Pambansa at kontrata ng pag-upa</li>
           </ul>
 
           <p><strong>2. PAGBABAYAD NG UPA AT MGA DEPOSITO</strong></p>
           <ul className="list-disc list-inside ml-2 space-y-1">
             <li>Ang buwanang upa ay babayaran sa itinakdang araw na nakasaad sa kontrata</li>
-            <li>Karaniwang ang pamantayan ay bayad nang advance sa loob ng unang limang (5) araw ng buwan</li>
-            <li>Hindi maaaring hingin ng lessor ang higit sa isang (1) buwan na advance rent</li>
-            <li>Hindi maaaring hingin ang higit sa dalawang (2) buwan na deposito</li>
-            <li>Ang deposito ay dapat panatilihin sa bangko sa pangalan ng lessor sa buong panahon ng kontrata</li>
+            <li>Hindi maaaring hingin ng landlord ang higit sa isang (1) buwan na advance rent</li>
           </ul>
 
-          <p><strong>3. SECURITY DEPOSIT AT PAGBABALIK</strong></p>
+          <p><strong>3. MGA PANANAGUTAN NG NAGPAPAUPA (LESSOR)</strong></p>
           <ul className="list-disc list-inside ml-2 space-y-1">
-            <li>Ang security deposit ay ginagamit lamang para sa mga pinahihintulutang bawas:</li>
-            <ul className="list-circle list-inside ml-4 space-y-1">
-              <li>Hindi nabayarang upa</li>
-              <li>Bayarin para sa mga nai-uyong pagkukumpuni na dapat sagutin ng lessee</li>
-              <li>Hindi nabayarang utility at association dues</li>
-              <li>Pinsalang lampas sa normal na pagsuot at pagluwal</li>
-            </ul>
-            <li>Ang anumang balanse ng deposito ay dapat ibalik sa lessee pagkatapos ng pag-termino</li>
-            <li>Dapat ibalik ang deposito ayon sa napagkasunduan sa kontrata o alinsunod sa batas</li>
+            <li>Siguraduhing nasa maayos na kondisyon ang unit bago ito ipaupa</li>
+            <li>Tiyaking magsagawa ng mga kinakailangang pagkukumpuni</li>
+            <li>Responsibilidad sa major structural repairs.</li>
           </ul>
 
-          <p><strong>4. MGA PANANAGUTAN NG NAGPAPAUPA (LESSOR)</strong></p>
-          <ul className="list-disc list-inside ml-2 space-y-1">
-            <li>Ibigay ang unit sa kundisyon na angkop para sa nilalayong gamit</li>
-            <li>Tiyaking mapayapa at sapat ang pag-aari sa buong panahon ng pag-upa</li>
-            <li>Tiyaking magsagawa ng kinakailangang mga pagkukumpuni</li>
-            <li>Responsibilidad sa major structural repairs maliban kung may kasunduan</li>
-          </ul>
-
-          <p><strong>5. MGA PANANAGUTAN NG UMUUPA (LESSEE)</strong></p>
+          <p><strong>4. MGA PANANAGUTAN NG UMUUPA (LESSEE)</strong></p>
           <ul className="list-disc list-inside ml-2 space-y-1">
             <li>Bayaran ang upa sa takdang oras</li>
-            <li>Gamitin ang unit nang may pananagutang katulad ng maingat na tao</li>
-            <li>Huwag magsagawa ng pagbabago o malakihang improvement nang walang nakasulat na pahintulot</li>
-            <li>Ibalik ang unit sa katapusan ng lease sa kondisyon na katulad ng tinanggap maliban sa normal na pagsuot</li>
+            <li>Ingatan at panatilihin ang unit sa maayos na kondisyon</li>
             <li>Panatilihing malinis at maayos ang unit</li>
           </ul>
 
-          <p><strong>6. PAGWAWAKAS NG KONTRATA AT PAUNAWA</strong></p>
+          <p><strong>5. PAGWAWAKAS NG KONTRATA AT PAUNAWA</strong></p>
           <ul className="list-disc list-inside ml-2 space-y-1">
             <li>Ang paunang pagwawakas (early termination) ay dapat nakasaad sa kontrata</li>
             <li>Karaniwang may kinakailangang paunang abiso (30 hanggang 60 araw)</li>
@@ -678,26 +658,26 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
             <li>Kapag ang yunit ay ibinalik bago matapos ang kontrata, ang mga obligasyon sa pag-aayos ng upa at deposito ay iuulat ayon sa kontraktwal na mga probisyon</li>
           </ul>
 
-          <p><strong>7. MGA BAYARIN SA UTILITIES AT ASSOCIATION FEES</strong></p>
+          <p><strong>6. MGA BAYARIN SA UTILITIES AT ASSOCIATION FEES</strong></p>
           <ul className="list-disc list-inside ml-2 space-y-1">
             <li>Ang responsibilidad para sa kuryente, tubig, internet, at condo/HOA dues ay dapat malinaw na nakasaad sa kontrata</li>
             <li>Alamin kung sino ang sasagot at kung paano ibabayad</li>
           </ul>
 
-          <p><strong>8. PANUNTUNAN SA MGA BISITA, PAGSASALIN-SALIN AT SUBLEASE</strong></p>
+          <p><strong>7. PANUNTUNAN SA MGA BISITA, PAGSASALIN-SALIN AT SUBLEASE</strong></p>
           <ul className="list-disc list-inside ml-2 space-y-1">
             <li>Ang regular na bisita (guests) ay pinahihintulutan hangga't hindi nagiging permanente</li>
             <li>Hindi dapat lumalabag sa kasunduan ang mga bisita</li>
             <li>Ang assignment ng lease o subleasing ay dapat may nakasulat na pahintulot mula sa lessor</li>
           </ul>
 
-          <p><strong>9. INSPEKSYON, ACCESS AT MAINTENANCE</strong></p>
+          <p><strong>8. INSPEKSYON, ACCESS AT MAINTENANCE</strong></p>
           <ul className="list-disc list-inside ml-2 space-y-1">
             <li>Maaaring magkaroon ng makatwirang inspeksyon ang lessor matapos magbigay ng sapat na paunawa (24-48 oras)</li>
             <li>Sa mga emergency (sunog, baha, malaking sira), ang lessor ay maaaring pumasok agad</li>
           </ul>
 
-          <p><strong>10. PAGLABAG, MULTA AT RESOLUSYON NG ALITAN</strong></p>
+          <p><strong>9. PAGLABAG, MULTA AT RESOLUSYON NG ALITAN</strong></p>
           <ul className="list-disc list-inside ml-2 space-y-1">
             <li>Ang hindi pagbabayad ng upa sa itinakdang panahon ay maaaring magresulta sa penalty o interest</li>
             <li>Para sa mga seryosong paglabag (ilegal na gawain, malakihang pinsala), maaaring simulan ang pag-uutos ng pag-alis</li>
@@ -705,7 +685,7 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
             <li>Kung hindi, maaaring gumamit ng mediation o arbitrasyon at huli ay pagdala sa korte</li>
           </ul>
 
-          <p><strong>11. IBA PANG TUNTUNIN AT KONDISYON</strong></p>
+          <p><strong>10. IBA PANG TUNTUNIN AT KONDISYON</strong></p>
           <ul className="list-disc list-inside ml-2 space-y-1">
             <li>Sumunod sa lokal na ordinansa at mga regulasyon ng building o barangay</li>
             <li>Garbage segregation at noise ordinances</li>
@@ -741,7 +721,7 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
   );
 
   const TenancyContract = () => (
-    <div className="bg-slate-50 px-4 py-3 leading-relaxed text-justify max-h-[80%] w-[95%] rounded-xl shadow-md shadow-black/50 overflow-x-hidden text-sm fixed flex flex-col top-1/2 left-1/2 -translate-1/2">
+    <div className="bg-slate-50 text-customViolet px-4 py-3 leading-relaxed text-justify max-h-[80%] w-[95%] rounded-xl shadow-md shadow-black/50 overflow-x-hidden text-sm fixed flex flex-col top-1/2 left-1/2 -translate-1/2">
       <h3 className="text-lg font-bold text-center mb-4 px-11" style={{color: '#574964'}}>KASUNDUAN SA PAUPA (LEASE AGREEMENT)</h3>
         
       <div className="space-y-3">
@@ -1081,7 +1061,7 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
                   className="fixed top-24 right-5 z-70 text-4xl text-customViolet/50 hover:text-customViolet focus:text-rose-500 ease-out duration-200"
                   onClick={() => setShowRules(false)}
                   ><HiX /></button>
-                  <TenancyRules/>
+                  <TenancyRules />
                 </>
               }
               {validationErrors.rulesSignature && (

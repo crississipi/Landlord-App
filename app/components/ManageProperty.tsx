@@ -9,6 +9,7 @@ import { HiArrowSmallLeft, HiOutlinePlusSmall } from 'react-icons/hi2';
 
 interface ManagePropertyProps extends ChangePageProps {
   onEditProperty?: (property: Property) => void;
+  highlightPropertyId?: number;
 }
 
 interface Feedback {
@@ -42,11 +43,29 @@ interface Property {
   averageRating: number;
 }
 
-const ManageProperty = ({ setPage, onEditProperty }: ManagePropertyProps) => {
+const ManageProperty = ({ setPage, onEditProperty, highlightPropertyId }: ManagePropertyProps) => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [feedbackSort, setFeedbackSort] = useState('Latest');
+  const [highlightedId, setHighlightedId] = useState<number | undefined>(highlightPropertyId);
+
+  // Clear highlight after 3 seconds and scroll to highlighted property
+  useEffect(() => {
+    if (highlightedId) {
+      // Scroll to the highlighted property after a brief delay for render
+      setTimeout(() => {
+        const element = document.getElementById(`property-${highlightedId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      
+      // Clear highlight after 3 seconds
+      const timer = setTimeout(() => setHighlightedId(undefined), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedId]);
 
   // Handle edit button click
   const handleEditClick = (property: Property) => {
@@ -190,7 +209,15 @@ const ManageProperty = ({ setPage, onEditProperty }: ManagePropertyProps) => {
       ) : (
         <div className='w-full h-full flex gap-3 overflow-x-auto flex-nowrap pb-5 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:overflow-visible lg:flex-wrap lg:gap-6'>
           {properties.map((property) => (
-            <div key={property.propertyId} className='h-auto min-w-[90vw] lg:min-w-0 lg:w-full flex flex-col relative overflow-x-hidden group bg-white rounded-lg border border-customViolet/20 lg:border-gray-200 shadow-sm lg:hover:shadow-md transition-all'>
+            <div 
+              key={property.propertyId} 
+              id={`property-${property.propertyId}`}
+              className={`h-auto min-w-[90vw] lg:min-w-0 lg:w-full flex flex-col relative overflow-x-hidden group bg-white rounded-lg border shadow-sm lg:hover:shadow-md transition-all duration-500 ${
+                highlightedId === property.propertyId 
+                  ? 'border-customViolet border-2 ring-4 ring-customViolet/30 shadow-lg scale-[1.02]' 
+                  : 'border-customViolet/20 lg:border-gray-200'
+              }`}
+            >
               {/* Property Image/Header */}
               <div className={`w-full aspect-square lg:aspect-video ${property.images.length === 0 ? (property.isAvailable ? 'bg-green-200' : 'bg-customViolet/70') : ''} relative overflow-hidden`}>
                 {property.images.length > 0 ? (

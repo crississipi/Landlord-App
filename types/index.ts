@@ -406,6 +406,11 @@ export interface MaintenanceRequest {
     timeAvailableFrom: string;
     timeAvailableTo: string;
   }[];
+  images?: {
+    resourceId: number;
+    url: string;
+    fileName: string;
+  }[];
 }
 
 export interface ScheduledByDate {

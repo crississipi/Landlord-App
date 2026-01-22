@@ -20,6 +20,15 @@ interface DashboardStats {
   pendingMaintenance: number;
 }
 
+// Urgency filter encoding: use negative numbers to encode urgency
+// -1 = critical, -2 = high, -3 = medium, -4 = low
+const urgencyToCode: Record<string, number> = {
+  critical: -1,
+  high: -2,
+  medium: -3,
+  low: -4,
+};
+
 const MainPage = ({ setPage }: ChangePageProps) => {
   const today = new Date();
   const [page, newPage] = useState(0);
@@ -148,10 +157,26 @@ const MainPage = ({ setPage }: ChangePageProps) => {
             <BillingSection onViewAll={() => newPage(13)} />
 
             {/* Section 2: Maintenance Requests - Independent Loading */}
-            <MaintenanceSection onViewAll={() => newPage(4)} />
+            <MaintenanceSection 
+              onViewAll={() => newPage(4)} 
+              onUrgencyClick={(urgency) => {
+                // Navigate to maintenance page with urgency filter
+                setPage(4, urgencyToCode[urgency] || 0);
+              }}
+              onRequestClick={(maintenanceId) => {
+                // Navigate to documentation page with maintenance request context
+                setPage(12, maintenanceId);
+              }}
+            />
 
             {/* Section 3: Properties & Feedbacks - Independent Loading */}
-            <PropertiesSection onManage={() => newPage(14)} />
+            <PropertiesSection 
+              onManage={() => newPage(14)} 
+              onPropertyClick={(property) => {
+                // Navigate to ManageProperty page and highlight the property
+                setPage(14, property.propertyId);
+              }}
+            />
           </div>
         </div>
       </div>
