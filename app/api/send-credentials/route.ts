@@ -159,7 +159,7 @@ const sendTenantCredentials = async (credentials: EmailCredentials): Promise<{ s
             </div>
 
             <div class="button-container">
-                <a href="https://coliving-for-tenant" class="access-button">Access Tenant Portal</a>
+                <a href="https://coliving-for-tenant.vercel.app" class="access-button">Access Tenant Portal</a>
             </div>
 
             <p style="text-align: center; color: #6b7280;">Click the button above to log in to your tenant account</p>

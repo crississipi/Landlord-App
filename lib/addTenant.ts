@@ -1,5 +1,4 @@
 //lib\addTenant.ts
-import bcrypt from "bcryptjs";
 
 // ---------------------------
 // ✅ 1. Type Definitions
@@ -120,25 +119,15 @@ export async function uploadTenantImages(
 // ---------------------------
 
 /**
- * Generates a tenant password by combining their name and unit number.
- * Example: John Doe (Unit 203) → "johndoe_203"
+ * Generates a tenant password by combining their name with 'coliving'.
+ * Example: John Doe → "johndoe_coliving"
  */
 export function generateTenantPassword(
   firstName: string,
-  lastName: string,
-  unitNumber: string
+  lastName: string
 ): string {
   const base = `${firstName}${lastName}`.replace(/\s+/g, "").toLowerCase();
-  return `${base}_${unitNumber}`;
-}
-
-/**
- * Encrypts a password using bcrypt.
- */
-export async function encryptPassword(password: string): Promise<string> {
-  const saltRounds = 10;
-  const hashedPassword = await bcrypt.hash(password, saltRounds);
-  return hashedPassword;
+  return `${base}_coliving`;
 }
 
 // ---------------------------
@@ -207,19 +196,17 @@ export async function handleTenantUploadAndSubmit(
       return;
     }
 
-    // Generate + encrypt tenant password
+    // Generate tenant password (plain text - will be hashed by API)
     const plainPassword = generateTenantPassword(
       data.firstName,
-      data.lastName,
-      data.unitNumber
+      data.lastName
     );
-    const hashedPassword = await encryptPassword(plainPassword);
 
-    // Submit tenant data with document URLs
+    // Submit tenant data with document URLs (send plain password, API will hash it)
     const submitRes = await submitTenant(
       {
         ...data,
-        password: hashedPassword,
+        password: plainPassword,
         signedRulesUrl: data.signedRulesUrl, // Pass document URLs
         signedContractUrl: data.signedContractUrl // Pass document URLs
       },

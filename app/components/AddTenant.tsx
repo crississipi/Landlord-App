@@ -557,12 +557,11 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
   
   
 
-  // Generate password for display
-  const generatedPassword = formData.firstName && formData.lastName && formData.unitNumber
+  // Generate password for display - format: firstnamelastname_coliving
+  const generatedPassword = formData.firstName && formData.lastName
     ? formData.firstName.replace(/\s+/g, "").toLowerCase() + 
       formData.lastName.replace(/\s+/g, "").toLowerCase() + 
-      "_" + 
-      formData.unitNumber.replace(/Unit/gi, '').replace(/\s+/g, "").toLowerCase()
+      "_coliving"
     : "";
 
   const sendCredentialsEmail = async (rulesUrl?: string, contractUrl?: string) => {
