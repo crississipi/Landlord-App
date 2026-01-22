@@ -170,30 +170,30 @@ const ForgotPass = ({ setPage }: ChangePageProps) => {
   };
 
   return (
-    <div className="max__size px-5 flex flex-col text-white transition-all duration-300 ease-in-out">
+    <div className="max__size px-5 flex flex-col text-white transition-all duration-300 ease-in-out items-center justify-center lg:h-full lg:max-w-2xl lg:mx-auto">
 
       {/* ===========================
           STEP 1 — ENTER EMAIL
       ============================ */}
       {step === 1 && (
         <>
-          <h1 className="font-poppins text-3xl font-light text-center mt-20">
+          <h1 className="font-poppins text-3xl font-light text-center mt-20 lg:text-4xl lg:mt-0 lg:mb-10">
             Recover Account
           </h1>
 
-          <div className="max__size flex__center__all flex-col w-full mt-10">
+          <div className="max__size flex__center__all flex-col w-full mt-10 lg:mt-0 lg:w-3/4">
             <input
               type="email"
               placeholder="Enter your registered email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full h-14 bg-transparent border border-white text-white text-lg rounded-lg px-4 outline-none"
+              className="w-full h-14 bg-transparent border border-white text-white text-lg rounded-lg px-4 outline-none lg:h-16 lg:text-xl transition-all focus:border-purple-300"
             />
 
-            {emailMsg && <p className="text-red-400 mt-2">{emailMsg}</p>}
+            {emailMsg && <p className="text-red-400 mt-2 text-center">{emailMsg}</p>}
 
             <button
-              className="primary__btn w-full bg-white text-customViolet mt-6 h-14 rounded-lg click__action hover__action focus__action"
+              className="primary__btn w-full bg-white text-customViolet mt-6 h-14 rounded-lg click__action hover__action focus__action lg:h-16 lg:text-xl font-medium transition-all hover:bg-gray-100"
               disabled={!email || loading}
               onClick={sendEmail}
             >
@@ -201,7 +201,7 @@ const ForgotPass = ({ setPage }: ChangePageProps) => {
             </button>
 
             <button
-              className="text-white underline mt-6 click__action"
+              className="text-white underline mt-6 click__action lg:mt-8 lg:text-lg hover:text-purple-200 transition-colors"
               onClick={() => setPage(99)}
             >
               Back to Login
@@ -215,48 +215,57 @@ const ForgotPass = ({ setPage }: ChangePageProps) => {
       ============================ */}
       {step === 2 && (
         <>
-          <h1 className="font-poppins text-3xl text-white font-light text-center mt-20">
+          <h1 className="font-poppins text-3xl text-white font-light text-center mt-20 lg:text-4xl lg:mt-0 lg:mb-10">
             Verify OTP
           </h1>
 
-          <div className="max__size flex__center__all flex-col w-full">
-            <div className="h-44 w-full flex__center__x gap-3 mt-10">
+          <div className="max__size flex__center__all flex-col w-full lg:w-3/4">
+            <p className="text-center text-sm lg:text-base mb-2 opacity-90">
+              We sent a code to <span className="font-medium">{email}</span>
+            </p>
+            
+            <div className="h-44 w-full flex__center__x gap-3 mt-4 lg:h-auto lg:my-10 lg:gap-5">
               {otp.map((val, i) => (
                 <input
                   key={i}
                   maxLength={1}
                   ref={(el) => { refs.current[i] = el! }}
-                  className="focus__action click__action hover__action h-[4.5rem] w-14 rounded-md text-2xl text-white bg-transparent border border-white font-bold text-center outline-none"
+                  className="focus__action click__action hover__action h-[4.5rem] w-14 rounded-md text-2xl text-white bg-transparent border border-white font-bold text-center outline-none lg:w-16 lg:h-20 lg:text-3xl transition-all focus:border-purple-300 focus:scale-105"
                   value={val}
                   onChange={(e) => handleInput(i, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Backspace' && !val && i > 0) {
+                      refs.current[i - 1]?.focus();
+                    }
+                  }}
                 />
               ))}
             </div>
 
-            {otpError && <p className="text-red-400 mt-2">{otpError}</p>}
+            {otpError && <p className="text-red-400 mt-2 text-center font-medium lg:text-lg">{otpError}</p>}
 
-            <div className="flex justify-between gap-3 mt-6 w-full">
+            <div className="flex justify-between gap-3 mt-6 w-full lg:mt-8">
               <button
-                className="border border-white px-3 py-2 rounded-md click__action hover__action focus__action flex__center__all"
+                className="border border-white px-3 py-2 rounded-md click__action hover__action focus__action flex__center__all lg:px-6 lg:py-3 lg:text-lg transition-all hover:bg-white/10"
                 onClick={() => setStep(1)}
               >
-                <HiOutlineArrowNarrowLeft className="text-3xl" /> BACK
+                <HiOutlineArrowNarrowLeft className="text-3xl lg:mr-2" /> <span className="hidden lg:inline">BACK</span>
               </button>
 
               <div className="flex gap-2 items-center">
                 <button
-                  className={`bg-white rounded-md px-3 py-2 text-customViolet click__action hover__action focus__action flex__center__all ${!canResend ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`bg-white rounded-md px-3 py-2 text-customViolet click__action hover__action focus__action flex__center__all lg:px-6 lg:py-3 lg:text-lg font-medium transition-all hover:bg-gray-100 ${!canResend ? "opacity-50 cursor-not-allowed" : ""}`}
                   disabled={!canResend}
                   onClick={resendOtp}
                 >
                   RESEND OTP
                 </button>
-                {!canResend && <span className="text-white">{resendTimer}s</span>}
+                {!canResend && <span className="text-white lg:text-lg min-w-[2rem] text-center">{resendTimer}s</span>}
                 <button
-                  className="bg-white rounded-md px-3 py-2 text-customViolet click__action hover__action focus__action flex__center__all"
+                  className="bg-white rounded-md px-3 py-2 text-customViolet click__action hover__action focus__action flex__center__all lg:px-6 lg:py-3 lg:text-lg font-medium transition-all hover:bg-gray-100"
                   onClick={() => verifyOtp()}
                 >
-                  NEXT <HiOutlineArrowNarrowRight className="text-3xl" />
+                  <span className="hidden lg:inline mr-2">VERIFY</span> NEXT <HiOutlineArrowNarrowRight className="text-3xl lg:ml-2" />
                 </button>
               </div>
             </div>
@@ -269,15 +278,15 @@ const ForgotPass = ({ setPage }: ChangePageProps) => {
       ============================ */}
       {step === 3 && (
         <>
-          <h1 className="font-poppins text-3xl font-light text-center mt-20">
+          <h1 className="font-poppins text-3xl font-light text-center mt-20 lg:text-4xl lg:mt-0 lg:mb-10">
             Set New Password
           </h1>
 
-          <div className="max__size flex__center__all flex-col w-full mt-10">
+          <div className="max__size flex__center__all flex-col w-full mt-10 lg:mt-0 lg:w-3/4">
             <input
               type="password"
               placeholder="New Password"
-              className="w-full h-14 bg-transparent border border-white text-white text-lg rounded-lg px-4 outline-none mb-4"
+              className="w-full h-14 bg-transparent border border-white text-white text-lg rounded-lg px-4 outline-none mb-4 lg:h-16 lg:text-xl lg:mb-6 transition-all focus:border-purple-300"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -285,15 +294,15 @@ const ForgotPass = ({ setPage }: ChangePageProps) => {
             <input
               type="password"
               placeholder="Confirm Password"
-              className="w-full h-14 bg-transparent border border-white text-white text-lg rounded-lg px-4 outline-none"
+              className="w-full h-14 bg-transparent border border-white text-white text-lg rounded-lg px-4 outline-none lg:h-16 lg:text-xl transition-all focus:border-purple-300"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
             />
 
-            {passError && <p className="text-red-400 mt-2">{passError}</p>}
+            {passError && <p className="text-red-400 mt-2 text-center lg:text-lg">{passError}</p>}
 
             <button
-              className="primary__btn w-full bg-white text-customViolet mt-6 h-14 rounded-lg click__action hover__action focus__action"
+              className="primary__btn w-full bg-white text-customViolet mt-6 h-14 rounded-lg click__action hover__action focus__action lg:h-16 lg:text-xl lg:mt-8 font-medium transition-all hover:bg-gray-100"
               disabled={!password || !confirm}
               onClick={submitNewPassword}
             >

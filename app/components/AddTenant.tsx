@@ -839,232 +839,241 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
     <div className="flex flex-col gap-3 md:gap-5 px-5 md:px-8 lg:px-12 py-3 md:py-5 select-none bg-white rounded-t-2xl overflow-hidden relative" style={{color: '#574964'}}>
       <TitleButton setPage={setPage} title="Tenant Information" />
 
-      <div className="flex flex-col gap-5 md:gap-6 lg:gap-8 overflow-x-hidden max-w-5xl mx-auto w-full">
-        <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold">Personal Information</h2>
+      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-5 md:gap-6 lg:gap-8 overflow-x-hidden max-w-full mx-auto w-full">
+        {/* Column 1: Personal Information */}
+        <div className="flex flex-col gap-4">
+          <h2 className="text-xl md:text-2xl lg:text-xl font-semibold">Personal Information</h2>
 
-        <div className="flex items-center justify-center h-auto w-full py-2 md:py-4 flex-col gap-2 md:gap-3">
-          <button
-            onClick={handleButtonClick}
-            className={`outline-none rounded-full h-24 w-24 md:h-28 md:w-28 lg:h-32 lg:w-32 text-white overflow-hidden flex items-center justify-center hover:scale-105 transition-transform ${
-              validationErrors.profileImage ? "ring-2 ring-red-500" : ""
-            }`}
-            style={{backgroundColor: '#574964'}}
-            type="button"
-          >
-            {image ? (
-              <img src={image} alt="Selected" className="object-cover w-full h-full rounded-full" />
-            ) : (
-              <AiOutlineUser className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16" />
-            )}
-          </button>
-          {validationErrors.profileImage && (
-            <p className="text-red-500 text-sm">Profile image is required</p>
-          )}
-          <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" required />
-        </div>
-
-        <div className="grid grid-cols-12 gap-3 md:gap-4 text-sm md:text-base">
-          <div className="col-span-full">
-            <input 
-              name="lastName" 
-              type="text" 
-              placeholder="Last Name *" 
-              value={formData.lastName} 
-              onChange={handleChange} 
-              className={`w-full text-base p-3 px-5 border rounded placeholder:text-customViolet/50 hover:border-customViolet ease-out duration-200 ${
-                validationErrors.lastName || fieldErrors.lastName ? "border-red-500 ring-2 ring-red-500" : "border-customViolet/50"
-              }`} 
-              required 
-            />
-            {fieldErrors.lastName && (
-              <p className="text-red-500 text-sm mt-1">{fieldErrors.lastName}</p>
-            )}
-          </div>
-          
-          <div className="col-span-full">
-            <input 
-              name="firstName" 
-              type="text" 
-              placeholder="First Name *" 
-              value={formData.firstName} 
-              onChange={handleChange} 
-              className={`w-full text-base p-3 px-5 border rounded placeholder:text-customViolet/50 hover:border-customViolet ease-out duration-200 ${
-                validationErrors.firstName || fieldErrors.firstName ? "border-red-500 ring-2 ring-red-500" : "border-customViolet/50"
-              }`} 
-              required 
-            />
-            {fieldErrors.firstName && (
-              <p className="text-red-500 text-sm mt-1">{fieldErrors.firstName}</p>
-            )}
-          </div>
-          
-          <input 
-            name="middleInitial" 
-            type="text" 
-            placeholder="M" 
-            value={formData.middleInitial}
-            onChange={handleChange} 
-            className="col-span-3 text-base p-3 text-center border border-customViolet/50 rounded placeholder:text-customViolet/50 hover:border-customViolet ease-out duration-200" 
-            maxLength={1} 
-          />
-
-          <div className="col-span-3 relative">
-            <button type="button" className="w-full flex items-center justify-between text-base p-3 border border-customViolet/50 rounded text-customViolet/50 hover:text-customViolet hover:border-customViolet ease-out duration-200" onClick={toggleSex}>
-              {currSex} <AiOutlineDown className="w-4 h-4" />
-            </button>
-            {sex && (
-              <div className="absolute top-12 bg-white border rounded w-full z-10">
-                {sexSelect.map((s, i) => (
-                  <button key={i} className="w-full py-2 px-3 text-left hover:bg-gray-100" onClick={() => changeSex(s)}>{s}</button>
-                ))}
-              </div>
-            )}
-          </div>
-          <input 
-            name="bday" 
-            type="date" 
-            value={formData.bday} 
-            onChange={handleChange} 
-            className="col-span-6 text-base p-3 border border-customViolet/50 rounded text-customViolet/50 hover:text-customeViolet hover:border-customViolet ease-out duration-200" 
-          />
-          
-          <div className="col-span-12 relative">
+          <div className="flex items-center justify-center h-auto w-full py-2 md:py-4 flex-col gap-2 md:gap-3">
             <button
+              onClick={handleButtonClick}
+              className={`outline-none rounded-full h-24 w-24 md:h-28 md:w-28 lg:h-32 lg:w-32 text-white overflow-hidden flex items-center justify-center hover:scale-105 transition-transform ${
+                validationErrors.profileImage ? "ring-2 ring-red-500" : ""
+              }`}
+              style={{backgroundColor: '#574964'}}
               type="button"
-              className={`w-full flex items-center justify-between text-base p-3 px-5 border border-customViolet/50 rounded text-customViolet/50 hover:text-customViolet hover:border-customViolet ease-out duration-200 ${validationErrors.property ? "ring-2 ring-red-500" : ""}`}
-              onClick={togglePropertyDropdown}
             >
-              {selectedProperty ? selectedProperty.name : "Select Unit"} <AiOutlineDown className="w-4 h-4" />
+              {image ? (
+                <img src={image} alt="Selected" className="object-cover w-full h-full rounded-full" />
+              ) : (
+                <AiOutlineUser className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16" />
+              )}
             </button>
-            {showPropertyDropdown && (
-              <div className="absolute top-12 bg-white border rounded w-full max-h-60 overflow-y-auto z-10">
-                {properties.map((property) => (
-                  <button key={property.propertyId} className="w-full py-2 px-3 text-left hover:bg-gray-100 flex items-center justify-between" onClick={() => selectProperty(property)}>
-                    <span>
-                      <p className="font-medium">{property.name}</p>
-                      <p className="text-xs text-gray-600">{property.address}</p>
-                    </span>
-                    <span className="px-2 py-1 rounded-full text-white text-xs" style={{backgroundColor: '#574964'}}>{property.currentTenants}</span>
-                  </button>
-                ))}
+            {validationErrors.profileImage && (
+              <p className="text-red-500 text-sm">Profile image is required</p>
+            )}
+            <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" required />
+          </div>
+
+          <div className="grid grid-cols-12 gap-3 md:gap-4 text-sm md:text-base">
+            <div className="col-span-full">
+              <input 
+                name="lastName" 
+                type="text" 
+                placeholder="Last Name *" 
+                value={formData.lastName} 
+                onChange={handleChange} 
+                className={`w-full text-base p-3 px-5 border rounded placeholder:text-customViolet/50 hover:border-customViolet ease-out duration-200 ${
+                  validationErrors.lastName || fieldErrors.lastName ? "border-red-500 ring-2 ring-red-500" : "border-customViolet/50"
+                }`} 
+                required 
+              />
+              {fieldErrors.lastName && (
+                <p className="text-red-500 text-sm mt-1">{fieldErrors.lastName}</p>
+              )}
+            </div>
+            
+            <div className="col-span-full">
+              <input 
+                name="firstName" 
+                type="text" 
+                placeholder="First Name *" 
+                value={formData.firstName} 
+                onChange={handleChange} 
+                className={`w-full text-base p-3 px-5 border rounded placeholder:text-customViolet/50 hover:border-customViolet ease-out duration-200 ${
+                  validationErrors.firstName || fieldErrors.firstName ? "border-red-500 ring-2 ring-red-500" : "border-customViolet/50"
+                }`} 
+                required 
+              />
+              {fieldErrors.firstName && (
+                <p className="text-red-500 text-sm mt-1">{fieldErrors.firstName}</p>
+              )}
+            </div>
+            
+            <input 
+              name="middleInitial" 
+              type="text" 
+              placeholder="M" 
+              value={formData.middleInitial}
+              onChange={handleChange} 
+              className="col-span-3 text-base p-3 text-center border border-customViolet/50 rounded placeholder:text-customViolet/50 hover:border-customViolet ease-out duration-200" 
+              maxLength={1} 
+            />
+
+            <div className="col-span-3 relative">
+              <button type="button" className="w-full flex items-center justify-between text-base p-3 border border-customViolet/50 rounded text-customViolet/50 hover:text-customViolet hover:border-customViolet ease-out duration-200" onClick={toggleSex}>
+                {currSex} <AiOutlineDown className="w-4 h-4" />
+              </button>
+              {sex && (
+                <div className="absolute top-12 bg-white border rounded w-full z-10">
+                  {sexSelect.map((s, i) => (
+                    <button key={i} className="w-full py-2 px-3 text-left hover:bg-gray-100" onClick={() => changeSex(s)}>{s}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <input 
+              name="bday" 
+              type="date" 
+              value={formData.bday} 
+              onChange={handleChange} 
+              className="col-span-6 text-base p-3 border border-customViolet/50 rounded text-customViolet/50 hover:text-customeViolet hover:border-customViolet ease-out duration-200" 
+            />
+            
+            <div className="col-span-12 relative">
+              <button
+                type="button"
+                className={`w-full flex items-center justify-between text-base p-3 px-5 border border-customViolet/50 rounded text-customViolet/50 hover:text-customViolet hover:border-customViolet ease-out duration-200 ${validationErrors.property ? "ring-2 ring-red-500" : ""}`}
+                onClick={togglePropertyDropdown}
+              >
+                {selectedProperty ? selectedProperty.name : "Select Unit"} <AiOutlineDown className="w-4 h-4" />
+              </button>
+              {showPropertyDropdown && (
+                <div className="absolute top-12 bg-white border rounded w-full max-h-60 overflow-y-auto z-10">
+                  {properties.map((property) => (
+                    <button key={property.propertyId} className="w-full py-2 px-3 text-left hover:bg-gray-100 flex items-center justify-between" onClick={() => selectProperty(property)}>
+                      <span>
+                        <p className="font-medium">{property.name}</p>
+                        <p className="text-xs text-gray-600">{property.address}</p>
+                      </span>
+                      <span className="px-2 py-1 rounded-full text-white text-xs" style={{backgroundColor: '#574964'}}>{property.currentTenants}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <input name="email" type="email" placeholder="@email.com" value={formData.email} onChange={handleChange} className="col-span-12 text-base p-3 px-5 border border-customViolet/50 rounded placeholder:text-customViolet/50 hover:border-customViolet ease-out duration-200" required />
+            
+            <div className="col-span-6">
+              <div className={`text-base p-3 px-5 border rounded placeholder:text-customViolet/50 hover:border-customViolet ease-out duration-200 flex gap-3 ${
+                validationErrors.firstNumber || fieldErrors.firstNumber ? "border-red-500 ring-2 ring-red-500" : "border-customViolet/50"
+              }`}>
+                <span>+63</span>
+                <input 
+                  name="firstNumber" 
+                  type="tel" 
+                  value={formData.firstNumber} 
+                  onChange={handleChange} 
+                  className="w-full outline-none" 
+                  placeholder="9xx xxx xxxx" 
+                  maxLength={12}
+                />
               </div>
-            )}
-          </div>
-
-          <input name="email" type="email" placeholder="@email.com" value={formData.email} onChange={handleChange} className="col-span-12 text-base p-3 px-5 border border-customViolet/50 rounded placeholder:text-customViolet/50 hover:border-customViolet ease-out duration-200" required />
-          
-          <div className="col-span-6">
-            <div className={`text-base p-3 px-5 border rounded placeholder:text-customViolet/50 hover:border-customViolet ease-out duration-200 flex gap-3 ${
-              validationErrors.firstNumber || fieldErrors.firstNumber ? "border-red-500 ring-2 ring-red-500" : "border-customViolet/50"
-            }`}>
-              <span>+63</span>
-              <input 
-                name="firstNumber" 
-                type="tel" 
-                value={formData.firstNumber} 
-                onChange={handleChange} 
-                className="w-full outline-none" 
-                placeholder="9xx xxx xxxx" 
-                maxLength={12}
-              />
+              {fieldErrors.firstNumber && (
+                <p className="text-red-500 text-sm mt-1">{fieldErrors.firstNumber}</p>
+              )}
             </div>
-            {fieldErrors.firstNumber && (
-              <p className="text-red-500 text-sm mt-1">{fieldErrors.firstNumber}</p>
-            )}
-          </div>
-          
-          <div className="col-span-6">
-            <div className={`text-base p-3 px-5 border rounded placeholder:text-customViolet/50 hover:border-customViolet ease-out duration-200 flex gap-3 ${
-              validationErrors.secondNumber || fieldErrors.secondNumber ? "border-red-500 ring-2 ring-red-500" : "border-customViolet/50"
-            }`}>
-              <span>+63</span>
-              <input 
-                name="secondNumber" 
-                type="tel" 
-                value={formData.secondNumber} 
-                onChange={handleChange} 
-                className="w-full outline-none" 
-                placeholder="9xx xxx xxxx" 
-                maxLength={12}
-              />
+            
+            <div className="col-span-6">
+              <div className={`text-base p-3 px-5 border rounded placeholder:text-customViolet/50 hover:border-customViolet ease-out duration-200 flex gap-3 ${
+                validationErrors.secondNumber || fieldErrors.secondNumber ? "border-red-500 ring-2 ring-red-500" : "border-customViolet/50"
+              }`}>
+                <span>+63</span>
+                <input 
+                  name="secondNumber" 
+                  type="tel" 
+                  value={formData.secondNumber} 
+                  onChange={handleChange} 
+                  className="w-full outline-none" 
+                  placeholder="9xx xxx xxxx" 
+                  maxLength={12}
+                />
+              </div>
+              {fieldErrors.secondNumber && (
+                <p className="text-red-500 text-sm mt-1">{fieldErrors.secondNumber}</p>
+              )}
             </div>
-            {fieldErrors.secondNumber && (
-              <p className="text-red-500 text-sm mt-1">{fieldErrors.secondNumber}</p>
-            )}
           </div>
         </div>
 
-        <h2 className="text-xl font-semibold">Credentials *</h2>
-        {validationErrors.credentials && (
-          <p className="text-red-500 text-sm -mt-3">At least one credential image is required</p>
-        )}
-        <div className="grid grid-cols-12 gap-3">
-          {[0, 1].map((i) => (
-            <div key={i} className={`col-span-6 rounded bg-gray-100 h-40 flex flex-col relative ${validationErrors.credentials && !idImages[0] && !idImages[1] ? "ring-2 ring-red-500" : ""}`}>
-              <label className="flex items-center justify-center h-full w-full text-xs flex-col bg-slate-50 cursor-pointer">
-                {idImages[i] ? (
-                  <img src={selectedImages[i]!} alt={`Uploaded ${i + 1}`} className="object-cover w-full h-full" />
-                ) : (
-                  <>
-                    <AiOutlineUpload className="w-12 h-12" style={{color: '#574964'}} />
-                    {i === 0 ? "Primary ID *" : "Secondary ID *"}
-                  </>
-                )}
-                <input type="file" accept="image/*" onChange={(e) => handleIDUpload(i, e)} className="hidden" />
-              </label>
-            </div>
-          ))}
+        {/* Column 2: Credentials */}
+        <div className="flex flex-col gap-4">
+          <h2 className="text-xl font-semibold">Credentials *</h2>
+          {validationErrors.credentials && (
+            <p className="text-red-500 text-sm -mt-3">At least one credential image is required</p>
+          )}
+          <div className="grid grid-cols-12 lg:grid-cols-1 gap-3">
+            {[0, 1].map((i) => (
+              <div key={i} className={`col-span-6 lg:col-span-1 rounded bg-gray-100 h-40 flex flex-col relative ${validationErrors.credentials && !idImages[0] && !idImages[1] ? "ring-2 ring-red-500" : ""}`}>
+                <label className="flex items-center justify-center h-full w-full text-xs flex-col bg-slate-50 cursor-pointer">
+                  {idImages[i] ? (
+                    <img src={selectedImages[i]!} alt={`Uploaded ${i + 1}`} className="object-cover w-full h-full" />
+                  ) : (
+                    <>
+                      <AiOutlineUpload className="w-12 h-12" style={{color: '#574964'}} />
+                      {i === 0 ? "Primary ID *" : "Secondary ID *"}
+                    </>
+                  )}
+                  <input type="file" accept="image/*" onChange={(e) => handleIDUpload(i, e)} className="hidden" />
+                </label>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="flex flex-col gap-4 mt-3">
+        {/* Column 3: Tenancy Agreement */}
+        <div className="flex flex-col gap-4">
           <h2 className="text-xl font-semibold">Tenancy Agreement</h2>
-
-          <div className={`w-full border rounded-lg p-4 ${signedRules ? 'border-transparent bg-emerald-600 text-white' : 'border-customViolet'}`}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Rules and Regulations</h3>
-              <button type="button" onClick={() => setShowRules(!showRules)} className="px-3 py-1 text-sm border rounded">
-                {showRules ? "Hide" : "View"}
-              </button>
+          <div className="flex flex-col gap-4">
+            <div className={`w-full border rounded-lg p-4 ${signedRules ? 'border-transparent bg-emerald-600 text-white' : 'border-customViolet'}`}>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Rules and Regulations</h3>
+                <button type="button" onClick={() => setShowRules(!showRules)} className="px-3 py-1 text-sm border rounded">
+                  {showRules ? "Hide" : "View"}
+                </button>
+              </div>
+              {showRules && 
+                <>
+                  <button 
+                  type="button" 
+                  className="fixed top-24 right-5 z-70 text-4xl text-customViolet/50 hover:text-customViolet focus:text-rose-500 ease-out duration-200"
+                  onClick={() => setShowRules(false)}
+                  ><HiX /></button>
+                  <TenancyRules/>
+                </>
+              }
+              {validationErrors.rulesSignature && (
+                <p className="text-red-500 text-sm mt-2">Please sign the Rules and Regulations document</p>
+              )}
             </div>
-            {showRules && 
-              <>
-                <button 
-                type="button" 
-                className="fixed top-24 right-5 z-70 text-4xl text-customViolet/50 hover:text-customViolet focus:text-rose-500 ease-out duration-200"
-                onClick={() => setShowRules(false)}
-                ><HiX /></button>
-                <TenancyRules/>
-              </>
-            }
-            {validationErrors.rulesSignature && (
-              <p className="text-red-500 text-sm mt-2">Please sign the Rules and Regulations document</p>
-            )}
-          </div>
 
-          <div className={`w-full border rounded-lg p-4 ${signedContract ? 'border-transparent bg-emerald-600 text-white' : 'border-customViolet'}`}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Tenancy Contract</h3>
-              <button type="button" onClick={() => setShowContract(!showContract)} className="px-3 py-1 text-sm border rounded">
-                {showContract ? "Hide" : "View"}
-              </button>
+            <div className={`w-full border rounded-lg p-4 ${signedContract ? 'border-transparent bg-emerald-600 text-white' : 'border-customViolet'}`}>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Tenancy Contract</h3>
+                <button type="button" onClick={() => setShowContract(!showContract)} className="px-3 py-1 text-sm border rounded">
+                  {showContract ? "Hide" : "View"}
+                </button>
+              </div>
+              {showContract && 
+                <>
+                  <button 
+                  type="button" 
+                  className="fixed top-24 right-5 z-70 text-4xl text-customViolet/50 hover:text-customViolet focus:text-rose-500 ease-out duration-200"
+                  onClick={() => setShowContract(false)}
+                  ><HiX /></button>
+                  <TenancyContract />
+                </>
+              }
+              {validationErrors.contractSignature && (
+                <p className="text-red-500 text-sm mt-2">Please sign the Tenancy Contract document</p>
+              )}
             </div>
-            {showContract && 
-              <>
-                <button 
-                type="button" 
-                className="fixed top-24 right-5 z-70 text-4xl text-customViolet/50 hover:text-customViolet focus:text-rose-500 ease-out duration-200"
-                onClick={() => setShowContract(false)}
-                ><HiX /></button>
-                <TenancyContract />
-              </>
-            }
-            {validationErrors.contractSignature && (
-              <p className="text-red-500 text-sm mt-2">Please sign the Tenancy Contract document</p>
-            )}
           </div>
         </div>
+      </div>
 
-        {showSignaturePad && (
+      {showSignaturePad && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
               <h3 className="text-lg font-bold mb-4">
@@ -1110,26 +1119,25 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
           </div>
         )}
 
-        <div className="w-full flex justify-end gap-2 mt-5">
-          <button
-            disabled={loading}
-            onClick={() => setPage(5)}
-            className="flex items-center border border-gray-400 rounded gap-3 text-gray-400 px-5 py-3 disabled:opacity-50"
-          >
-            <HiOutlineArrowNarrowLeft className="w-5 h-5" /> Cancel
-          </button>
-          <button
-            disabled={loading || !signedRules || !signedContract || !rulesSignature || !contractSignature}
-            onClick={handleSubmit}
-            className={`flex items-center text-white rounded px-5 py-3 gap-3 ${
-              (!signedRules || !signedContract || !rulesSignature || !contractSignature) ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            style={{backgroundColor: '#574964'}}
-          >
-            {loading ? "Creating..." : "Create Account"}
-            <HiOutlineArrowNarrowRight className="w-5 h-5" />
-          </button>
-        </div>
+      <div className="w-full flex justify-end gap-2 mt-5">
+        <button
+          disabled={loading}
+          onClick={() => setPage(5)}
+          className="flex items-center border border-gray-400 rounded gap-3 text-gray-400 px-5 py-3 disabled:opacity-50"
+        >
+          <HiOutlineArrowNarrowLeft className="w-5 h-5" /> Cancel
+        </button>
+        <button
+          disabled={loading || !signedRules || !signedContract || !rulesSignature || !contractSignature}
+          onClick={handleSubmit}
+          className={`flex items-center text-white rounded px-5 py-3 gap-3 ${
+            (!signedRules || !signedContract || !rulesSignature || !contractSignature) ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+          style={{backgroundColor: '#574964'}}
+        >
+          {loading ? "Creating..." : "Create Account"}
+          <HiOutlineArrowNarrowRight className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );

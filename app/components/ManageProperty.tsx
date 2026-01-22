@@ -15,6 +15,12 @@ interface Feedback {
   userName: string;
 }
 
+interface PropertyImage {
+  resourceId: number;
+  url: string;
+  fileName: string;
+}
+
 interface Property {
   propertyId: number;
   name: string;
@@ -26,6 +32,7 @@ interface Property {
   renovated: boolean;
   currentTenants: number;
   isAvailable: boolean;
+  images: PropertyImage[];
   feedbacks: Feedback[];
   totalFeedbacks: number;
   averageRating: number;
@@ -145,7 +152,7 @@ const ManageProperty = ({ setPage }: ChangePageProps) => {
   return (
     <div className='max__size px-5 py-3 gap-5 text-customViolet flex flex-col items-start overflow-hidden bg-white lg:bg-gray-50 rounded-t-2xl lg:rounded-none'>
       <div className='w-full flex items-center justify-between mt-10 lg:mt-4 gap-3 text-customViolet lg:text-gray-800'>
-        <button type="button" className='text-4xl lg:hidden' onClick={() => setPage(0)}>
+        <button type="button" className='text-4xl lg:text-3xl hover:opacity-80 transition-opacity' onClick={() => setPage(0)}>
           <HiArrowSmallLeft />
         </button>
         <h1 className='font-poppins text-xl lg:text-xl font-light lg:font-semibold w-full text-left'>Manage Properties</h1>
@@ -172,7 +179,18 @@ const ManageProperty = ({ setPage }: ChangePageProps) => {
           {properties.map((property) => (
             <div key={property.propertyId} className='h-auto min-w-[90vw] lg:min-w-0 lg:w-full flex flex-col relative overflow-x-hidden group bg-white rounded-lg border border-customViolet/20 lg:border-gray-200 shadow-sm lg:hover:shadow-md transition-all'>
               {/* Property Image/Header */}
-              <div className={`w-full aspect-square lg:aspect-video ${property.isAvailable ? 'bg-green-200' : 'bg-customViolet/70'} relative`}>
+              <div className={`w-full aspect-square lg:aspect-video ${property.images.length === 0 ? (property.isAvailable ? 'bg-green-200' : 'bg-customViolet/70') : ''} relative overflow-hidden`}>
+                {property.images.length > 0 ? (
+                  <img 
+                    src={property.images[0].url} 
+                    alt={property.name} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-4xl">🏠</span>
+                  </div>
+                )}
                 {/* Edit Button on Hover */}
                 <div className='hidden group-hover:flex group-focus:flex absolute inset-0 bg-black/20 z-50 items-center justify-center transition-all duration-200'>
                   <button

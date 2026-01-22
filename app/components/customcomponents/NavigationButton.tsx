@@ -3,9 +3,9 @@ import React from 'react'
 import { AiOutlineComment, AiOutlineHome, AiOutlineDelete, AiOutlineDollarCircle, AiOutlinePicture, AiOutlinePushpin, AiOutlineSetting, AiOutlineSolution, AiOutlineTool, AiOutlineUser, AiOutlineUserAdd } from 'react-icons/ai'
 
 const CustomNavBtn = ({ btnName, onClick, mainPage }:CustomNavBtnProps ) => {
-  const btnStyle = "h-8 w-8 md:h-10 md:w-10 lg:h-11 lg:w-11 text-customViolet";
+  const btnStyle = "h-8 w-8 md:h-10 md:w-10 lg:h-6 lg:w-6 text-customViolet";
   return (
-    <button className={`${btnName === "Delete Conversation" && 'mt-5'} ${mainPage && 'justify-center'} flex__center__y focus__action click__action hover__action outline-none w-full h-12 md:h-14 lg:h-16 rounded-md gap-2.5 md:gap-4 lg:gap-5 px-3 md:px-4 text-emerald-700 text-base md:text-lg lg:text-xl transition-colors`} onClick={onClick}>
+    <button className={`${btnName === "Delete Conversation" && 'mt-5'} ${mainPage && 'justify-center lg:justify-start'} flex__center__y focus__action click__action hover__action outline-none w-full h-12 md:h-14 lg:h-12 rounded-md gap-2.5 md:gap-4 lg:gap-3 px-3 md:px-4 text-emerald-700 text-base md:text-lg lg:text-base transition-colors lg:hover:bg-gray-100 lg:rounded-lg`} onClick={onClick}>
       { btnName === "Home" && <AiOutlineHome className={btnStyle}/>}
       { btnName === "Messages" && <AiOutlineComment className={btnStyle}/>}
       { btnName === "Bulletin" && <AiOutlinePushpin className={btnStyle}/>}
@@ -27,6 +27,9 @@ const CustomNavBtn = ({ btnName, onClick, mainPage }:CustomNavBtnProps ) => {
         </>
       }
       { btnName === "Delete Conversation" && <AiOutlineDelete className={`${btnStyle} text-rose-700`}/>}
+      
+      {/* Show label on large screens if mainPage prop is true */}
+      {mainPage && <span className="hidden lg:block text-gray-700 font-medium whitespace-nowrap">{btnName}</span>}
 
       {btnName === "Delete Conversation" && (
         <h4 className={`font-medium text-red-700 tracking-wide text-nowrap`}>{btnName}</h4>

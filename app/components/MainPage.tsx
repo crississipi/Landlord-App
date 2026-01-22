@@ -174,9 +174,12 @@ const MainPage = ({ setPage }: ChangePageProps) => {
           <h2 className='col-span-2 font-medium text-lg md:text-xl lg:text-xl flex items-center mt-1 lg:text-gray-900'><TbCurrencyPeso className='text-base md:text-lg lg:text-lg stroke-2'/>1,500</h2>
         </div>
       </div>
-      <div className={`min-h-[93vh] border border-black/5 w-full flex flex-col gap-3 md:gap-4 lg:gap-5 rounded-t-[2rem] lg:rounded-none bg-white lg:bg-gray-50 z-30 overflow-x-hidden sticky top-[25vh] md:top-full p-2 md:p-4 lg:p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] lg:shadow-none lg:border-none`}>
+      <div className={`min-h-[93vh] border border-black/5 w-full flex flex-col lg:flex-row gap-3 md:gap-4 lg:gap-0 rounded-t-[2rem] lg:rounded-none bg-white lg:bg-gray-50 z-30 overflow-x-hidden sticky top-[25vh] md:top-full p-2 md:p-4 lg:p-0 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] lg:shadow-none lg:border-none`}>
         {/* DO NOT CHANGE THIS */}
-        <div className='min-h-16 md:min-h-20 w-full bg-zinc-50 grid grid-cols-5 items-center rounded-2xl p-1 md:p-2 gap-1 overflow-x-auto md:overflow-visible no-scrollbar lg:hidden'>
+        <div className='min-h-16 md:min-h-20 w-full lg:w-80 lg:min-w-80 lg:h-[93vh] lg:sticky lg:top-0 bg-zinc-50 lg:bg-white grid grid-cols-5 lg:flex lg:flex-col items-center lg:items-start lg:justify-start rounded-2xl lg:rounded-none p-1 md:p-2 lg:p-6 gap-1 lg:gap-4 overflow-x-auto md:overflow-visible no-scrollbar lg:border-r lg:border-gray-200'>
+          
+          <h2 className="hidden lg:block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2 px-3">Menu</h2>
+
           <CustomNavBtn 
             btnName='Home' 
             mainPage={true} 

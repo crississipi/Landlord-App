@@ -42,6 +42,7 @@ model Users {
   sentMessages      Messages[]    @relation("SentMessages")
   property          Property?     @relation(fields: [propertyId], references: [propertyId])
   notifications     Notification[]
+  expenseLogs       ExpenseLog[]
 
   @@index([propertyId], map: "Users_propertyId_fkey")
 }
@@ -60,15 +61,9 @@ model Property {
   feedbacks    Feedback[]
   maintenances Maintenance[]
   users        Users[]
+  resources    Resource[]
 }
 
-model Expenses {
-  expensesID   Int      @id @default(autoincrement())
-  paidRent     Float
-  paidWater    Float
-  paidElectric Float
-  datePaid     DateTime @default(now())
-}
 
 model Billing {
   billingID         Int       @id @default(autoincrement())
@@ -138,7 +133,7 @@ model Documentation {
   aiDescription     String?                 @db.Text
   aiDescriptionTl   String?                 @db.Text
   maintenance       Maintenance             @relation(fields: [maintenanceID], references: [maintenanceId])
-  images            DocumentationImage[]
+  images            Resource[]
   materials         DocumentationMaterial[]
 
   @@index([maintenanceID], map: "Documentation_maintenanceID_fkey")
@@ -154,16 +149,6 @@ model DocumentationMaterial {
   @@index([documentationID], map: "DocumentationMaterial_documentationID_fkey")
 }
 
-model DocumentationImage {
-  id              Int           @id @default(autoincrement())
-  documentationID Int
-  url             String        @db.Text
-  fileName        String        @db.VarChar(255)
-  createdAt       DateTime      @default(now())
-  documentation   Documentation @relation(fields: [documentationID], references: [docuID], onDelete: Cascade)
-
-  @@index([documentationID], map: "DocumentationImage_documentationID_fkey")
-}
 
 model Feedback {
   feedbackID Int      @id @default(autoincrement())
@@ -201,12 +186,19 @@ model Messages {
 }
 
 model Resource {
-  resourceId    Int      @id @default(autoincrement())
-  referenceId   Int
-  referenceType String
-  url           String   @db.Text
-  fileName      String
-  createdAt     DateTime @default(now())
+  resourceId      Int            @id @default(autoincrement())
+  referenceId     Int
+  referenceType   String
+  url             String         @db.Text
+  fileName        String
+  createdAt       DateTime       @default(now())
+  propertyId      Int?
+  documentationId Int?
+  property        Property?      @relation(fields: [propertyId], references: [propertyId])
+  documentation   Documentation? @relation(fields: [documentationId], references: [docuID], onDelete: Cascade)
+
+  @@index([propertyId], map: "Resource_propertyId_fkey")
+  @@index([documentationId], map: "Resource_documentationId_fkey")
 }
 
 model Payment {
@@ -227,17 +219,23 @@ model Payment {
   @@index([userID], map: "Payment_userID_fkey")
 }
 
-model RentBillingLog {
-  logID       Int      @id @default(autoincrement())
-  userID      Int
-  propertyId  Int
-  billingID   Int?
-  month       String   @db.VarChar(20)
-  sentAt      DateTime @default(now())
-  emailSent   Boolean  @default(false)
-  error       String?  @db.Text
+model ExpenseLog {
+  logID        Int       @id @default(autoincrement())
+  userID       Int
+  propertyId   Int
+  billingID    Int?
+  month        String    @db.VarChar(20)
+  paidRent     Float     @default(0)
+  paidWater    Float     @default(0)
+  paidElectric Float     @default(0)
+  datePaid     DateTime?
+  sentAt       DateTime  @default(now())
+  emailSent    Boolean   @default(false)
+  error        String?   @db.Text
+  user         Users     @relation(fields: [userID], references: [userID])
 
   @@unique([userID, month])
+  @@index([userID], map: "ExpenseLog_userID_fkey")
 }
 
 model Notification {

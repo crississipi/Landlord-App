@@ -3,7 +3,7 @@
 import { handleUploadAndSubmit, PropertyFormData } from "@/lib/addProperty";
 import { ChangePageProps } from "@/types";
 import React, { useRef, useState, useEffect } from "react";
-import { HiArrowSmallLeft, HiOutlinePlus } from "react-icons/hi2";
+import { HiArrowSmallLeft, HiOutlinePlus, HiXMark } from "react-icons/hi2";
 
 const EditProperty = ({ setPage }: ChangePageProps) => {
   const [renovated, setRenovated] = useState(false);
@@ -41,6 +41,15 @@ const EditProperty = ({ setPage }: ChangePageProps) => {
     setPreviewUrls((prev) => [...prev, ...files.map((file) => URL.createObjectURL(file))]);
   };
 
+  const handleRemoveImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+    setPreviewUrls((prev) => {
+      const urlToRemove = prev[index];
+      URL.revokeObjectURL(urlToRemove);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const resetForm = () => {
     setName("");
     setRent("");
@@ -48,7 +57,10 @@ const EditProperty = ({ setPage }: ChangePageProps) => {
     setYearBuilt("");
     setAddress("");
     setDescription("");
+    // Revoke old URLs before clearing
+    previewUrls.forEach((url) => URL.revokeObjectURL(url));
     setImages([]);
+    setPreviewUrls([]);
     setUploadedUrls([]);
     setRenovated(false);
   };
@@ -101,12 +113,20 @@ const EditProperty = ({ setPage }: ChangePageProps) => {
           </span>
 
           {previewUrls.map((src, i) => (
-            <span
+            <div
               key={i}
-              className="w-full aspect-square rounded-md border border-customViolet/50 bg-neutral-50 overflow-hidden"
+              className="relative w-full aspect-square rounded-md border border-customViolet/50 bg-neutral-50 overflow-hidden group"
             >
               <img src={src} alt="preview" className="w-full h-full object-cover" />
-            </span>
+              <button
+                type="button"
+                onClick={() => handleRemoveImage(i)}
+                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                title="Remove image"
+              >
+                <HiXMark className="w-4 h-4" />
+              </button>
+            </div>
           ))}
         </div>
 

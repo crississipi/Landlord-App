@@ -65,10 +65,11 @@ const Header: React.FC<HeadProps> = ({ setNav, setPage, page, login }) => {
     <div className='h-auto w-full flex items-center z-20 px-5 py-3 gap-5 bg-customViolet lg:bg-white lg:border-b lg:border-gray-200 ease-in-out duration-150 lg:h-16 shadow-md lg:shadow-sm'>
       <button 
         onClick={() => changePage(0)} 
-        className='outline-none focus:opacity-80 hover:opacity-90 transition-opacity lg:hidden'
+        className='outline-none focus:opacity-80 hover:opacity-90 transition-opacity'
         title="Go to Dashboard"
       >
-        <Image src={"/loading_logo.svg"} alt='logo image' height={50} width={50} className='h-11 w-auto object-contain md:h-14 lg:h-10'/>
+        <Image src={"/loading_logo.svg"} alt='logo image' height={50} width={50} className='h-11 w-auto object-contain md:h-14 lg:hidden'/>
+        <Image src={"/logo.png"} alt='logo image' height={50} width={50} className='hidden lg:block h-10 w-auto object-contain'/>
       </button>
 
       {page !== 99 && (

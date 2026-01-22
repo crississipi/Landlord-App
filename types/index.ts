@@ -418,8 +418,8 @@ export interface DocumentationMaterial {
   cost: number | string;
 }
 
-export interface DocumentationImage {
-  id?: number;
+export interface DocumentationResource {
+  resourceId?: number;
   url: string;
   fileName: string;
 }
@@ -436,7 +436,7 @@ export interface MaintenanceDocumentation {
   dateIssued: string;
   maintenance?: MaintenanceRequest;
   materials?: DocumentationMaterial[];
-  images?: DocumentationImage[];
+  images?: DocumentationResource[];
 }
 
 export interface CalendaryoProps extends ChangePageProps {

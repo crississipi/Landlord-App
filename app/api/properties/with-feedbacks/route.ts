@@ -27,6 +27,16 @@ export async function GET() {
           orderBy: {
             dateIssued: 'desc'
           }
+        },
+        resources: {
+          select: {
+            resourceId: true,
+            url: true,
+            fileName: true
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
         }
       },
       orderBy: {
@@ -48,6 +58,11 @@ export async function GET() {
       renovated: property.renovated,
       currentTenants: property.users.length,
       isAvailable: property.users.length === 0,
+      images: property.resources.map(resource => ({
+        resourceId: resource.resourceId,
+        url: resource.url,
+        fileName: resource.fileName
+      })),
       feedbacks: property.feedbacks.map(feedback => ({
         feedbackID: feedback.feedbackID,
         ratings: feedback.ratings,

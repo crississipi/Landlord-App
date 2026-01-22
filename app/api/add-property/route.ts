@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       },
     });
 
-    // 📸 Create separate resource entries
+    // 📸 Create separate resource entries with propertyId relation
     if (imageUrls && imageUrls.length > 0) {
       try {
         await prisma.resource.createMany({
@@ -42,6 +42,7 @@ export async function POST(req: Request) {
             referenceType: 'property',
             url,
             fileName: url.split("/").pop() || "unknown",
+            propertyId: newProperty.propertyId,
           })),
         });
       } catch (resourceError) {

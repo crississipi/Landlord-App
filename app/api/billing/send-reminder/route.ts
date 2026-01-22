@@ -124,12 +124,15 @@ export async function POST(request: NextRequest) {
     await transporter.sendMail(mailOptions);
 
     // Update billing log
-    await prisma.rentBillingLog.create({
+    await prisma.expenseLog.create({
       data: {
         userID: billing.user.userID,
         propertyId: billing.propertyId,
         billingID: billing.billingID,
         month: billingMonth,
+        paidRent: 0,
+        paidWater: 0,
+        paidElectric: 0,
         emailSent: true
       }
     });

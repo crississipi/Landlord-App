@@ -160,11 +160,13 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Create images if provided
+      // Create images if provided (using Resource table)
       if (images && images.length > 0) {
-        await tx.documentationImage.createMany({
+        await tx.resource.createMany({
           data: images.map((img: { url: string; fileName: string }) => ({
-            documentationID: doc.docuID,
+            referenceId: doc.docuID,
+            referenceType: 'documentation',
+            documentationId: doc.docuID,
             url: img.url,
             fileName: img.fileName
           }))
@@ -303,11 +305,13 @@ export async function PUT(request: NextRequest) {
         }
       }
 
-      // Add new images if provided (don't delete existing)
+      // Add new images if provided (using Resource table)
       if (images && images.length > 0) {
-        await tx.documentationImage.createMany({
+        await tx.resource.createMany({
           data: images.map((img: { url: string; fileName: string }) => ({
-            documentationID: doc.docuID,
+            referenceId: doc.docuID,
+            referenceType: 'documentation',
+            documentationId: doc.docuID,
             url: img.url,
             fileName: img.fileName
           }))

@@ -10,7 +10,6 @@ import {
   AiOutlineDownload,
   AiOutlineFileText
 } from 'react-icons/ai';
-import { TbCurrencyPeso } from 'react-icons/tb';
 import { HiOutlineDocumentText } from 'react-icons/hi';
 import { TitleButton } from './customcomponents';
 import Image from 'next/image';

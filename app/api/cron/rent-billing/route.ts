@@ -286,7 +286,7 @@ export async function GET(request: NextRequest) {
 
     for (const tenant of eligibleTenants) {
       // Check if we already sent billing for this tenant this month
-      const existingLog = await prisma.rentBillingLog.findUnique({
+      const existingLog = await prisma.expenseLog.findUnique({
         where: {
           userID_month: {
             userID: tenant.userID,
@@ -349,12 +349,15 @@ export async function GET(request: NextRequest) {
       );
 
       // Log the billing attempt
-      await prisma.rentBillingLog.create({
+      await prisma.expenseLog.create({
         data: {
           userID: tenant.userID,
           propertyId: tenant.propertyId!,
           billingID: billing.billingID,
           month: currentMonth,
+          paidRent: 0,
+          paidWater: 0,
+          paidElectric: 0,
           emailSent: emailResult.success,
           error: emailResult.error,
         },
