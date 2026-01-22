@@ -77,6 +77,7 @@ export default function Home() {
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
   const [selectedChatUserId, setSelectedChatUserId] = useState<number | undefined>(); // 
   const [selectedMaintenanceId, setSelectedMaintenanceId] = useState<number | undefined>(); // For documentation
+  const [editingProperty, setEditingProperty] = useState<any>(null); // For property editing
   const comRef = useRef<HTMLDivElement | null>(null);
 
   const { data: session, status } = useSession();
@@ -136,7 +137,17 @@ export default function Home() {
         setSelectedMaintenanceId(contextId);
       }
     }
+    // Clear editingProperty when navigating away from EditProperty page
+    if (page !== 15) {
+      setEditingProperty(null);
+    }
     setPage(page);
+  };
+
+  // Handle property edit from ManageProperty
+  const handleEditProperty = (property: any) => {
+    setEditingProperty(property);
+    setPage(15);
   };
 
   // Tenant web app URL for redirect
@@ -254,8 +265,8 @@ export default function Home() {
     11: <AllMedia setPage={handleSetPage} setImage={setImage} />,
     12: <Docu setPage={handleSetPage} setImage={setImage} />,
     13: <Billing propertyId={1} setPage={setPage} />,
-    14: <ManageProperty setPage={handleSetPage} />,
-    15: <EditProperty setPage={handleSetPage} />,
+    14: <ManageProperty setPage={handleSetPage} onEditProperty={handleEditProperty} />,
+    15: <EditProperty setPage={handleSetPage} editingProperty={editingProperty} />,
     98: <ForgotPass setPage={handleSetPage} />,
     99: <Login setPage={handleSetPage} />,
     100: <ViewAllUnits setPage={handleSetPage} />,

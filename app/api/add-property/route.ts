@@ -5,9 +5,31 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { name, rent, area, yearBuilt, renovated, address, description, imageUrls } = body;
+    const { name, rent, area, yearBuilt, renovated, address, description, imageUrls, propertyId } = body;
 
-    // ✅ Basic validation
+    // If propertyId is provided, just add images to existing property
+    if (propertyId) {
+      if (imageUrls && imageUrls.length > 0) {
+        try {
+          await prisma.resource.createMany({
+            data: imageUrls.map((url: string) => ({
+              referenceId: propertyId,
+              referenceType: 'property',
+              url,
+              fileName: url.split("/").pop() || "unknown",
+              propertyId: propertyId,
+            })),
+          });
+          console.log(`✅ Added ${imageUrls.length} images to property ${propertyId}`);
+        } catch (resourceError) {
+          console.error("Error creating resources:", resourceError);
+          return NextResponse.json({ success: false, message: "Failed to add images." }, { status: 500 });
+        }
+      }
+      return NextResponse.json({ success: true, propertyId });
+    }
+
+    // ✅ Basic validation for new property
     if (!name || !rent || !area || !yearBuilt || !address || !description) {
       return NextResponse.json({ success: false, message: "All fields are required." }, { status: 400 });
     }

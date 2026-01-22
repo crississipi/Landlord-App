@@ -7,6 +7,10 @@ import DropDownBtn from './customcomponents/DropDownBtn';
 import { ChangePageProps } from '@/types';
 import { HiArrowSmallLeft, HiOutlinePlusSmall } from 'react-icons/hi2';
 
+interface ManagePropertyProps extends ChangePageProps {
+  onEditProperty?: (property: Property) => void;
+}
+
 interface Feedback {
   feedbackID: number;
   ratings: number;
@@ -38,11 +42,20 @@ interface Property {
   averageRating: number;
 }
 
-const ManageProperty = ({ setPage }: ChangePageProps) => {
+const ManageProperty = ({ setPage, onEditProperty }: ManagePropertyProps) => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [feedbackSort, setFeedbackSort] = useState('Latest');
+
+  // Handle edit button click
+  const handleEditClick = (property: Property) => {
+    if (onEditProperty) {
+      onEditProperty(property);
+    } else {
+      setPage(15);
+    }
+  };
 
   // Fetch properties with feedbacks
   useEffect(() => {
@@ -196,7 +209,7 @@ const ManageProperty = ({ setPage }: ChangePageProps) => {
                   <button
                     type="button"
                     className="h-16 w-16 rounded-md p-1 text-white/50 border-4 border-white/50 hover:border-white/70 hover:text-white/70 focus:border-white focus:text-white ease-out duration-200"
-                    onClick={() => setPage(15)}
+                    onClick={() => handleEditClick(property)}
                   >
                     <RiEdit2Line className="h-full w-full" />
                   </button>

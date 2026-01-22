@@ -6,6 +6,7 @@ export interface PropertyFormData {
   renovated: boolean;
   address: string;
   description: string;
+  propertyId?: number; // For updating existing property
 }
 
 export interface UploadResult {
@@ -87,11 +88,15 @@ export async function uploadImages(
 export async function submitProperty(
   data: PropertyFormData,
   imageUrls: string[]
-): Promise<{ success: boolean; message?: string }> {
+): Promise<{ success: boolean; message?: string; propertyId?: number }> {
   const res = await fetch("/api/add-property", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...data, imageUrls }),
+    body: JSON.stringify({ 
+      ...data, 
+      imageUrls,
+      propertyId: data.propertyId // Include propertyId if updating
+    }),
   });
 
   return res.json();
@@ -107,10 +112,13 @@ export async function handleUploadAndSubmit(
   setUploadedUrls: (urls: string[]) => void,
   resetForm: () => void
 ) {
-  const errors = validatePropertyForm(data);
-  if (errors.length) {
-    alert("Please fix the following errors:\n" + errors.join("\n"));
-    return;
+  // Skip validation when only adding images to existing property
+  if (!data.propertyId) {
+    const errors = validatePropertyForm(data);
+    if (errors.length) {
+      alert("Please fix the following errors:\n" + errors.join("\n"));
+      return;
+    }
   }
 
   setLoading(true);
@@ -124,13 +132,19 @@ export async function handleUploadAndSubmit(
         setUploadedUrls(uploadRes.urls);
       } else {
         alert("Image upload failed. Please check console for details.");
+        setLoading(false);
         return;
       }
     }
 
     const submitRes = await submitProperty(data, imageUrls);
     if (submitRes.success) {
-      alert("Property successfully added!");
+      if (data.propertyId) {
+        // Images added to existing property
+        console.log(`✅ Added ${imageUrls.length} images to property ${data.propertyId}`);
+      } else {
+        alert("Property successfully added!");
+      }
       resetForm();
     } else {
       alert(submitRes.message || "Error saving property");

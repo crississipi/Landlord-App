@@ -498,12 +498,13 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
             email: formData.email,
             firstNumber: formData.firstNumber.replace(/\s/g, ''),
             unitNumber: selectedProperty?.name,
-            rulesSignature: rulesSignature,
-            contractSignature: contractSignature,
-            property: selectedProperty,
             rulesAgreed: signedRules,
             contractAgreed: signedContract,
           },
+          // Signatures must be at root level for API validation
+          rulesSignature: rulesSignature,
+          contractSignature: contractSignature,
+          property: selectedProperty,
         }),
       });
   
@@ -595,7 +596,7 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
   };
 
   const TenancyRules = () => (
-    <div className="bg-slate-50 px-4 py-3 leading-relaxed text-justify max-h-[80%] w-[95%] rounded-xl shadow-md shadow-black/50 overflow-x-hidden text-sm fixed flex flex-col top-1/2 left-1/2 -translate-1/2">
+    <div className="bg-slate-50 text-customViolet px-4 py-3 leading-relaxed text-justify max-h-[80%] w-[95%] rounded-xl shadow-md shadow-black/50 overflow-x-hidden text-sm fixed flex flex-col top-1/2 left-1/2 -translate-1/2">
       <h3 className="text-lg font-bold text-center mb-4" style={{color: '#574964'}}>MGA PANUNTUNAN, REGULASYON, AT PANANAGUTAN SA PAG-UPA</h3>
       
       <div className="space-y-3">

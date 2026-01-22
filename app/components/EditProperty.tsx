@@ -5,12 +5,36 @@ import { ChangePageProps } from "@/types";
 import React, { useRef, useState, useEffect } from "react";
 import { HiArrowSmallLeft, HiOutlinePlus, HiXMark } from "react-icons/hi2";
 
-const EditProperty = ({ setPage }: ChangePageProps) => {
+interface PropertyImage {
+  resourceId: number;
+  url: string;
+  fileName: string;
+}
+
+interface EditingProperty {
+  propertyId: number;
+  name: string;
+  rent: number;
+  area: number;
+  address: string;
+  description: string;
+  yearBuilt: number;
+  renovated: boolean;
+  images?: PropertyImage[];
+}
+
+interface EditPropertyProps extends ChangePageProps {
+  editingProperty?: EditingProperty | null;
+}
+
+const EditProperty = ({ setPage, editingProperty }: EditPropertyProps) => {
   const [renovated, setRenovated] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<PropertyImage[]>([]);
   const [, setUploadedUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Controlled input states
   const [name, setName] = useState("");
@@ -21,6 +45,24 @@ const EditProperty = ({ setPage }: ChangePageProps) => {
   const [description, setDescription] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Populate form when editingProperty changes
+  useEffect(() => {
+    if (editingProperty) {
+      setIsEditing(true);
+      setName(editingProperty.name || "");
+      setRent(editingProperty.rent?.toString() || "");
+      setArea(editingProperty.area?.toString() || "");
+      setYearBuilt(editingProperty.yearBuilt?.toString() || "");
+      setAddress(editingProperty.address || "");
+      setDescription(editingProperty.description || "");
+      setRenovated(editingProperty.renovated || false);
+      setExistingImages(editingProperty.images || []);
+    } else {
+      setIsEditing(false);
+      resetForm();
+    }
+  }, [editingProperty]);
 
   // Clean up object URLs when component unmounts
   useEffect(() => {
@@ -63,9 +105,15 @@ const EditProperty = ({ setPage }: ChangePageProps) => {
     setPreviewUrls([]);
     setUploadedUrls([]);
     setRenovated(false);
+    setExistingImages([]);
+    setIsEditing(false);
   };
 
-  const handleSubmit = () => {
+  const handleRemoveExistingImage = (index: number) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async () => {
     const data: PropertyFormData = {
       name,
       rent,
@@ -76,17 +124,59 @@ const EditProperty = ({ setPage }: ChangePageProps) => {
       description,
     };
 
-    handleUploadAndSubmit(data, images, setLoading, setUploadedUrls, resetForm);
+    if (isEditing && editingProperty) {
+      // Update existing property
+      setLoading(true);
+      try {
+        const response = await fetch('/api/properties/update', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            propertyId: editingProperty.propertyId,
+            ...data,
+            existingImageIds: existingImages.map(img => img.resourceId),
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Upload new images if any
+          if (images.length > 0) {
+            await handleUploadAndSubmit(
+              { ...data, propertyId: editingProperty.propertyId },
+              images,
+              setLoading,
+              setUploadedUrls,
+              () => {}
+            );
+          }
+          alert('Property updated successfully!');
+          resetForm();
+          setPage(14); // Go back to ManageProperty
+        } else {
+          alert('Failed to update property: ' + (result.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error updating property:', error);
+        alert('Failed to update property. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Create new property
+      handleUploadAndSubmit(data, images, setLoading, setUploadedUrls, resetForm);
+    }
   };
 
   return (
     <div className="max__size px-5 py-3 gap-5 text-customViolet flex flex-col items-start overflow-hidden bg-white rounded-t-2xl">
       <div className="w-full flex items-center justify-between mt-3 gap-3 text-customViolet">
-        <button type="button" className="text-4xl" onClick={() => setPage(0)}>
+        <button type="button" className="text-4xl" onClick={() => setPage(14)}>
           <HiArrowSmallLeft />
         </button>
         <h1 className="font-poppins text-xl font-light w-full text-left">
-          Manage Properties
+          {isEditing ? 'Edit Property' : 'Add New Property'}
         </h1>
       </div>
 
@@ -112,9 +202,28 @@ const EditProperty = ({ setPage }: ChangePageProps) => {
             />
           </span>
 
+          {/* Existing Images */}
+          {existingImages.map((img, i) => (
+            <div
+              key={`existing-${img.resourceId}`}
+              className="relative w-full aspect-square rounded-md border border-customViolet/50 bg-neutral-50 overflow-hidden group"
+            >
+              <img src={img.url} alt={img.fileName} className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => handleRemoveExistingImage(i)}
+                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                title="Remove image"
+              >
+                <HiXMark className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+
+          {/* New Images */}
           {previewUrls.map((src, i) => (
             <div
-              key={i}
+              key={`new-${i}`}
               className="relative w-full aspect-square rounded-md border border-customViolet/50 bg-neutral-50 overflow-hidden group"
             >
               <img src={src} alt="preview" className="w-full h-full object-cover" />
@@ -126,6 +235,7 @@ const EditProperty = ({ setPage }: ChangePageProps) => {
               >
                 <HiXMark className="w-4 h-4" />
               </button>
+              <span className="absolute bottom-1 left-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded">New</span>
             </div>
           ))}
         </div>
@@ -234,7 +344,7 @@ const EditProperty = ({ setPage }: ChangePageProps) => {
           disabled={loading}
           className="col-span-full mt-3 px-3 py-2 rounded-md bg-customViolet text-white hover:bg-customViolet/80 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Processing..." : "Submit"}
+          {loading ? "Processing..." : isEditing ? "Update Property" : "Add Property"}
         </button>
       </div>
     </div>
