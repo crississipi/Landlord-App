@@ -42,6 +42,7 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
   const [selectedImages, setSelectedImages] = useState<(string | null)[]>([null, null]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [idImages, setIdImages] = useState<File[]>([null as any, null as any]);
+  const idInputRefs = useRef<(HTMLInputElement | null)[]>([null, null]);
   
   const [rulesSignature, setRulesSignature] = useState<string>("");
   const [contractSignature, setContractSignature] = useState<string>("");
@@ -195,7 +196,12 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
     }
   }, [showSignaturePad, currentSignatureType]);
 
-  const handleButtonClick = () => fileInputRef.current?.click();
+  const handleButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''; // Reset to allow re-selecting same file
+      fileInputRef.current.click();
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -216,14 +222,29 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
       const newImages = [...idImages];
       newImages[index] = file;
       setIdImages(newImages);
-      const imageUrl = URL.createObjectURL(file);
-      const updatedImages = [...selectedImages];
-      updatedImages[index] = imageUrl;
-      setSelectedImages(updatedImages);
+      
+      // Create object URL for preview
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          const updatedImages = [...selectedImages];
+          updatedImages[index] = event.target.result as string;
+          setSelectedImages(updatedImages);
+        }
+      };
+      reader.readAsDataURL(file);
       
       if (idImages.some(img => img) || file) {
         setValidationErrors(prev => ({ ...prev, credentials: false }));
       }
+    }
+  };
+
+  const handleIDClick = (index: number) => {
+    const input = idInputRefs.current[index];
+    if (input) {
+      input.value = ''; // Reset to allow re-selecting same file
+      input.click();
     }
   };
 
@@ -862,7 +883,13 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
             {validationErrors.profileImage && (
               <p className="text-red-500 text-sm">Profile image is required</p>
             )}
-            <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" required />
+            <input 
+              type="file" 
+              accept="image/*" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              className="hidden" 
+            />
           </div>
 
           <div className="grid grid-cols-12 gap-3 md:gap-4 text-sm md:text-base">
@@ -1005,18 +1032,32 @@ const AddTenant = ({ setPage }: ChangePageProps) => {
           )}
           <div className="grid grid-cols-12 lg:grid-cols-1 gap-3">
             {[0, 1].map((i) => (
-              <div key={i} className={`col-span-6 lg:col-span-1 rounded bg-gray-100 h-40 flex flex-col relative ${validationErrors.credentials && !idImages[0] && !idImages[1] ? "ring-2 ring-red-500" : ""}`}>
-                <label className="flex items-center justify-center h-full w-full text-xs flex-col bg-slate-50 cursor-pointer">
-                  {idImages[i] ? (
-                    <img src={selectedImages[i]!} alt={`Uploaded ${i + 1}`} className="object-cover w-full h-full" />
+              <div 
+                key={i} 
+                className={`col-span-6 lg:col-span-1 rounded bg-gray-100 h-40 flex flex-col relative cursor-pointer overflow-hidden ${validationErrors.credentials && !idImages[0] && !idImages[1] ? "ring-2 ring-red-500" : ""}`}
+                onClick={() => handleIDClick(i)}
+              >
+                <div className="flex items-center justify-center h-full w-full text-xs flex-col bg-slate-50">
+                  {selectedImages[i] ? (
+                    <img 
+                      src={selectedImages[i]!} 
+                      alt={`Uploaded ${i + 1}`} 
+                      className="object-cover w-full h-full pointer-events-none" 
+                    />
                   ) : (
                     <>
                       <AiOutlineUpload className="w-12 h-12" style={{color: '#574964'}} />
                       {i === 0 ? "Primary ID *" : "Secondary ID *"}
                     </>
                   )}
-                  <input type="file" accept="image/*" onChange={(e) => handleIDUpload(i, e)} className="hidden" />
-                </label>
+                </div>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  ref={(el) => { idInputRefs.current[i] = el; }}
+                  onChange={(e) => handleIDUpload(i, e)} 
+                  className="hidden" 
+                />
               </div>
             ))}
           </div>
