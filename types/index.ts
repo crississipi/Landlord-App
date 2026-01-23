@@ -303,7 +303,8 @@ export type UnitBillingRow = {
     electricMeterImage?: string; // base64 image
     tenantNames?: string;
     note?: string;
-    billingType: 'rent' | 'utility'; // type of billing
+    totalMaintenance?: number;
+    billingType: 'rent' | 'utility' | 'all' | 'maintenance'; // type of billing
   };
 
 export interface UnbilledUnit {
@@ -312,7 +313,9 @@ export interface UnbilledUnit {
   tenants: {
     userID: number;
     name: string;
+    email?: string;
   }[];
+  totalTenants?: number;
 }
 
 export interface BillingRecord {
@@ -324,7 +327,7 @@ export interface BillingRecord {
   totalElectric: number;
   totalAmount: number;
   dateIssued: string;
-  billingType: 'rent' | 'utility';
+  billingType: 'rent' | 'utility' | 'all' | 'maintenance';
   paymentStatus: 'pending' | 'partial' | 'paid';
   amountPaid: number;
   dueDate: string | null;

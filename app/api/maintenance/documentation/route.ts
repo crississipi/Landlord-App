@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { createMaintenanceFixedNotification } from '@/lib/notifications';
+import { sendDocumentationEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 
 // GET: Fetch documentation for a maintenance request
@@ -205,6 +206,24 @@ export async function POST(request: NextRequest) {
         read: false
       }
     });
+
+    // Send documentation email to tenant if email exists
+    try {
+      const tenant = await prisma.users.findUnique({ where: { userID: maintenance.userId }, select: { email: true, firstName: true, lastName: true, unitNumber: true } });
+      if (tenant && tenant.email) {
+        await sendDocumentationEmail({
+          to: tenant.email,
+          name: `${tenant.firstName || ''} ${tenant.lastName || ''}`.trim() || 'Tenant',
+          unit: tenant.unitNumber || 'Unknown',
+          maintenanceSummary: remarks,
+          materials: materials || [],
+          totalCost,
+          images: images || []
+        });
+      }
+    } catch (emailErr) {
+      console.error('Failed to send documentation email:', emailErr);
+    }
 
     // Fetch complete documentation with relations
     const completeDoc = await prisma.documentation.findUnique({

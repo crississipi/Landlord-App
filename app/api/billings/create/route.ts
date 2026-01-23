@@ -23,7 +23,8 @@ interface BillingPayload {
   waterMeterImage?: string; // base64
   electricMeterImage?: string; // base64
   tenantNames?: string;
-  billingType: 'rent' | 'utility';
+  billingType: 'rent' | 'utility' | 'all' | 'maintenance';
+  totalMaintenance?: number;
 }
 
 // Create email transporter
@@ -46,6 +47,8 @@ interface BillingData {
   totalRent: number;
   totalWater: number;
   totalElectric: number;
+  billingType?: string;
+  totalMaintenance?: number;
 }
 
 interface TenantData {
@@ -153,23 +156,31 @@ async function generateBillingPDF(
   // Table Rows
   const formatCurrency = (amount: number) => `PHP ${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 
-  page.drawText('Monthly Rent', { x: col1, y: yPosition, size: 10, font, color: rgb(0, 0, 0) });
-  page.drawText(formatCurrency(billingData.totalRent), { x: col2, y: yPosition, size: 10, font, color: rgb(0, 0, 0) });
-  yPosition -= lineHeight;
+  if (billingData.billingType === 'maintenance') {
+    page.drawText('Maintenance Fee', { x: col1, y: yPosition, size: 10, font, color: rgb(0, 0, 0) });
+    page.drawText(formatCurrency(billingData.totalMaintenance || 0), { x: col2, y: yPosition, size: 10, font, color: rgb(0, 0, 0) });
+    yPosition -= lineHeight;
+  } else {
+    page.drawText('Monthly Rent', { x: col1, y: yPosition, size: 10, font, color: rgb(0, 0, 0) });
+    page.drawText(formatCurrency(billingData.totalRent), { x: col2, y: yPosition, size: 10, font, color: rgb(0, 0, 0) });
+    yPosition -= lineHeight;
 
-  page.drawText('Water Bill', { x: col1, y: yPosition, size: 10, font, color: rgb(0, 0, 0) });
-  page.drawText(formatCurrency(billingData.totalWater), { x: col2, y: yPosition, size: 10, font, color: rgb(0, 0, 0) });
-  yPosition -= lineHeight;
+    page.drawText('Water Bill', { x: col1, y: yPosition, size: 10, font, color: rgb(0, 0, 0) });
+    page.drawText(formatCurrency(billingData.totalWater), { x: col2, y: yPosition, size: 10, font, color: rgb(0, 0, 0) });
+    yPosition -= lineHeight;
 
-  page.drawText('Electric Bill', { x: col1, y: yPosition, size: 10, font, color: rgb(0, 0, 0) });
-  page.drawText(formatCurrency(billingData.totalElectric), { x: col2, y: yPosition, size: 10, font, color: rgb(0, 0, 0) });
-  yPosition -= lineHeight;
+    page.drawText('Electric Bill', { x: col1, y: yPosition, size: 10, font, color: rgb(0, 0, 0) });
+    page.drawText(formatCurrency(billingData.totalElectric), { x: col2, y: yPosition, size: 10, font, color: rgb(0, 0, 0) });
+    yPosition -= lineHeight;
+  }
 
   addLine();
   yPosition -= 5;
 
   // Total
-  const total = billingData.totalRent + billingData.totalWater + billingData.totalElectric;
+  const total = (billingData.billingType === 'maintenance')
+    ? (billingData.totalMaintenance || 0)
+    : (billingData.totalRent + billingData.totalWater + billingData.totalElectric);
   page.drawText('TOTAL AMOUNT DUE', { x: col1, y: yPosition, size: 12, font: boldFont, color: rgb(0, 0, 0) });
   page.drawText(formatCurrency(total), { x: col2, y: yPosition, size: 12, font: boldFont, color: rgb(0.8, 0.2, 0.2) });
   yPosition -= lineHeight * 2;
@@ -343,7 +354,9 @@ async function sendBillingEmail(
 
     const monthDate = new Date(billingData.month + '-01');
     const monthName = monthDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-    const total = billingData.totalRent + billingData.totalWater + billingData.totalElectric;
+    const total = (billingData.billingType === 'maintenance')
+      ? (billingData.totalMaintenance || billingData.totalElectric || 0)
+      : (billingData.totalRent + billingData.totalWater + billingData.totalElectric);
 
     const emailTemplate = `
 <!DOCTYPE html>
@@ -373,18 +386,25 @@ async function sendBillingEmail(
             
             <div class="billing-summary">
                 <h3 style="margin-top: 0;">Unit ${billingData.unit} - ${property.name}</h3>
+                ${billingData.billingType === 'maintenance' ? `
                 <div class="amount-row">
-                    <span>Monthly Rent</span>
-                    <span>PHP ${billingData.totalRent.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  <span>Maintenance Fee</span>
+                  <span>PHP ${(billingData.totalMaintenance || billingData.totalElectric || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </div>
+                ` : `
+                <div class="amount-row">
+                  <span>Monthly Rent</span>
+                  <span>PHP ${billingData.totalRent.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div class="amount-row">
-                    <span>Water Bill</span>
-                    <span>PHP ${billingData.totalWater.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  <span>Water Bill</span>
+                  <span>PHP ${billingData.totalWater.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div class="amount-row">
-                    <span>Electric Bill</span>
-                    <span>PHP ${billingData.totalElectric.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  <span>Electric Bill</span>
+                  <span>PHP ${billingData.totalElectric.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
+                `}
                 <div class="total-row">
                     <span>TOTAL AMOUNT DUE</span>
                     <span>PHP ${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
@@ -455,6 +475,7 @@ export async function POST(request: NextRequest) {
       waterMeterImage,
       electricMeterImage,
       billingType,
+      totalMaintenance,
     } = body;
 
     // Validate required fields
@@ -465,11 +486,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!totalRent && !totalWater && !totalElectric) {
-      return NextResponse.json(
-        { success: false, message: 'At least one billing amount is required' },
-        { status: 400 }
-      );
+    if (billingType === 'maintenance') {
+      if (!totalMaintenance && !totalElectric) {
+        return NextResponse.json(
+          { success: false, message: 'Maintenance amount is required' },
+          { status: 400 }
+        );
+      }
+    } else {
+      if (!totalRent && !totalWater && !totalElectric) {
+        return NextResponse.json(
+          { success: false, message: 'At least one billing amount is required' },
+          { status: 400 }
+        );
+      }
     }
 
     // Check if billing already exists for this unit and month
@@ -533,9 +563,10 @@ export async function POST(request: NextRequest) {
         propertyId,
         unit,
         month,
-        totalRent: billingType === 'rent' ? (totalRent || 0) : 0,
-        totalWater: billingType === 'utility' ? (totalWater || 0) : 0,
-        totalElectric: billingType === 'utility' ? (totalElectric || 0) : 0,
+        totalRent: (billingType === 'rent' || billingType === 'all') ? (totalRent || 0) : 0,
+        totalWater: (billingType === 'utility' || billingType === 'all') ? (totalWater || 0) : 0,
+        // store maintenance amount in totalElectric when billingType === 'maintenance' (schema extension pending)
+        totalElectric: (billingType === 'utility' || billingType === 'all') ? (totalElectric || 0) : (billingType === 'maintenance' ? (totalMaintenance || totalElectric || 0) : 0),
         billingType: billingType || 'utility',
         paymentStatus: 'pending',
         amountPaid: 0,
@@ -544,11 +575,11 @@ export async function POST(request: NextRequest) {
     });
 
     // Calculate total amount
-    const totalAmount = (totalRent || 0) + (totalWater || 0) + (totalElectric || 0);
+    const totalAmount = (billingType === 'maintenance') ? (totalMaintenance || totalElectric || 0) : ((totalRent || 0) + (totalWater || 0) + (totalElectric || 0));
 
     // Generate PDF
     const pdfBytes = await generateBillingPDF(
-      { ...body, totalRent: totalRent || 0, totalWater: totalWater || 0, totalElectric: totalElectric || 0 },
+      { ...body, totalRent: totalRent || 0, totalWater: totalWater || 0, totalElectric: totalElectric || 0, billingType, totalMaintenance },
       tenant,
       property,
       waterMeterImage,
@@ -574,7 +605,9 @@ export async function POST(request: NextRequest) {
     // Send email to tenant
     let emailResult: { success: boolean; error?: string } = { success: false, error: 'Email not sent' };
     if (tenant.email) {
-      emailResult = await sendBillingEmail(tenant, body, property, pdfBytes);
+      // Pass billingType and totalMaintenance in billingData for correct rendering
+      const billingDataForEmail = { ...body, billingType, totalMaintenance } as BillingData;
+      emailResult = await sendBillingEmail(tenant, billingDataForEmail, property, pdfBytes);
     }
 
     // Create notification for tenant about the new billing

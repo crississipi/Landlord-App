@@ -528,3 +528,71 @@ export const sendBillingReminderEmail = async (
     };
   }
 };
+
+// Send documentation email to tenant after maintenance is fixed
+export const sendDocumentationEmail = async (params: {
+  to: string;
+  name: string;
+  unit: string;
+  maintenanceSummary: string; // remarks/work done
+  materials?: { material: string; cost: number }[];
+  totalCost?: number;
+  images?: { url: string }[];
+}): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const transporter = createTransporter();
+
+    const { to, name, unit, maintenanceSummary, materials, totalCost, images } = params;
+
+    const attachments = [] as any[];
+
+    // Optionally attach first image as inline preview
+    if (images && images.length > 0) {
+      // For remote URLs we won't download; include as link instead in email body
+    }
+
+    const materialsHtml = materials && materials.length > 0
+      ? `<ul>${materials.map(m => `<li>${m.material} — ₱${(m.cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</li>`).join('')}</ul>`
+      : '';
+
+    const totalHtml = typeof totalCost === 'number' ? `<p><strong>Total Cost:</strong> ₱${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>` : '';
+
+    const imagesHtml = images && images.length > 0
+      ? `<p>Images: ${images.map(i => `<a href="${i.url}">View image</a>`).join(' • ')}</p>`
+      : '';
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; color:#222;">
+        <h2>Maintenance Documentation</h2>
+        <p>Dear ${name},</p>
+        <p>The maintenance work for Unit ${unit} has been documented:</p>
+        <div style="background:#f7f7f8;padding:12px;border-radius:8px;margin:10px 0;">
+          <p style="white-space:pre-wrap;">${maintenanceSummary}</p>
+        </div>
+        ${materialsHtml}
+        ${totalHtml}
+        ${imagesHtml}
+        <p>Check the tenant portal for full documentation and receipts.</p>
+        <p style="color:#666;font-size:13px;">This is an automated message from Rodriguez Properties.</p>
+      </div>
+    `;
+
+    const mailOptions = {
+      from: {
+        name: process.env.EMAIL_FROM_NAME || 'Rodriguez Properties Management',
+        address: process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER!,
+      },
+      to,
+      subject: `Maintenance Documentation - Unit ${unit}`,
+      html,
+      attachments: attachments.length ? attachments : undefined,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending documentation email:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};

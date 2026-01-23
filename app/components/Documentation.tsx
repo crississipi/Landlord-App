@@ -108,11 +108,9 @@ const Documentation: React.FC<DocuProps> = ({ setPage, setImage, maintenanceId }
         const result: AIAnalysisResult = data.result;
         setAiDescription(result.description);
         setAiDescriptionTl(result.description_tl);
-        
-        // Auto-populate remarks if empty
-        if (!remarks.trim()) {
-          setRemarks(result.work_done);
-        }
+
+        // Apply generated work summary to remarks upon successful generation
+        setRemarks(result.work_done || '');
       } else {
         setAiError(data.error || 'Failed to generate AI description');
       }
